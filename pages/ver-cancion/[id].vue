@@ -23,12 +23,16 @@
                 <span class="close" @click="closeModal">&times;</span>
                 <h3>Agregar Acorde</h3>
                 <label for="acorde">Acorde:</label>
-                <input v-model="acorde" type="text" id="acorde" />
+                <select v-model="acorde" id="acorde">
+                    <option v-for="acorde in acordes" :key="acorde.numero" :value="acorde.acorde">
+                        {{ acorde.acorde }}
+                    </option>
+                </select>
 
                 <label for="modificador">Modificador:</label>
                 <input v-model="modificador" type="text" id="modificador" />
 
-                <button @click="saveChord">Guardar</button>
+                <button class="btn btn-success mt-3" @click="saveChord">Guardar</button>
             </div>
         </div>
     </div>
@@ -49,6 +53,59 @@ const acorde = ref('')
 const modificador = ref('')
 const selectedChar = ref(null)
 const selectedLine = ref(null)
+const acordes = ref([
+    {
+        numero: 1,
+        acorde: 'C',
+    },
+    {
+        numero: 2,
+        acorde: 'C#',
+    },
+    {
+        numero: 3,
+        acorde: 'D',
+    },
+    {
+        numero: 4,
+        acorde: 'D#',
+    },
+    {
+        numero: 5,
+        acorde: 'E',
+    },
+    {
+        numero: 6,
+        acorde: 'F',
+    },
+    {
+        numero: 7,
+        acorde: 'F#',
+    },
+    {
+        numero: 8,
+        acorde: 'G',
+    },
+    {
+        numero: 9,
+        acorde: 'G#',
+    },
+    {
+        numero: 10,
+        acorde: 'A',
+    },
+    {
+        numero: 11,
+        acorde: 'A#',
+    },
+    {
+        numero: 12,
+        acorde: 'B',
+    },
+])
+const guardando = ref(false)
+
+
 
 const fetchSong = async () => {
     const songId = route.params.id
