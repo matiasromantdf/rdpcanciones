@@ -5,9 +5,18 @@
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song">
             <div class="controles">
-                <!-- botones mas +1 y -1 para transportar la cancion -->
-                <button class="btn btn-primary" @click="transportar(1)">+1</button>
-                <button class="btn btn-primary" @click="transportar(-1)">-1</button>
+                <div class="controles-tono">
+                    <!-- botones mas +1 y -1 para transportar la cancion -->
+                    <button class="btn border" @click="transportar(1)">+1 </button>
+                    tono
+                    <button class="btn border" @click="transportar(-1)">-1</button>
+                </div>
+                <div class="controles-letra">
+                    <!-- botones mas +1 y -1 para transportar la cancion -->
+                    <button class="btn border" @click="cambiarTamanio(1)">+1 </button>
+                    letra
+                    <button class="btn border" @click="cambiarTamanio(-1)">-1</button>
+                </div>
             </div>
             <div class="row">
                 <div class="col">
@@ -308,6 +317,16 @@ const tonoCancion = computed(() => {
     return tono
 })
 
+const cambiarTamanio = (numero) => {
+    document.querySelectorAll('.char').forEach(char => {
+        let fontSize = parseInt(window.getComputedStyle(char).fontSize)
+        fontSize += numero
+        char.style.fontSize = fontSize + 'px'
+        char.style.maxWidth = fontSize + 'px'
+    })
+
+}
+
 
 onMounted(() => {
     fetchSong();
@@ -325,6 +344,7 @@ h1 {
     margin-right: 2px;
     cursor: pointer;
     max-width: 11px;
+    font-size: 20px;
 }
 
 .espacio {
@@ -377,14 +397,35 @@ h1 {
     font-size: 24px;
 }
 
-.controles {
+.controles-tono {
     display: flex;
-    justify-content: center;
     margin-bottom: 20px;
-
+    align-items: center;
+    width: fit-content;
+    border: solid 1px #ccc;
+    padding: 10px;
 }
 
-.controles button {
+
+.controles-tono button {
     margin: 0 10px;
+}
+
+.controles-letra {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+    width: fit-content;
+    border: solid 1px #ccc;
+    padding: 10px;
+}
+
+.controles-letra button {
+    margin: 0 10px;
+}
+
+.controles {
+    display: flex;
+    margin-bottom: 20px;
 }
 </style>
