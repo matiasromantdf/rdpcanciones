@@ -4,7 +4,7 @@
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song">
-            <div class="controles">
+            <div class="controles mt-4">
                 <div class="controles-tono">
                     <!-- botones mas +1 y -1 para transportar la cancion -->
                     <button class="btn border" @click="transportar(1)">+1 </button>
@@ -323,6 +323,11 @@ const cambiarTamanio = (numero) => {
         char.style.fontSize = fontSize + 'px'
         char.style.maxWidth = fontSize + 'px'
     })
+    document.querySelectorAll('.acorde').forEach(acorde => {
+        let fontSize = parseInt(window.getComputedStyle(acorde).fontSize)
+        fontSize += numero
+        acorde.style.fontSize = fontSize + 'px'
+    })
 
 }
 
@@ -360,9 +365,9 @@ h1 {
 }
 
 .acorde {
-    color: #999;
+    color: #6e52a1;
     float: left;
-    font-size: 12px;
+    font-size: 15px;
 }
 
 /* Modal Styles */
