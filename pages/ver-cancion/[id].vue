@@ -8,7 +8,7 @@
                 <div class="controles-tono">
                     <!-- botones mas +1 y -1 para transportar la cancion -->
                     <button class="btn border" @click="transportar(1)">+1 </button>
-                    tono
+                    {{ tonoCancion }}
                     <button class="btn border" @click="transportar(-1)">-1</button>
                 </div>
                 <div class="controles-letra">
@@ -20,13 +20,12 @@
             </div>
             <div class="row">
                 <div class="col">
-                    <h2>{{ song.titulo }}</h2>
-                    <p>{{ tonoCancion }}</p>
+                    <h3>{{ song.titulo }}</h3>
                 </div>
             </div>
             <div class="row mb-4">
                 <div class="col">
-                    <h2>{{ song.autor }}</h2>
+                    <h4>{{ song.autor }}</h4>
                 </div>
             </div>
             <div>
