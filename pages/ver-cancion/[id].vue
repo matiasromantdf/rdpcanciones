@@ -365,7 +365,7 @@ h1 {
 }
 
 .acorde {
-    color: #6e52a1;
+    color: #941c4e;
     float: left;
     font-size: 15px;
 }
