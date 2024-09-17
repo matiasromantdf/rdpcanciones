@@ -5,7 +5,7 @@
                 <h1 class="text-center">Cancionero RDP</h1>
             </div>
         </div>
-        <div class="row">
+        <div class="row" v-if="usuario">
             <div class="col-md-6 offset-md-3">
                 <div class="card">
                     <div class="card-body">
