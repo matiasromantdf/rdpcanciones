@@ -8,7 +8,6 @@
                 <div v-else class="datos-user">
                     <h1>Bienvenido, {{ usuario.user_metadata.full_name }}</h1>
                     <img :src="usuario.user_metadata.avatar_url" alt="Avatar de usuario" />
-                    <button @click="supabase.auth.signOut()" class="btn btn-primary">cerar sesion</button>
                 </div>
             </div>
         </div>
