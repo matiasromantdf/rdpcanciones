@@ -1,7 +1,7 @@
 <template>
     <div class="loguearse" v-if="!puedeCrear">
 
-        <h1 class="text-center">No tienes permisos para crear canciones</h1>
+        <h1 class="text-center">Por ahora, no podés crear canciones</h1>
 
 
     </div>
@@ -142,7 +142,7 @@ const puedeCrear = computed(() => {
 })
 
 onMounted(() => {
-    getModificadores();
+    getModificadores()
     getRolesUsuario()
 })
 
