@@ -2,7 +2,7 @@
     <div>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">Navbar</a>
+                <a class="navbar-brand" href="#">RDP</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -17,40 +17,48 @@
                             <nuxt-link to="/nuevaCancion" class="nav-link">Nueva Canción</nuxt-link>
 
                         </li>
-                        <!-- <li class="nav-item dropdown">
+                        <li class="nav-item dropdown" v-if="usuario">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
-                                Dropdown
+                                Usuario
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Another action</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                                <li><a class="dropdown-item" href="#">Perfil</a></li>
+                                <li><a class="dropdown-item" @click="logout">Cerrar Sesión</a></li>
+
                             </ul>
-                        </li> -->
+                        </li>
                         <li class="nav-item">
                             <nuxt-link to="/canciones" class="nav-link">Canciones</nuxt-link>
                         </li>
                     </ul>
-                    <form class="d-flex">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
+
                 </div>
             </div>
         </nav>
     </div>
 </template>
 
-<script>
-export default {
+<script setup>
 
+const router = useRouter()
+
+const supabase = useSupabaseClient()
+
+const usuario = useSupabaseUser()
+
+const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+        console.error('Error al cerrar sesión:', error.message)
+    } else {
+        console.log('Sesión cerrada')
+        router.push('/login') // Redirige correctamente al login
+    }
 }
-</script>
 
+</script>
 <style>
 .nav-item {
     margin-right: 10px;

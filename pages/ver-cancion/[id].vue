@@ -76,6 +76,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSupabaseClient } from '#imports'
+const usuario = useSupabaseUser()
 
 const route = useRoute()
 const supabase = useSupabaseClient()
@@ -215,6 +216,9 @@ const getModificadores = async () => {
 }
 
 const openModal = (charIndex) => {
+    if (!puedeEditar.value) {
+        return
+    }
     selectedChar.value = charIndex
     showModal.value = true
 }
@@ -330,6 +334,28 @@ const cambiarTamanio = (numero) => {
     })
 
 }
+
+const roles = ref([])
+const getRolesUsuario = async () => {
+    if (usuario.value.id) {
+        const { data, error } = await supabase
+            .from('roles')
+            .select('rol')
+            .eq('user_id', usuario.value.id)
+
+        if (error) {
+            console.error('Error al obtener el rol:', error.message)
+        } else {
+            console.log('Roles:', data)
+            roles.value = data
+        }
+    }
+}
+
+const puedeEditar = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol === 'letras_editor')
+})
 
 
 onMounted(() => {

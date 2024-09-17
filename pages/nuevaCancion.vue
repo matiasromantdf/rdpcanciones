@@ -1,5 +1,11 @@
 <template>
-    <div class="container">
+    <div class="loguearse" v-if="!puedeCrear">
+
+        <h1 class="text-center">No tienes permisos para crear canciones</h1>
+
+
+    </div>
+    <div class="container" v-else>
         <div class="row">
             <div class="col-md-12">
                 <h1 class="text-center">Nueva Canción</h1>
@@ -51,6 +57,7 @@
 
 <script setup>
 const supabase = useSupabaseClient()
+const usuario = useSupabaseUser()
 let cargando = ref(false)
 const notas = [
     { nota: 'Do', numero: 1 },
@@ -112,8 +119,31 @@ const getModificadores = async () => {
     }
 }
 
+const roles = ref([])
+const getRolesUsuario = async () => {
+    if (usuario.value.id) {
+        const { data, error } = await supabase
+            .from('roles')
+            .select('rol')
+            .eq('user_email', usuario.value.email)
+
+        if (error) {
+            console.error('Error al obtener el rol:', error.message)
+        } else {
+            console.log('Roles:', data)
+            roles.value = data
+        }
+    }
+}
+
+const puedeCrear = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol == 'letras_editor')
+})
+
 onMounted(() => {
-    getModificadores()
+    getModificadores();
+    getRolesUsuario()
 })
 
 </script>

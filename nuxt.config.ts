@@ -6,7 +6,15 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules:['@nuxtjs/supabase'],
   supabase: {
-    redirect: false
+    redirectOptions:{
+      login: '/login',
+      callback: '/',
+      exclude: [
+        '/login',
+        '/ver-cancion/**',
+        '/canciones',
+      ]
+    }
   },
   app: {
     head: {
