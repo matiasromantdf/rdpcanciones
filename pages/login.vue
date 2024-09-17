@@ -27,7 +27,6 @@ const login = async () => {
     document.getElementById('btn').style.pointerEvents = 'none'
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        redirectTo: `http://localhost:3000/`,
     })
 
     if (error) {
