@@ -1,6 +1,5 @@
 <template>
     <div class="container">
-
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song">
@@ -75,8 +74,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useSupabaseClient } from '#imports'
-const usuario = useSupabaseUser()
 
 const route = useRoute()
 const supabase = useSupabaseClient()
@@ -87,7 +84,6 @@ const showModal = ref(false)
 const acorde = ref('')
 const modificador = ref('')
 const selectedChar = ref(null)
-const selectedLine = ref(null)
 const acordes = ref([
     {
         numero: 1,
@@ -141,6 +137,7 @@ const acordes = ref([
 const guardando = ref(false)
 const acordesCancion = ref([])
 const modificadores = ref([])
+const usuario = useSupabaseUser()
 
 
 
@@ -215,10 +212,16 @@ const getModificadores = async () => {
     }
 }
 
+const puedeEditar = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol === 'letras_editor')
+})
+
 const openModal = (charIndex) => {
     if (!puedeEditar.value) {
         return
     }
+
     selectedChar.value = charIndex
     showModal.value = true
 }
@@ -341,7 +344,7 @@ const getRolesUsuario = async () => {
         const { data, error } = await supabase
             .from('roles')
             .select('rol')
-            .eq('user_id', usuario.value.id)
+            .eq('user_email', usuario.value.email)
 
         if (error) {
             console.error('Error al obtener el rol:', error.message)
@@ -350,17 +353,16 @@ const getRolesUsuario = async () => {
             roles.value = data
         }
     }
+    else {
+        console.log('No hay usuario')
+    }
 }
-
-const puedeEditar = computed(() => {
-    //si en el array de roles del usuario esta el rol de admin
-    return roles.value.some((rol) => rol.rol === 'letras_editor')
-})
 
 
 onMounted(() => {
     fetchSong();
-    getModificadores()
+    getModificadores();
+    getRolesUsuario();
 })
 </script>
 
