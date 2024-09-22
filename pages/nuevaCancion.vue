@@ -1,7 +1,7 @@
 <template>
     <div class="loguearse" v-if="!puedeCrear">
 
-        <h1 class="text-center">Por ahora, no podés crear canciones</h1>
+        <h1 class="text-center">Sin autorización</h1>
 
 
     </div>
@@ -123,9 +123,9 @@ const roles = ref([])
 const getRolesUsuario = async () => {
     if (usuario.value.id) {
         const { data, error } = await supabase
-            .from('roles')
+            .from('roles_usuarios')
             .select('rol')
-            .eq('user_email', usuario.value.email)
+            .eq('user_id', usuario.value.id)
 
         if (error) {
             console.error('Error al obtener el rol:', error.message)

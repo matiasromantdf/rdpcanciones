@@ -13,8 +13,21 @@
                         <li class="nav-item">
                             <nuxt-link to="/" class="nav-link">Home</nuxt-link>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Alabanza
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li></li>
+                                <nuxt-link to="/nuevaCancion" class="dropdown-item" v-if="usuario">Nueva
+                                    Canción</nuxt-link>
+                                <nuxt-link to="/canciones" class="dropdown-item">Canciones</nuxt-link>
+
+
+                            </ul>
+                        </li>
                         <li class="nav-item">
-                            <nuxt-link to="/nuevaCancion" class="nav-link">Nueva Canción</nuxt-link>
 
                         </li>
                         <li class="nav-item dropdown" v-if="usuario">
@@ -29,7 +42,6 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <nuxt-link to="/canciones" class="nav-link">Canciones</nuxt-link>
                         </li>
                     </ul>
 

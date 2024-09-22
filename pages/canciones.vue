@@ -62,9 +62,9 @@ const roles = ref([])
 const getRolesUsuario = async () => {
     if (usuario.value.id) {
         const { data, error } = await supabase
-            .from('roles')
+            .from('roles_usuarios')
             .select('rol')
-            .eq('user_email', usuario.value.email)
+            .eq('user_id', usuario.value.id)
 
         if (error) {
             console.error('Error al obtener el rol:', error.message)
