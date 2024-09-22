@@ -15,10 +15,13 @@
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
                 <div class="col-10">
                     <div class="row">
-                        <div class="col d-flex">
-                            <h2>{{ song.titulo }}</h2> <span v-if="song.es_adaptacion"
-                                class="es_adapt">Adaptación</span>
-                        </div>
+                        <nuxt-link :to="'/ver-cancion/' + song.id">
+                            <div class="col d-flex">
+                                <h2>{{ song.titulo }}</h2> <span v-if="song.es_adaptacion"
+                                    class="es_adapt">Adaptación</span>
+                            </div>
+                        </nuxt-link>
+
                         <div class="col">
 
                         </div>
