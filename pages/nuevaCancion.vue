@@ -65,9 +65,10 @@
                     </div>
                     <div class="mb-3">
                         <label for="letra" class="form-label">Letra</label>
-                        <textarea class="form-control" id="letra" rows="3"></textarea>
+                        <textarea class="form-control" id="letra" rows="20"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary" :disabled="cargando" id="btn-enviar">Guardar</button>
+                    <button type="submit" class="btn btn-primary mb-3" :disabled="cargando"
+                        id="btn-enviar">Guardar</button>
                 </form>
             </div>
         </div>
