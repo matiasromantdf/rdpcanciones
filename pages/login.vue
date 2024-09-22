@@ -26,6 +26,9 @@ const login = async () => {
     document.getElementById('btn').style.pointerEvents = 'none'
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+            redirectTo: 'https://rdpletras.vercel.app/'
+        }
     })
 
     if (error) {
