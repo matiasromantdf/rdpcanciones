@@ -22,13 +22,14 @@ const userData = ref(null)
 
 
 const login = async () => {
+    const redirectUrl = window.location.origin;
+
     document.getElementById('btn').innerText = 'Cargando...'
     document.getElementById('btn').style.pointerEvents = 'none'
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: 'https://rocadepaz.vercel.app/'
-            // redirectTo: 'http://localhost:3000/'
+            redirectTo: redirectUrl,
         }
     })
 
