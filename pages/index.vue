@@ -30,7 +30,7 @@ import { useRouter } from 'vue-router'
 const supabase = useSupabaseClient()
 const router = useRouter()
 
-const rol = ref(null)
+const roles = ref([])
 const usuario = useSupabaseUser()
 
 const getUserRole = async () => {
@@ -39,7 +39,6 @@ const getUserRole = async () => {
             .from('roles')
             .select('rol')
             .eq('user_email', usuario.value.email)
-            .single()
 
         if (error) {
             console.error('Error al obtener el rol:', error.message)
