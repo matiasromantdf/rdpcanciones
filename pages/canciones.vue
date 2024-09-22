@@ -11,16 +11,29 @@
             </div>
         </div>
         <div v-if="loading">Cargando...</div>
-        <div v-if="error">Error: {{ error.message }}</div>
-        <ul v-if="songs.length">
+        <ul v-if="songs.length && !cargando">
+            <div class="row border p-2 m-2 cancion" v-for="song in songs">
+                <div class="col-10">
+                    <div class="row">
+                        <div class="col d-flex">
+                            <h2>{{ song.titulo }}</h2> <span v-if="song.es_adaptacion"
+                                class="es_adapt">Adaptación</span>
+                        </div>
+                        <div class="col">
 
-            <li v-for="song in songs" :key="song.id">
-                <NuxtLink :to="'/ver-cancion/' + song.id">
-                    <h3>{{ song.titulo }}</h3>
-                    <p>{{ song.autor }}</p>
-                </NuxtLink>
-                <button v-if="puedeEliminar" class="btn btn-danger" @click="deleteSong(song.id)">Eliminar</button>
-            </li>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <p>{{ song.autor }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2 d-flex align-items-center justify-content-center">
+                    <button class="btn btn-danger" v-if="puedeEliminar" @click="deleteSong(song.id)">Eliminar</button>
+                </div>
+
+            </div>
         </ul>
         <div v-if="!songs.length && !loading">No hay canciones disponibles.</div>
     </div>
@@ -42,7 +55,7 @@ const fetchSongs = async () => {
     //agregar los % para que busque en cualquier parte del titulo o autor
     const { data, error } = await supabase
         .from('canciones')
-        .select('id, titulo, autor')
+        .select('*')
         .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
         .order('titulo')
 
@@ -112,6 +125,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.cancion {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 /* Estilos opcionales para tu página de canciones */
 h1 {
     text-align: center;
@@ -143,5 +164,20 @@ pre {
 a {
     text-decoration: none;
     color: black;
+}
+
+.es_adapt {
+    background-color: #b3b02d;
+    color: white;
+    padding: 4px;
+    border-radius: 5px;
+    float: right;
+    margin-right: 5px;
+    height: 30px;
+}
+
+.col h2 {
+    float: left;
+    margin-right: 10px;
 }
 </style>

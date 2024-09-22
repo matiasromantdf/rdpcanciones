@@ -44,6 +44,25 @@
                         </div>
 
                     </div>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-6">
+                            <label for="mod" class="form-label">Tipo</label>
+                            <select class="form-select" v-model="tipo" id="tipo">
+                                <option value="1">Adoración</option>
+                                <option value="2">Alabanza</option>
+
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="es_adaptacion">
+                                <label class="form-check-label" for="es_adaptacion">
+                                    Es adaptación
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="letra" class="form-label">Letra</label>
                         <textarea class="form-control" id="letra" rows="3"></textarea>
@@ -77,6 +96,7 @@ const modificadores = ref([])
 const modificador = ref('')
 const tono = ref('')
 const mod = ref('')
+const tipo = ref(1)
 
 
 const handleSend = async () => {
@@ -87,11 +107,15 @@ const handleSend = async () => {
     const letra = document.getElementById('letra').value
     let tono = document.getElementById('tono').value
     const modificador = document.getElementById('mod').value
+    const es_adaptacion = document.getElementById('es_adaptacion').checked
+    const tipo = document.getElementById('tipo').value
+
+
 
 
 
     const { data, error } = await supabase.from('canciones').insert([
-        { titulo, autor, letra, numero_tono: tono, modificador: modificador }
+        { titulo, autor, letra, numero_tono: tono, modificador: modificador, es_adaptacion, tipo }
     ])
 
     if (error) {
@@ -102,6 +126,11 @@ const handleSend = async () => {
         document.getElementById('titulo').value = ''
         document.getElementById('autor').value = ''
         document.getElementById('letra').value = ''
+        document.getElementById('tono').value = ''
+        document.getElementById('mod').value = ''
+        document.getElementById('es_adaptacion').checked = false
+        document.getElementById('tipo').value = 1
+
     }
     cargando = false
     document.getElementById('btn-enviar').innerText = 'Guardar'
