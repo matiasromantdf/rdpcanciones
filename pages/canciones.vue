@@ -11,7 +11,7 @@
             </div>
         </div>
         <div v-if="loading">Cargando...</div>
-        <ul v-if="songs.length && !cargando">
+        <ul v-if="songs.length && !loading">
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
                 <div class="col-10">
                     <div class="row">

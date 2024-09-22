@@ -5,16 +5,21 @@
         <div v-if="song">
             <div class="controles mt-4">
                 <div class="controles-tono">
-                    <!-- botones mas +1 y -1 para transportar la cancion -->
-                    <button class="btn border" @click="transportar(1)">+1 </button>
-                    {{ tonoCancion }}
-                    <button class="btn border" @click="transportar(-1)">-1</button>
+                    <p>cambiar tono</p>
+                    <div>
+                        <!-- botones mas +1 y -1 para transportar la cancion -->
+                        <button class="btn border" @click="transportar(1)">+1 </button>
+                        {{ tonoCancion }}
+                        <button class="btn border" @click="transportar(-1)">-1</button>
+                    </div>
                 </div>
                 <div class="controles-letra">
                     <!-- botones mas +1 y -1 para transportar la cancion -->
-                    <button class="btn border" @click="cambiarTamanio(1)">+1 </button>
-                    letra
-                    <button class="btn border" @click="cambiarTamanio(-1)">-1</button>
+                    <p>Cambiar tamaño</p>
+                    <div>
+                        <button class="btn border" @click="cambiarTamanio(1)">Inc. </button>
+                        <button class="btn border" @click="cambiarTamanio(-1)">Dis.</button>
+                    </div>
                 </div>
             </div>
             <div class="row">
@@ -431,25 +436,33 @@ h1 {
 
 .controles-tono {
     display: flex;
+    flex-direction: column;
     margin-bottom: 20px;
     align-items: center;
     width: fit-content;
     border: solid 1px #ccc;
     padding: 10px;
+    border-radius: 5px;
+    background-color: #f5f5f5;
 }
 
 
 .controles-tono button {
     margin: 0 10px;
+
 }
 
 .controles-letra {
     display: flex;
+    flex-direction: column;
     margin-bottom: 20px;
     align-items: center;
     width: fit-content;
     border: solid 1px #ccc;
     padding: 10px;
+    border-radius: 5px;
+    background-color: #f5f5f5;
+    margin-left: 20px;
 }
 
 .controles-letra button {

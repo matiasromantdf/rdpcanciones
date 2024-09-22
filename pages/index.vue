@@ -10,31 +10,54 @@
                 <p>Si ya tenés usuario, podés ingresar <nuxt-link to="/login">aquí</nuxt-link></p>
             </div>
         </div>
-        <div class="row" v-if="usuario">
+        <div class="row text-center" v-if="roles.length > 0">
             <div class="col-md-6 offset-md-3">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Bienvenido, {{ usuario?.user_metadata.full_name }}</h5>
-                        <button @click="logout" class="btn btn-primary">Cerrar sesión</button>
+                        <button @click="logout" class="btn btn-primary mt-5">Cerrar sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row text-center" v-if="roles.length === 0 && usuario">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Esta cuenta no posee roles asociados</h5>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-
-
-
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const supabase = useSupabaseClient()
 const router = useRouter()
 
-const usuario = useSupabaseUser()
+const usuario = ref(useSupabaseUser())
+const roles = ref([])
+const getRolesUsuario = async () => {
+    if (usuario.value.id) {
+        const { data, error } = await supabase
+            .from('roles_usuarios')
+            .select('rol')
+            .eq('user_id', usuario.value.id)
+
+        if (error) {
+            console.error('Error al obtener el rol:', error.message)
+        } else {
+            console.log('Roles:', data)
+            roles.value = data
+        }
+    }
+}
+getRolesUsuario()
 
 const logout = async () => {
     const { error } = await supabase.auth.signOut()
@@ -43,11 +66,11 @@ const logout = async () => {
         console.error('Error al cerrar sesión:', error.message)
     } else {
         console.log('Sesión cerrada')
-        router.push('/login') // Redirige correctamente al login
+        router.push('/login')
     }
 }
 
-// Asegúrate de ejecutar la función cuando el componente esté montado
+
 
 </script>
 
