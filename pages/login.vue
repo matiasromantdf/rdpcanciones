@@ -27,8 +27,8 @@ const login = async () => {
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            // redirectTo: 'https://rdpletras.vercel.app/'
-            redirectTo: 'http://localhost:3000/'
+            redirectTo: 'https://rocadepaz.vercel.app/'
+            // redirectTo: 'http://localhost:3000/'
         }
     })
 
