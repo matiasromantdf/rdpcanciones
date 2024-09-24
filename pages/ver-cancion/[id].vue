@@ -22,6 +22,14 @@
                     </div>
                 </div>
             </div>
+            <div class="row mb-4">
+                <div class="col-2 d-flex align-items-center" v-if="puedeAddToFavorite" @click="addToRepertorio">
+                    <span :class="'material-icons icono ' + classIcono">
+                        favorite
+                    </span>
+                    <span v-if="estaEnRepertorio">en repertorio</span>
+                </div>
+            </div>
             <div class="row">
                 <div class="col">
                     <h3>{{ song.titulo }}</h3>
@@ -32,6 +40,7 @@
                     <h4>{{ song.autor }}</h4>
                 </div>
             </div>
+
             <div>
                 <div v-for="(line, lineIndex) in song.letra.split('\n')" :key="line">
                     <div class="linea-letra">
@@ -73,6 +82,27 @@
                 <button class="btn btn-success mt-3" @click="saveChord()">Guardar</button>
             </div>
         </div>
+
+        <!--- Modal acorde para añadir a repertorio -->
+        <div v-if="showModalToRepertorio" class="modal-overlay">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h3>Agregar Acorde {{ selectedChar }}</h3>
+                <label for="acorde">Acorde:</label>
+                <select v-model="acorde" id="acorde">
+                    <option v-for="acorde in acordes" :key="acorde.numero" :value="acorde.numero">
+                        {{ acorde.acorde }}
+                    </option>
+                </select>
+                <!-- <label for="modificador">Modificador:</label>
+                <select v-model="modificador" id="modificador">
+                    <option v-for="mod in modificadores" :key="mod.id" :value="mod.modificador">{{ mod.modificador }}
+                    </option>
+                </select> -->
+
+                <button class="btn btn-success mt-3" @click="guardarEnRepertorio()">Guardar</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -86,6 +116,7 @@ const song = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const showModal = ref(false)
+const showModalToRepertorio = ref(false)
 const acorde = ref('')
 const modificador = ref('')
 const selectedChar = ref(null)
@@ -142,9 +173,75 @@ const acordes = ref([
 const guardando = ref(false)
 const acordesCancion = ref([])
 const modificadores = ref([])
-const usuario = useSupabaseUser()
+const usuario = ref(useSupabaseUser())
 
 
+const estaEnRepertorio = ref(false)
+
+const getIsInRepertorio = async () => {
+    if (usuario.value.id) {
+        const { data, error } = await supabase
+            .from('repertorio_voces')
+            .select('cancion_id')
+            .eq('cancion_id', song.value.id)
+            .eq('user_id', usuario.value.id)
+
+        if (error) {
+            console.error('Error al obtener el repertorio:', error.message)
+        } else {
+            console.log('Repertorio:', data)
+            estaEnRepertorio.value = data.length > 0
+        }
+    }
+}
+
+const classIcono = computed(() => {
+    return estaEnRepertorio.value ? 'in' : 'out'
+})
+
+const addToRepertorio = () => {
+    //confirmar
+    if (estaEnRepertorio.value) {
+        if (confirm('¿Estás seguro de quitar esta canción a tu repertorio?')) {
+            //quitar de repertorio
+            supabase.from('repertorio_voces')
+                .delete()
+                .eq('cancion_id', song.value.id)
+                .eq('user_id', usuario.value.id)
+                .then(({ error }) => {
+                    if (error) {
+                        console.error(error)
+                    } else {
+                        estaEnRepertorio.value = false
+                    }
+                })
+
+        }
+    } else {
+        //agregar a repertorio
+        //abrir el modal para seleccionar la el tono
+        showModalToRepertorio.value = true
+    }
+}
+
+const guardarEnRepertorio = () => {
+    //guardar en la tabla repertorio_voces, cancion_id, user_id, tono
+    const cancion_id = song.value.id
+    const user_id = usuario.value.id
+    const tono = acorde.value
+    supabase.from('repertorio_voces').insert([
+        { cancion_id, user_id, tono_numero: tono }
+    ]).then(({ error }) => {
+        if (error) {
+            console.error(error)
+            alert('Ocurrió un error al guardar la canción en el repertorio')
+        } else {
+            alert('Canción guardada en el repertorio')
+            estaEnRepertorio.value = true
+            showModalToRepertorio.value = false
+        }
+    })
+}
 
 const fetchSong = async () => {
     const songId = route.params.id
@@ -154,15 +251,12 @@ const fetchSong = async () => {
             .select('*')
             .eq('id', songId)
             .single()
-
-
-
         if (fetchError) {
             throw fetchError
         }
-
         song.value = data
         fetchAcordes()
+        getIsInRepertorio()
 
     } catch (err) {
         error.value = err
@@ -222,11 +316,15 @@ const puedeEditar = computed(() => {
     return roles.value.some((rol) => rol.rol === 'letras_editor')
 })
 
+const puedeAddToFavorite = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol === 'voces')
+})
+
 const openModal = (charIndex) => {
     if (!puedeEditar.value) {
         return
     }
-
     selectedChar.value = charIndex
     showModal.value = true
 }
@@ -372,6 +470,22 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.icono {
+    font-size: 20px;
+    border: 1px solid #941c4e;
+    padding: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.icono.in {
+    color: #941c4e;
+}
+
+.icono.out {
+    color: #ccc;
+}
+
 h1 {
     text-align: center;
 }

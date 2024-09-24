@@ -19,32 +19,24 @@
                                 Alabanza
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li></li>
                                 <nuxt-link to="/nuevaCancion" class="dropdown-item" v-if="usuario">Nueva
                                     Canción</nuxt-link>
                                 <nuxt-link to="/canciones" class="dropdown-item">Canciones</nuxt-link>
-
-
+                                <nuxt-link to="/repertorio" class="dropdown-item" v-if="esVoces">Mi
+                                    repertorio</nuxt-link>
                             </ul>
                         </li>
-                        <li class="nav-item">
-
-                        </li>
                         <li class="nav-item dropdown" v-if="usuario">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUsuario" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 Usuario
                             </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsuario">
                                 <li><a class="dropdown-item" href="#">Perfil</a></li>
                                 <li><a class="dropdown-item" @click="logout">Cerrar Sesión</a></li>
-
                             </ul>
                         </li>
-                        <li class="nav-item">
-                        </li>
                     </ul>
-
                 </div>
             </div>
         </nav>
@@ -52,25 +44,29 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSupabase } from '../composables/useSupabase'
 
+const { hasRole, usuario, fetchUserRoles, roles, signOut } = useSupabase()
+
+const esVoces = ref(false) // Inicializamos como `false`
 const router = useRouter()
 
-const supabase = useSupabaseClient()
-
-const usuario = useSupabaseUser()
 
 const logout = async () => {
-    const { error } = await supabase.auth.signOut()
+    await signOut()
+    router.push('/')
 
-    if (error) {
-        console.error('Error al cerrar sesión:', error.message)
-    } else {
-        console.log('Sesión cerrada')
-        router.push('/login') // Redirige correctamente al login
-    }
 }
 
+onMounted(async () => {
+    await fetchUserRoles() // Obtenemos los roles del usuario
+    esVoces.value = hasRole('voces') // Verificamos si el usuario tiene el rol "voces"
+    console.log('Rol voces:', esVoces.value)
+})
 </script>
+
 <style>
 .nav-item {
     margin-right: 10px;
