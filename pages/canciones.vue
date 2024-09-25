@@ -13,7 +13,7 @@
         <div v-if="loading">Cargando...</div>
         <ul v-if="songs.length && !loading">
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
-                <div class="col-10">
+                <div class="col-9">
                     <div class="row">
                         <nuxt-link :to="'/ver-cancion/' + song.id">
                             <div class="col d-flex">
