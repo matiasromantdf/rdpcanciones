@@ -1,5 +1,10 @@
 <template>
     <div class="container">
+        <div class="row text-center mt-2">
+            <div class="col">
+                <h1>Mi repertorio</h1>
+            </div>
+        </div>
         <div class="row" v-if="cargando">
             <div class="col-12 text-center">
                 <h1>Cargando...</h1>

@@ -22,13 +22,21 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-4">
+            <div class="row mb-4" v-if="!cargardoRepertorio">
                 <div class="col-2 d-flex align-items-center" v-if="puedeAddToFavorite" @click="addToRepertorio">
                     <span :class="'material-icons icono ' + classIcono">
                         favorite
                     </span>
                     <span v-if="estaEnRepertorio">en repertorio</span>
                 </div>
+            </div>
+            <div class="row text-center" v-else>
+                <div class="col-sm-12 col-md-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
             </div>
             <div class="row">
                 <div class="col">
@@ -86,9 +94,9 @@
         <!--- Modal acorde para añadir a repertorio -->
         <div v-if="showModalToRepertorio" class="modal-overlay">
             <div class="modal-content">
-                <span class="close" @click="closeModal">&times;</span>
-                <h3>Agregar Acorde {{ selectedChar }}</h3>
-                <label for="acorde">Acorde:</label>
+                <span class="close" @click="showModalToRepertorio = false">&times;</span>
+                <h3>Indicá tu tono</h3>
+                <label for="acorde">Tono:</label>
                 <select v-model="acorde" id="acorde">
                     <option v-for="acorde in acordes" :key="acorde.numero" :value="acorde.numero">
                         {{ acorde.acorde }}
@@ -174,6 +182,7 @@ const guardando = ref(false)
 const acordesCancion = ref([])
 const modificadores = ref([])
 const usuario = ref(useSupabaseUser())
+const cargardoRepertorio = ref(true)
 
 
 const estaEnRepertorio = ref(false)
@@ -192,6 +201,7 @@ const getIsInRepertorio = async () => {
             console.log('Repertorio:', data)
             estaEnRepertorio.value = data.length > 0
         }
+        cargardoRepertorio.value = false
     }
 }
 
