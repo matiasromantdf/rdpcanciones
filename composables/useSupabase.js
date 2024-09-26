@@ -30,6 +30,7 @@ export const useSupabase = () => {
 
   // Obtener roles del usuario autenticado
   const fetchUserRoles = async () => {
+    if(!usuario.value) return []; // Si el usuario no está autenticado, no hagas nada
     try {
       const { data, error } = await supabase
         .from('roles_usuarios') // Asegúrate de que este sea el nombre correcto de tu tabla

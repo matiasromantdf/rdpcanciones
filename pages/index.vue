@@ -43,7 +43,7 @@ const router = useRouter()
 const usuario = ref(useSupabaseUser())
 const roles = ref([])
 const getRolesUsuario = async () => {
-    if (usuario.value.id) {
+    if (usuario.value) {
         const { data, error } = await supabase
             .from('roles_usuarios')
             .select('rol')

@@ -188,7 +188,7 @@ const cargardoRepertorio = ref(true)
 const estaEnRepertorio = ref(false)
 
 const getIsInRepertorio = async () => {
-    if (usuario.value.id) {
+    if (usuario.value) {
         const { data, error } = await supabase
             .from('repertorio_voces')
             .select('cancion_id')
@@ -201,8 +201,8 @@ const getIsInRepertorio = async () => {
             console.log('Repertorio:', data)
             estaEnRepertorio.value = data.length > 0
         }
-        cargardoRepertorio.value = false
     }
+    cargardoRepertorio.value = false
 }
 
 const classIcono = computed(() => {
@@ -453,7 +453,7 @@ const cambiarTamanio = (numero) => {
 
 const roles = ref([])
 const getRolesUsuario = async () => {
-    if (usuario.value.id) {
+    if (usuario.value != null) {
         const { data, error } = await supabase
             .from('roles_usuarios')
             .select('rol')
@@ -468,6 +468,7 @@ const getRolesUsuario = async () => {
     }
     else {
         console.log('No hay usuario')
+        roles.value = []
     }
 }
 
