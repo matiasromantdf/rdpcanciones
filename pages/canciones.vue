@@ -13,12 +13,11 @@
         <div v-if="loading">Cargando...</div>
         <ul v-if="songs.length && !loading">
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
-                <div class="col-9">
+                <div class="col-10">
                     <div class="row">
                         <nuxt-link :to="'/ver-cancion/' + song.id">
                             <div class="col d-flex">
-                                <h2>{{ song.titulo }}</h2> <span v-if="song.es_adaptacion"
-                                    class="es_adapt">Adaptación</span>
+                                <h2>{{ song.titulo }}</h2>
                             </div>
                         </nuxt-link>
 
@@ -27,8 +26,9 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col">
+                        <div class="col d-flex">
                             <p>{{ song.autor }}</p>
+                            <span v-if="song.es_adaptacion" class="es_adapt">Adaptación</span>
                         </div>
                     </div>
                 </div>
@@ -172,11 +172,13 @@ a {
 .es_adapt {
     background-color: #b3b02d;
     color: white;
-    padding: 4px;
+    position: relative;
     border-radius: 5px;
-    float: right;
-    margin-right: 5px;
-    height: 30px;
+    margin-left: 10px;
+    height: 25px;
+    padding-left: 5px;
+    padding-right: 5px;
+
 }
 
 .col h2 {
