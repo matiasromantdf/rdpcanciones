@@ -34,7 +34,9 @@ const cargando = ref(true)
 const esVoces = ref(false)
 const repertorio = ref([])
 const getRepertorio = async () => {
-    const { data, error } = await supabase.from('repertorio_voces').select('*, canciones(*)')
+    const { data, error } = await supabase.from('repertorio_voces')
+        .select('*, canciones(*)')
+        .eq('user_id', usuario.value.id)
     if (error) {
         console.error('Error al obtener el repertorio:', error.message)
     } else {
