@@ -131,52 +131,52 @@ const selectedChar = ref(null)
 const acordes = ref([
     {
         numero: 1,
-        acorde: 'C',
+        acorde: 'DO',
     },
     {
         numero: 2,
-        acorde: 'C#',
+        acorde: 'DO#',
     },
     {
         numero: 3,
-        acorde: 'D',
+        acorde: 'RE',
     },
     {
         numero: 4,
-        acorde: 'D#',
+        acorde: 'RE#',
     },
     {
         numero: 5,
-        acorde: 'E',
+        acorde: 'MI',
     },
     {
         numero: 6,
-        acorde: 'F',
+        acorde: 'FA',
     },
     {
         numero: 7,
-        acorde: 'F#',
+        acorde: 'FA#',
     },
     {
         numero: 8,
-        acorde: 'G',
+        acorde: 'SOL',
     },
     {
         numero: 9,
-        acorde: 'G#',
+        acorde: 'SOL#',
     },
     {
         numero: 10,
-        acorde: 'A',
+        acorde: 'LA',
     },
     {
         numero: 11,
-        acorde: 'A#',
+        acorde: 'LA#',
     },
     {
         numero: 12,
-        acorde: 'B',
-    },
+        acorde: 'SI',
+    }
 ])
 const guardando = ref(false)
 const acordesCancion = ref([])
@@ -486,6 +486,7 @@ onMounted(() => {
     padding: 10px;
     border-radius: 50%;
     margin-right: 10px;
+    cursor: pointer;
 }
 
 .icono.in {
@@ -496,7 +497,12 @@ onMounted(() => {
     color: #ccc;
 }
 
-h1 {
+.icono:hover {
+    background-color: #941c4e;
+    color: white;
+}
+
+.h1 {
     text-align: center;
 }
 
