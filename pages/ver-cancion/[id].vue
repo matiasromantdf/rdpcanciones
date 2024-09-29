@@ -191,10 +191,9 @@ const getIsInRepertorio = async () => {
     if (usuario.value) {
         const { data, error } = await supabase
             .from('repertorio_voces')
-            .select('cancion_id')
+            .select('id')
             .eq('cancion_id', song.value.id)
             .eq('user_id', usuario.value.id)
-
         if (error) {
             console.error('Error al obtener el repertorio:', error.message)
         } else {
