@@ -24,7 +24,7 @@
 import { useSupabase } from '~/composables/useSupabase';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router'
-const { usuario, roles, fetchUserRoles, hasRole, supabase } = useSupabase();
+const { usuario, roles, hasRole, supabase } = useSupabase();
 
 const tonos = [
     'Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'
@@ -52,7 +52,6 @@ const convertirNumeroEnTono = (numero) => {
 const router = useRouter()
 
 onMounted(async () => {
-    await fetchUserRoles()
     if (!hasRole('voces')) {
         router.push('/')
     }
