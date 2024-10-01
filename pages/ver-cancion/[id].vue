@@ -53,7 +53,8 @@
                 <div v-for="(line, lineIndex) in song.letra.split('\n')" :key="line">
                     <div class="linea-letra">
 
-                        <div class="char" v-for="(char, charIndex) in line.split('')" :key="charIndex"
+                        <div :class="char == 'm' ? 'char mucho-espacio' : 'char poco-espacio'"
+                            v-for="(char, charIndex) in line.split('')" :key="charIndex"
                             @click="openModal(calcularIndice(charIndex, lineIndex))"
                             :id="calcularIndice(charIndex, lineIndex)">
                             <div class="acorde">
@@ -508,10 +509,19 @@ onMounted(() => {
 
 .char {
     display: inline-block;
-    margin-right: 2px;
     cursor: pointer;
     max-width: 11px;
     font-size: 20px;
+}
+
+.poco-espacio {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.mucho-espacio {
+    margin-left: 2px;
+    margin-right: 4px;
 }
 
 .espacio {

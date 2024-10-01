@@ -13,7 +13,7 @@
         <div v-if="loading">Cargando...</div>
         <ul v-if="songs.length && !loading">
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
-                <div class="col-10">
+                <div class="col md-10 sm-9">
                     <div class="row">
                         <nuxt-link :to="'/ver-cancion/' + song.id">
                             <div class="col d-flex">
@@ -32,8 +32,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-2 d-flex align-items-center justify-content-center">
-                    <button class="btn btn-danger" v-if="puedeEliminar" @click="deleteSong(song.id)">Eliminar</button>
+                <div class="col-md-2 col-sm-12 d-flex align-items-center justify-content-center">
+                    <button class="btn btn-sm btn-danger" v-if="puedeEliminar"
+                        @click="deleteSong(song.id)">Eliminar</button>
                 </div>
 
             </div>
@@ -179,6 +180,13 @@ a {
     padding-left: 5px;
     padding-right: 5px;
 
+}
+
+@media (max-width: 768px) {
+    .es_adapt {
+        font-size: 0.8rem;
+        height: 20px;
+    }
 }
 
 .col h2 {
