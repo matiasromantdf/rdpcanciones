@@ -519,7 +519,7 @@ onMounted(() => {
 }
 
 .mucho-espacio {
-    margin-right: 2px;
+    margin-right: 6px;
 }
 
 .espacio {
