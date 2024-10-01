@@ -44,9 +44,9 @@ export const useSupabase = () => {
   };
 
   // Verificar si el usuario tiene un rol específico
-  const hasRole = (role) => {
-
-    return roles.value?.some((r) => r.rol === role);
+  const hasRole = async (role) => {
+    await fetchUserRoles(); // Asegúrate de que los roles estén disponibles
+    return roles.value.some((r) => r.rol === role);
   };
 
   // Registrar usuario
@@ -65,7 +65,6 @@ export const useSupabase = () => {
     errorMessage,       // Posibles errores
     signOut,            // Función para cerrar sesión
     signUp,             // Función para registrar un nuevo usuario
-    fetchUserRoles,     // Función para obtener los roles del usuario
     hasRole,            // Verifica si el usuario tiene un rol específico
     supabase,           // Cliente de Supabase
   };

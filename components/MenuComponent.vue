@@ -48,7 +48,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSupabase } from '../composables/useSupabase'
 
-const { hasRole, usuario, fetchUserRoles, roles, signOut } = useSupabase()
+const { hasRole, usuario, roles, signOut } = useSupabase()
 
 const esVoces = ref(false) // Inicializamos como `false`
 const router = useRouter()
@@ -61,7 +61,6 @@ const logout = async () => {
 }
 
 onMounted(async () => {
-    await fetchUserRoles() // Obtenemos los roles del usuario
     esVoces.value = hasRole('voces') // Verificamos si el usuario tiene el rol "voces"
     console.log('Rol voces:', esVoces.value)
 })

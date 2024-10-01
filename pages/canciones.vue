@@ -33,8 +33,14 @@
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-12 d-flex align-items-center justify-content-center">
-                    <button class="btn btn-sm btn-danger" v-if="puedeEliminar"
-                        @click="deleteSong(song.id)">Eliminar</button>
+                    <span v-if="puedeEliminar" @click="deleteSong(song.id)" class="material-icons boton"
+                        style="color:brown">
+                        delete
+                    </span>
+                    <span v-if="puedeEliminar" @click="editSong(song.id)" class="material-icons boton"
+                        style="color:cornflowerblue">
+                        edit
+                    </span>
                 </div>
 
             </div>
@@ -52,6 +58,7 @@ const songs = ref([])
 const loading = ref(true)
 const error = ref(null)
 const search = ref('')
+const router = useRouter()
 
 
 const fetchSongs = async () => {
@@ -117,6 +124,14 @@ const deleteSong = async (id) => {
 const textoBoton = computed(() => {
     return search.value ? 'Buscar' : 'Ver Todas'
 })
+
+const editSong = (id) => {
+    //preguntar si esta seguro de eliminar
+    if (confirm('¿Estás seguro de editar esta canción?')) {
+        //redirigir a la página de edición
+        router.push(`/editar-cancion/${id}`)
+    }
+}
 
 
 
@@ -192,5 +207,13 @@ a {
 .col h2 {
     float: left;
     margin-right: 10px;
+}
+
+.boton {
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    margin-left: 5px;
 }
 </style>
