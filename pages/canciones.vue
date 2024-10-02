@@ -15,15 +15,23 @@
             <div class="row border p-2 m-2 cancion" v-for="song in songs">
                 <div class="col md-10 sm-9">
                     <div class="row">
-                        <nuxt-link :to="'/ver-cancion/' + song.id">
-                            <div class="col d-flex">
-                                <h2>{{ song.titulo }}</h2>
-                            </div>
-                        </nuxt-link>
+                        <div class="col-10 d-flex">
+                            <div class="col">
+                                <div class="d-flex">
+                                    <nuxt-link :to="'/ver-cancion/' + song.id">
+                                        <h2>{{ song.titulo }}</h2>
+                                    </nuxt-link>
+                                    <div v-if="song.link" @click="openUrl(song.link)">
+                                        <span class="material-icons boton" style="color: red;">
+                                            smart_display
+                                        </span>
+                                    </div>
 
-                        <div class="col">
+                                </div>
+                            </div>
 
                         </div>
+
                     </div>
                     <div class="row">
                         <div class="col d-flex">
@@ -132,6 +140,9 @@ const editSong = (id) => {
         router.push(`/editar-cancion/${id}`)
     }
 }
+const openUrl = (url) => {
+    window.open(url, '_blank')
+}
 
 
 
@@ -215,5 +226,6 @@ a {
     padding: 5px;
     border: 1px solid #ccc;
     margin-left: 5px;
+
 }
 </style>

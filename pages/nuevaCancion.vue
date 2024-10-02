@@ -25,6 +25,11 @@
                         <input type="text" class="form-control" id="autor" aria-describedby="autorHelp">
                         <div id="autorHelp" class="form-text">Ingresa el autor de la canción</div>
                     </div>
+                    <div class="mb-3">
+                        <label for="autor" class="form-label">Link</label>
+                        <input type="text" class="form-control" id="link" aria-describedby="autorHelp">
+                        <div id="autorHelp" class="form-text">Ingresa un link </div>
+                    </div>
                     <div class="row mb-3">
                         <div class="col">
                             <label for="tono" class="form-label">Tono</label>
@@ -110,13 +115,10 @@ const handleSend = async () => {
     const modificador = document.getElementById('mod').value
     const es_adaptacion = document.getElementById('es_adaptacion').checked
     const tipo = document.getElementById('tipo').value
-
-
-
-
+    let link = document.getElementById('link').value
 
     const { data, error } = await supabase.from('canciones').insert([
-        { titulo, autor, letra, numero_tono: tono, modificador: modificador, es_adaptacion, tipo }
+        { titulo, autor, letra, numero_tono: tono, modificador: modificador, es_adaptacion, tipo, link }
     ])
 
     if (error) {

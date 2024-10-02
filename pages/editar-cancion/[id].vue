@@ -26,6 +26,12 @@
                             v-model="cancion.autor">
                         <div id="autorHelp" class="form-text">Ingresa el autor de la canción</div>
                     </div>
+                    <div class="mb-3">
+                        <label for="autor" class="form-label">Link</label>
+                        <input type="text" class="form-control" id="link" aria-describedby="autorHelp"
+                            v-model="cancion.link">
+                        <div id="autorHelp" class="form-text">Ingresa un link</div>
+                    </div>
                     <div class="row mb-3">
                         <div class="col">
                             <label for="tono" class="form-label">Tono</label>
@@ -100,7 +106,10 @@ const cancion = ref({
     tipo: 1,
     es_adaptacion: false,
     letra: '',
-    id: 0
+    id: 0,
+    numero_tono: 1,
+    modificador: '',
+    link: ''
 })
 
 const notas = [
@@ -150,10 +159,10 @@ const getModificadores = async () => {
 const handleUpdate = async () => {
     cargando.value = true
     document.getElementById('btn-enviar').innerText = 'Actualizando...'
-    const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo } = cancion.value
+    const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link } = cancion.value
     const id = router.params.id
     const { data, error } = await supabase.from('canciones').update({
-        titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo
+        titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link
     }).eq('id', id)
     if (error) {
         console.error(error)
