@@ -29,6 +29,11 @@
                     </span>
                     <span v-if="estaEnRepertorio">en repertorio</span>
                 </div>
+                <div class="col-2" v-if="song.link" @click="openUrl(song.link)">
+                    <span class="material-icons icono-link" style="color: red;">
+                        smart_display
+                    </span>
+                </div>
             </div>
             <div class="row text-center" v-else>
                 <div class="col-sm-12 col-md-4">
@@ -472,6 +477,10 @@ const getRolesUsuario = async () => {
     }
 }
 
+const openUrl = (url) => {
+    window.open(url, '_blank')
+}
+
 
 onMounted(() => {
     fetchSong();
@@ -610,5 +619,13 @@ onMounted(() => {
 .controles {
     display: flex;
     margin-bottom: 20px;
+}
+
+.icono-link {
+    font-size: 24px;
+    cursor: pointer;
+    border: 1px solid #941c4e;
+    padding: 10px;
+    border-radius: 50%;
 }
 </style>
