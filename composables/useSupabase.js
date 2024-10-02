@@ -22,6 +22,8 @@ export const useSupabase = () => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
+      // Limpiar los roles del usuario
+      roles.value = null;
       if (error) throw error;
     } catch (error) {
       errorMessage.value = error.message;

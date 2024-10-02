@@ -57,13 +57,14 @@ const router = useRouter()
 const logout = async () => {
     await signOut()
     router.push('/')
-
 }
+esVoces.value = await hasRole('voces');
 
-onMounted(async () => {
-    esVoces.value = await hasRole('voces') // Verificamos si el usuario tiene el rol "voces"
-    console.log('Rol voces:', esVoces.value)
+watch(usuario, async (value) => {
+    esVoces.value = await hasRole('voces')
 })
+
+
 </script>
 
 <style>
