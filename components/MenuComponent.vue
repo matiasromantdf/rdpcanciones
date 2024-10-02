@@ -61,7 +61,7 @@ const logout = async () => {
 }
 
 onMounted(async () => {
-    esVoces.value = hasRole('voces') // Verificamos si el usuario tiene el rol "voces"
+    esVoces.value = await hasRole('voces') // Verificamos si el usuario tiene el rol "voces"
     console.log('Rol voces:', esVoces.value)
 })
 </script>

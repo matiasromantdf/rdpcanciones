@@ -45,8 +45,11 @@ export const useSupabase = () => {
 
   // Verificar si el usuario tiene un rol específico
   const hasRole = async (role) => {
-    await fetchUserRoles(); // Asegúrate de que los roles estén disponibles
-    return roles.value.some((r) => r.rol === role);
+    if(usuario.value){
+      await fetchUserRoles(); // Asegúrate de que los roles estén disponibles
+      return roles.value.some((r) => r.rol === role);
+    }
+    return false;
   };
 
   // Registrar usuario
