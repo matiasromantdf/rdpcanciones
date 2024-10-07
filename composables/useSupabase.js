@@ -64,6 +64,8 @@ export const useSupabase = () => {
     }
   };
 
+  
+
   return {
     usuario,               // El usuario actual
     roles,              // Los roles asociados al usuario

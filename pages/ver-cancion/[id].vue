@@ -23,7 +23,8 @@
                 </div>
             </div>
             <div class="row mb-4" v-if="!cargardoRepertorio">
-                <div class="col-2 d-flex align-items-center" v-if="puedeAddToFavorite" @click="addToRepertorio">
+                <div class="col-4 col-md-2 d-flex align-items-center" v-if="puedeAddToFavorite"
+                    @click="addToRepertorio">
                     <span :class="'material-icons icono ' + classIcono">
                         favorite
                     </span>
