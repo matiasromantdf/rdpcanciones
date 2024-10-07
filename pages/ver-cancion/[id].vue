@@ -329,7 +329,7 @@ const getModificadores = async () => {
 
 const puedeEditar = computed(() => {
     //si en el array de roles del usuario esta el rol de admin
-    return roles.value.some((rol) => rol.rol === 'letras_editor')
+    return roles.value.some((rol) => rol.rol === 'acordes_editor')
 })
 
 const puedeAddToFavorite = computed(() => {
