@@ -5,10 +5,13 @@
                 <h1 class="text-center">App Roca de Paz</h1>
             </div>
         </div>
+        <div class="row mb-4 mt-1">
+
+        </div>
         <div class="row text-center mt-5" v-if="!usuario">
-            <div class="col">
+            <!-- <div class="col">
                 <p>Si ya tenés usuario, podés ingresar <nuxt-link to="/login">aquí</nuxt-link></p>
-            </div>
+            </div> -->
         </div>
         <div class="row text-center" v-if="roles.length > 0">
             <div class="col-md-6 offset-md-3">

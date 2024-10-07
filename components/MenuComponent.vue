@@ -37,7 +37,17 @@
                             </ul>
                         </li>
                     </ul>
+                    <!--divisor-->
+                    <div>
+                    </div>
+                    <nuxt-link to="/login" class="nav-link ingresar">
+                        <span class="material-icons">
+                            login
+                        </span>
+                    </nuxt-link>
                 </div>
+
+
             </div>
         </nav>
     </div>
@@ -70,5 +80,10 @@ watch(usuario, async (value) => {
 <style>
 .nav-item {
     margin-right: 10px;
+}
+
+.ingresar {
+    font-size: 30px;
+    color: rgb(172, 60, 206);
 }
 </style>
