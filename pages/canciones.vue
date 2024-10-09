@@ -76,7 +76,7 @@ const fetchSongs = async () => {
         .from('canciones')
         .select('*')
         .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
-        .order('titulo')
+        .order('id', { ascending: false })
 
     if (error) {
         console.error('Error al obtener las canciones:', error.message)
