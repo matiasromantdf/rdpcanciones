@@ -24,8 +24,12 @@
                                 <nuxt-link to="/canciones" class="dropdown-item">Canciones</nuxt-link>
                                 <nuxt-link to="/repertorio" class="dropdown-item" v-if="esVoces">Mi
                                     repertorio</nuxt-link>
+                                <nuxt-link to="/voces/crear-listado" class="dropdown-item" v-if="esAdminVoces">Crear
+                                    listado</nuxt-link>
+
                             </ul>
                         </li>
+
                         <li class="nav-item dropdown" v-if="usuario">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUsuario" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -61,6 +65,7 @@ import { useSupabase } from '../composables/useSupabase'
 const { hasRole, usuario, roles, signOut } = useSupabase()
 
 const esVoces = ref(false) // Inicializamos como `false`
+const esAdminVoces = ref(false) // Inicializamos como `false`
 const router = useRouter()
 
 
@@ -69,6 +74,7 @@ const logout = async () => {
     router.push('/')
 }
 esVoces.value = await hasRole('voces');
+esAdminVoces.value = await hasRole('admin_voces');
 
 watch(usuario, async (value) => {
     esVoces.value = await hasRole('voces')
@@ -85,5 +91,25 @@ watch(usuario, async (value) => {
 .ingresar {
     font-size: 30px;
     color: rgb(172, 60, 206);
+}
+
+.dropdown-menu li {
+    position: relative;
+}
+
+.dropdown-menu .dropdown-submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -7px;
+}
+
+.dropdown-menu .dropdown-submenu-left {
+    right: 100%;
+    left: auto;
+}
+
+.dropdown-menu>li:hover>.dropdown-submenu {
+    display: block;
 }
 </style>
