@@ -7,7 +7,7 @@
         </div>
         <div class="row mb-4 d-flex  align-items-center">
             <div class="col-md-4 col-sm-12">
-                <label for="voces">Voces</label>
+                <label for="voces" class="label"> seleccionar voces</label>
                 <select name="voces" id="voces" class="form-control" v-model="vozSeleccionada">
                     <option v-for="voz in voces" :value="voz.id">{{ voz.nombre }}</option>
                 </select>
@@ -21,7 +21,7 @@
         </div>
         <div class="row mb-4">
             <div class="col-md-4 col-sm-12">
-                <label for="tonos" class="">Seleccionar tono</label>
+                <label for="tonos" class="label">Seleccionar tono</label>
                 <select name="tonos" id="tonos" class="form-control" v-model="tonoSeleccionado">
                     <option v-for="tono in tonos" :value="tono.numero">{{ tono.valor }}</option>
                 </select>
@@ -110,5 +110,10 @@ onMounted(async () => {
 .tabla::-webkit-scrollbar-thumb {
     background-color: #ccc;
     border-radius: 5px;
+}
+
+.label {
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 </style>

@@ -39,9 +39,13 @@ const eliminarVoz = () => {
     height: 40px;
 }
 
+.voz p {
+    margin-right: 10px;
+}
+
 @media (max-width: 768px) {
     .voz {
-        width: 95%;
+        width: fit-content;
     }
 }
 </style>

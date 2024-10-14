@@ -1,13 +1,20 @@
 <template>
     <div class="lista">
-        <p>
-            {{ voz.nombre }}
-        </p>
-        <ul>
-            <li v-for="cancion in canciones" :key="cancion.id">
-                {{ cancion.canciones.titulo }}
-            </li>
-        </ul>
+        <div v-if="cargando" class="loader">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+        <div v-else>
+            <p>
+                {{ voz.nombre }}
+            </p>
+            <ul>
+                <li v-for="cancion in canciones" :key="cancion.id">
+                    {{ cancion.canciones.titulo }}
+                </li>
+            </ul>
+        </div>
     </div>
 
 </template>
@@ -20,6 +27,7 @@ import { useSupabase } from '~/composables/useSupabase';
 
 const { supabase } = useSupabase();
 const canciones = ref([])
+const cargando = ref(false)
 
 const props = defineProps({
     voz: {
@@ -33,11 +41,14 @@ const props = defineProps({
 })
 
 const getCancionesDeVoces = async (voz) => {
+    cargando.value = true
     const { error, data } = await supabase.from('repertorio_voces').select('*, canciones(*)').eq('user_id', voz.id).eq('tono_numero', props.tono)
     if (error) {
+        cargando.value = false
         console.error('Error al obtener el repertorio:', error.message)
     } else {
         canciones.value = data
+        cargando.value = false
     }
 
 }
@@ -58,8 +69,17 @@ watch(() => props.voz, async (newValue) => {
     padding: 10px;
     margin: 10px;
     border-radius: 5px;
-    background-color: #e6ebf0;
+    background-color: #a9defd;
     margin-right: 10px;
+    height: fit-content;
+    box-shadow: 0 0 5px #ccc;
+    min-width: 200px;
+}
+
+.lista p {
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
 ul {
@@ -68,5 +88,12 @@ ul {
 
 li {
     padding: 5px;
+}
+
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
 }
 </style>
