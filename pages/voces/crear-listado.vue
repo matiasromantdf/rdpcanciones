@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row">
             <div class="col">
-                <h1>Crear listado</h1>
+                <h1>Crear listado por tono</h1>
             </div>
         </div>
         <div class="row mb-4 d-flex  align-items-center">
@@ -21,12 +21,17 @@
         </div>
         <div class="row mb-4">
             <div class="col-md-4 col-sm-12">
-                <label for="tonos">Tono</label>
-                <select name="tonos" id="tonos" class="form-control">
-                    <option v-for="tono in tonos" :value="tono">{{ tono }}</option>
+                <label for="tonos" class="">Seleccionar tono</label>
+                <select name="tonos" id="tonos" class="form-control" v-model="tonoSeleccionado">
+                    <option v-for="tono in tonos" :value="tono.numero">{{ tono.valor }}</option>
                 </select>
-
             </div>
+
+        </div>
+        <div class="tabla">
+            <tabla-canciones-voces-component v-for="voz in vocesSeleccionadas" :voz="voz" :tono="tonoSeleccionado"
+                v-if="tonoSeleccionado != null" />
+
         </div>
     </div>
 </template>
@@ -41,8 +46,20 @@ const vozSeleccionada = ref(null)
 const voces = ref([])
 const vocesSeleccionadas = ref([])
 const tonos = [
-    'Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'
+    { numero: 1, valor: 'Do' },
+    { numero: 2, valor: 'Do#' },
+    { numero: 3, valor: 'Re' },
+    { numero: 4, valor: 'Re#' },
+    { numero: 5, valor: 'Mi' },
+    { numero: 6, valor: 'Fa' },
+    { numero: 7, valor: 'Fa#' },
+    { numero: 8, valor: 'Sol' },
+    { numero: 9, valor: 'Sol#' },
+    { numero: 10, valor: 'La' },
+    { numero: 11, valor: 'La#' },
+    { numero: 12, valor: 'Si' }
 ]
+const tonoSeleccionado = ref(null)
 
 const getVoces = async () => {
     const { data, error } = await supabase.from('voces_users_view').select('*')
@@ -74,3 +91,24 @@ onMounted(async () => {
 })
 
 </script>
+
+<style scoped>
+.tabla {
+    display: flex;
+    overflow-x: scroll;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.tabla::-webkit-scrollbar {
+    height: 10px;
+}
+
+.tabla::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 5px;
+}
+</style>

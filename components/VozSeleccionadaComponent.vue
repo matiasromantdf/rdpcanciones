@@ -1,7 +1,7 @@
 <template>
     <div class="voz">
-        <h4>{{ voz.nombre }}</h4>
-        <button class="btn btn-danger" @click="eliminarVoz">X</button>
+        <p>{{ voz.nombre }}</p>
+        <button class="btn btn-sm btn-danger" @click="eliminarVoz">X</button>
     </div>
 </template>
 
@@ -29,18 +29,19 @@ const eliminarVoz = () => {
 <style scoped>
 .voz {
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 5px;
     margin: 10px;
     border-radius: 5px;
     display: flex;
     justify-content: space-between;
     width: 400px;
-    background-color: #e6ebf0;
+    background-color: #f3f6f8;
+    height: 40px;
 }
 
 @media (max-width: 768px) {
     .voz {
-        width: 100%;
+        width: 95%;
     }
 }
 </style>
