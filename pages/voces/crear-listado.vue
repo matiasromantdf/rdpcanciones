@@ -8,12 +8,12 @@
         <div class="row mb-4 d-flex  align-items-center">
             <div class="col-md-4 col-sm-12">
                 <label for="voces" class="label"> seleccionar voces</label>
-                <select name="voces" id="voces" class="form-control" v-model="vozSeleccionada">
+                <select name="voces" id="voces" class="form-control" v-model="vozSeleccionada" @change="aniadirVoz()">
+                    <option value="-1">Seleccionar voz</option>
                     <option v-for="voz in voces" :value="voz.id">{{ voz.nombre }}</option>
                 </select>
             </div>
             <div class="col-md-4 col-sm-12">
-                <button class="btn btn-primary mt-4" @click="aniadirVoz()">Añadir voz</button>
             </div>
         </div>
         <div class="row">
@@ -41,7 +41,7 @@ import { onMounted } from 'vue';
 
 
 const { usuario, roles, hasRole, supabase } = useSupabase();
-const vozSeleccionada = ref(null)
+const vozSeleccionada = ref(-1)
 
 const voces = ref([])
 const vocesSeleccionadas = ref([])
@@ -67,7 +67,7 @@ const getVoces = async () => {
         console.error('Error al obtener las voces:', error.message)
     } else {
         voces.value = data
-        console.log('Voces:', data)
+
     }
 }
 
