@@ -60,6 +60,10 @@ watch(() => props.voz, async (newValue) => {
     await getCancionesDeVoces(newValue)
 })
 
+onMounted(async () => {
+    await getCancionesDeVoces(props.voz)
+})
+
 
 </script>
 
