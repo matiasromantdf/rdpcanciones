@@ -2,7 +2,7 @@
     <div class="container">
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
-        <div v-if="song">
+        <div v-if="song && !guardando">
             <div class="controles mt-4">
                 <div class="controles-tono">
                     <p>cambiar tono</p>
@@ -75,6 +75,7 @@
 
             </div>
         </div>
+        <div v-if="guardando">Guardando...</div>
         <div v-if="!song && !loading">Canción no encontrada.</div>
         <!-- Modal -->
         <div v-if="showModal" class="modal-overlay">
@@ -365,12 +366,11 @@ const saveChord = () => {
             alert('Ocurrió un error al guardar el acorde')
             guardando.value = false
         } else {
-            alert('Acorde guardado')
             acorde.value = ''
             modificador.value = ''
-            guardando.value = false
             closeModal()
             fetchSong()
+            guardando.value = false
 
         }
     })
