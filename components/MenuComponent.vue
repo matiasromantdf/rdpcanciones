@@ -26,6 +26,7 @@
                                     repertorio</nuxt-link>
                                 <nuxt-link to="/voces/crear-listado" class="dropdown-item" v-if="esAdminVoces">Crear
                                     listado</nuxt-link>
+                                <nuxt-link to="/calendario" class="dropdown-item" v-if="esVoces">Calendario</nuxt-link>
 
                             </ul>
                         </li>
