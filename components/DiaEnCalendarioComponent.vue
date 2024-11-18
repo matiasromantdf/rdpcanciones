@@ -1,10 +1,10 @@
 <template>
     <div class="contenedor-dia">
-        <div @click="mostrarDia(fecha)" class="numero-dia">
+        <div class="numero-dia">
             {{ fecha.getDate() }}
         </div>
         <div class="eventos" v-if="props.eventos.length > 0">
-            <div v-for="evento in props.eventos" class="evento" @click="mostrarEvento(evento)">
+            <div v-for="evento in props.eventos" class="evento" @click.stop="mostrarEvento(evento)">
                 {{ evento.titulo }}
             </div>
         </div>
@@ -20,9 +20,6 @@ const props = defineProps({
     fecha: Date,
     eventos: Array
 })
-const mostrarDia = (fecha) => {
-    console.log(fecha)
-}
 
 const emit = defineEmits(['mostrarEvento'])
 
@@ -37,17 +34,19 @@ const mostrarEvento = (evento) => {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 100%;
+    width: auto;
     height: 100%;
 
 }
 
 .eventos {
+    margin-top: 2px;
+    margin-left: 2px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
     width: 100%;
+    overflow: hidden;
 }
 
 .eventos :hover {
@@ -71,7 +70,7 @@ const mostrarEvento = (evento) => {
 
 .numero-dia {
     display: flex;
-    width: 30px;
+    min-width: 30px;
     height: 30px;
     font-size: 12px;
     margin-left: 2px;

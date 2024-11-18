@@ -1,19 +1,6 @@
 <template>
     <div class="container  py-2 mb-3">
-        <div class="row text-center justify-content-center">
-            <div class="col">
-                <button class="btn btn-primary" @click="subirUnMes">Anterior</button>
-            </div>
-            <div class="col">
-                <h4>{{ meses[mes] }} {{ anio }}</h4>
-            </div>
-            <div class="col">
-                <button class="btn btn-primary" @click="bajarUnMes">Siguiente</button>
-            </div>
-        </div>
-        <div class="row" v-if="usuarioEsAdmin">
-            sdd
-        </div>
+
         <div class="calendario">
             <div class="nombre-dias">
                 <div class="nombre-dia">Lunes</div>
@@ -28,7 +15,8 @@
                 <div class="dias" v-for="j in 7">
                     <div class="dia">
                         <DiaEnCalendarioComponent :fecha="showDates()[i - 1][j - 1]"
-                            :eventos="getEventosDia(showDates()[i - 1][j - 1])" @mostrarEvento="mostrarEvento" />
+                            :eventos="getEventosDia(showDates()[i - 1][j - 1])" @mostrarEvento="mostrarEvento"
+                            @click="addEvent(showDates()[i - 1][j - 1])" />
                     </div>
                 </div>
 
@@ -37,85 +25,25 @@
         </div>
 
     </div>
-    <ModalInfoEventoComponent v-if="showModalEventos" @cerrar="showModalEventos = false" :evento="eventoParaModal" />
+    <ModalInfoEventoComponent v-if="showModalEventos" @cerrar="showModalEventos = false" :evento="eventoParaModal"
+        @actualizar="actualizarEventos" />
 
 </template>
 <script setup>
-import { useSupabase } from '../composables/useSupabase';
-
-const { hasRole, usuario, roles, signOut } = useSupabase()
-
-
-console.log(usuario.value.email)
-
-const usuarioEsAdmin = hasRole('admin_voces')
-
-
-const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-
 const eventoParaModal = ref({})
 
+const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
-const fecha = new Date()
-var anio = ref(null)
-var mes = ref(null)
-var firstDayOfSeries = ref(null)
-var lastDayOfSeries = ref(null)
 
-anio.value = fecha.getFullYear()
-mes.value = fecha.getMonth()
-
-const subirUnMes = () => {
-    mes.value--
-    if (mes.value < 0) {
-        mes.value = 11
-        anio.value--
-    }
-}
-
-const bajarUnMes = () => {
-    mes.value++
-    if (mes.value > 11) {
-        mes.value = 0
-        anio.value++
-    }
-}
-
-const eventos = ref([])
-
-const getEventos = async () => {
-    let eventoMuestra = {
-        fecha: new Date('2024-11-01 00:00:00'),
-        titulo: 'Culto con el Pastor',
-        descripcion: 'Este es un evento de muestra',
-        participantes: [{
-            email: 'mroman.tdf@gmail.com',
-            name: 'Matias Roman'
-        },
-        {
-            email: 'ana@gmail.com',
-            name: 'Ana'
-        }
-        ]
-    }
-    eventos.value.push(eventoMuestra)
-
-    let eventoMuestra2 = {
-        fecha: new Date('2024-11-01 00:00:00'),
-        titulo: 'Culto con la Pastora',
-        descripcion: 'Este es un evento de muestra',
-        participantes: [{
-            email: 'jose@gmail.com',
-            name: 'Jose'
-        }, {
-            email: 'mario@gmail.com',
-            name: 'Mario'
-        }
-        ]
-    }
-    eventos.value.push(eventoMuestra2)
-}
+const props = defineProps({
+    mes: Number,
+    anio: Number,
+    eventos: Array,
+})
+//convertir las prop a ref
+const mes = ref(props.mes)
+const anio = ref(props.anio)
+const eventos = ref(props.eventos)
 
 const showDates = () => {
     const firstDay = new Date(anio.value, mes.value, 1)
@@ -160,41 +88,47 @@ const showDates = () => {
     return daysToShow
 }
 
-const eventosDia = ref([])
 const getEventosDia = (fecha) => {
+    //covertir fecha a 'yyyy-mm-dd'
+    fecha = fecha.toISOString().split('T')[0]
     let eventosDia = []
     eventos.value.forEach(evento => {
-        if (evento.fecha.getDate() === fecha.getDate() && evento.fecha.getMonth() === fecha.getMonth() && evento.fecha.getFullYear() === fecha.getFullYear()) {
-            for (let i = 0; i < evento.participantes.length; i++) {
-                if (evento.participantes[i].email === usuario.value.email) {
-                    eventosDia.push(evento)
-                }
-            }
+        if (evento.fecha === fecha) {
+            eventosDia.push(evento)
         }
+        // evento.fecha = new Date(evento.fecha)
+        // if (evento.fecha.getDate() === fecha.getDate() && evento.fecha.getMonth() === fecha.getMonth() && evento.fecha.getFullYear() === fecha.getFullYear()) {
+        //     for (let i = 0; i < evento.participantes.length; i++) {
+        //         if (evento.participantes[i].email === usuario.value.email) {
+        //             eventosDia.push(evento)
+        //         }
+        //     }
+        // }
     })
     return eventosDia
 
 }
+
 const showModalEventos = ref(false)
 const mostrarEvento = (evento) => {
     eventoParaModal.value = evento
     showModalEventos.value = true
 }
 
+const actualizarEventos = () => {
+    console.log('Actualizando eventos');
+    emit('actualizarEventos')
+}
+const addEvent = (date) => {
+    emit('addEvent', date)
+}
+
+const emit = defineEmits(['addEvent', 'actualizarEventos'])
+
 
 onMounted(() => {
-    getEventos()
+    console.log('Calendario:', mes.value, anio.value, eventos.value)
 })
-
-//al cambiar el mes, se actualizan los eventos
-watch([mes, anio], () => {
-    eventos.value = []
-    getEventos()
-})
-
-
-
-
 
 </script>
 <style>
@@ -256,5 +190,6 @@ watch([mes, anio], () => {
 .dia {
     width: fit-content;
     height: 100%;
+    width: 100%;
 }
 </style>
