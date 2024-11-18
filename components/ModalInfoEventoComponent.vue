@@ -46,6 +46,9 @@ const traducirFecha = (fecha) => {
 }
 
 const eliminarEvento = () => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+        return
+    }
     supabase.from('eventos').delete().eq('id', props.evento.id).then(({ data, error }) => {
         if (error) {
             console.error('Error al eliminar el evento:', error.message)
