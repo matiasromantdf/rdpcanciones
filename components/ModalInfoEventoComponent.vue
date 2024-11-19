@@ -39,10 +39,11 @@ const cerrarModal = () => {
 }
 
 const traducirFecha = (fecha) => {
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    const fechaDate = new Date(fecha)
-    return `${dias[fechaDate.getDay()]} ${fechaDate.getDate()} de ${meses[fechaDate.getMonth()]} de ${fechaDate.getFullYear()}`
+    let fechaDate = new Date(fecha)
+    //sumar 3 horas para que se muestre la fecha correcta
+    fechaDate.setHours(fechaDate.getHours() + 3)
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    return fechaDate.toLocaleDateString('es-ES', options)
 }
 
 const eliminarEvento = () => {
