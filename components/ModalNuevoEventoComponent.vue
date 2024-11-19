@@ -34,12 +34,14 @@
             <div class="row mb-3">
                 <div class="col-md-12 col-sm-12">
                     <label for="titulo" class="label">Titulo</label>
-                    <input type="text" name="titulo" id="titulo-evento" class="form-control">
+                    <input type="text" name="titulo" id="titulo-evento" class="form-control"
+                        placeholder="ingrese un título">
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="guardarEvento">Guardar</button>
+            <button type="button" class="btn btn-primary" @click="guardarEvento"
+                :disabled="(!vocesSeleccionadas.length > 0)">Guardar</button>
         </div>
     </div>
 </template>

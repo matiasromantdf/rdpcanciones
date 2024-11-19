@@ -13,7 +13,7 @@
             </ul>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-danger" @click="eliminarEvento">Eliminar</button>
+            <button type="button" class="btn btn-danger" @click="eliminarEvento" v-if="puedeEliminar">Eliminar</button>
         </div>
     </div>
 </template>
@@ -21,22 +21,22 @@
 <script setup>
 
 import { useSupabase } from '~/composables/useSupabase';
-import { ref } from 'vue'
 import { defineEmits } from 'vue';
 import { defineProps } from 'vue';
+
+
 
 const props = defineProps({
     evento: Object
 })
-const { supabase } = useSupabase();
-
-console.log(props.evento)
-
+const { supabase, hasRole } = useSupabase();
 const emit = defineEmits(['cerrar', 'actualizar'])
 
 const cerrarModal = () => {
     emit('cerrar')
 }
+
+const puedeEliminar = await hasRole('admin_voces')
 
 const traducirFecha = (fecha) => {
     let fechaDate = new Date(fecha)
@@ -45,6 +45,8 @@ const traducirFecha = (fecha) => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
     return fechaDate.toLocaleDateString('es-ES', options)
 }
+
+
 
 const eliminarEvento = () => {
     if (!confirm('¿Estás seguro de que deseas eliminar este evento?')) {
@@ -60,6 +62,8 @@ const eliminarEvento = () => {
         }
     })
 }
+
+
 
 </script>
 

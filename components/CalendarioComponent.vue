@@ -30,10 +30,12 @@
 
 </template>
 <script setup>
+import { useSupabase } from '~/composables/useSupabase';
 const eventoParaModal = ref({})
 
 const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
+const { hasRole } = useSupabase();
 
 const props = defineProps({
     mes: Number,
@@ -108,6 +110,9 @@ const getEventosDia = (fecha) => {
     return eventosDia
 
 }
+const puedeCrearEvento = async () => {
+    return await hasRole('admin_voces')
+}
 
 const showModalEventos = ref(false)
 const mostrarEvento = (evento) => {
@@ -119,16 +124,15 @@ const actualizarEventos = () => {
     console.log('Actualizando eventos');
     emit('actualizarEventos')
 }
-const addEvent = (date) => {
-    emit('addEvent', date)
+const addEvent = async (date) => {
+    if (puedeCrearEvento) {
+        emit('addEvent', date)
+    }
+
 }
 
 const emit = defineEmits(['addEvent', 'actualizarEventos'])
 
-
-onMounted(() => {
-    console.log('Calendario:', mes.value, anio.value, eventos.value)
-})
 
 </script>
 <style>
