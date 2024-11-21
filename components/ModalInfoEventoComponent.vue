@@ -9,7 +9,9 @@
         <div class="modal-body">
             <p>{{ props.evento.descripcion }}</p>
             <ul>
-                <li v-for="integrante in props.evento.integrantes">{{ integrante.nombre }}</li>
+                <li v-for="integrante in props.evento.integrantes" :class="integrante.director ? 'director' : ''">
+                    {{ integrante.nombre }}
+                </li>
             </ul>
         </div>
         <div class="modal-footer">
@@ -101,5 +103,18 @@ const eliminarEvento = () => {
     padding: 0.5rem;
     margin-left: 10px;
     background-color: gray;
+}
+
+.director {
+    font-weight: bold;
+}
+
+.director:hover {
+    cursor: pointer;
+}
+
+.director:after {
+    content: '(Director)';
+    margin-left: 5px;
 }
 </style>

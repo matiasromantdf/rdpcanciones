@@ -10,13 +10,22 @@
         <hr>
         <div class="modal-body">
             <div class="row voces-seleccionadas">
-                <div class="voz-seleccionada" v-for="voz in vocesSeleccionadas">
+                <div :class="voz.director ? 'voz-seleccionada director' : 'voz-seleccionada'"
+                    v-for="voz in vocesSeleccionadas">
+                    <div class="boton-director" @click="voz.director = !voz.director">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <title>compass-outline</title>
+                            <path
+                                d="M7,17L10.2,10.2L17,7L13.8,13.8L7,17M12,11.1A0.9,0.9 0 0,0 11.1,12A0.9,0.9 0 0,0 12,12.9A0.9,0.9 0 0,0 12.9,12A0.9,0.9 0 0,0 12,11.1M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z" />
+                        </svg>
+                    </div>
                     <div class="nombre-voz">
                         {{ voz.nombre }}
                     </div>
                     <div class="boton-eliminar" @click="eliminarVoz(voz)">
                         x
                     </div>
+
                 </div>
             </div>
             <div class="row mb-4 d-flex  align-items-center">
@@ -70,7 +79,9 @@ const vozSeleccionada = ref(-1)
 const vocesSeleccionadas = ref([])
 const aniadirVoz = () => {
     if (vozSeleccionada.value != -1) {
-        vocesSeleccionadas.value.push(voces.value.find(v => v.id == vozSeleccionada.value))
+        let voz = voces.value.find(v => v.id == vozSeleccionada.value)
+        voz.director = false
+        vocesSeleccionadas.value.push(voz)
     }
     voces.value = voces.value.filter(v => v.id != vozSeleccionada.value)
     vozSeleccionada.value = -1
@@ -101,6 +112,16 @@ const guardarEvento = () => {
     let titulo = document.getElementById('titulo-evento').value
     let fecha = props.fecha
     let voces = vocesSeleccionadas.value
+    //ordenar las voces seleccionadas, director primero
+    voces.sort((a, b) => {
+        if (a.director) {
+            return -1
+        }
+        if (b.director) {
+            return 1
+        }
+        return 0
+    })
 
     supabase.from('eventos').insert({
         titulo: titulo,
@@ -176,10 +197,32 @@ h5 {
     background-color: #f3f6f8;
 }
 
+.director {
+    font-weight: bold;
+    color: rgb(182, 156, 39);
+}
+
 .boton-eliminar {
     cursor: pointer;
     color: red;
     margin-left: 0.5rem;
+}
+
+.boton-director {
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.boton-director svg {
+    width: 20px;
+    height: 20px;
+    fill: rgb(97, 96, 96);
+    margin-right: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.director svg {
+    fill: rgb(182, 156, 39);
 }
 
 .btn-close {
