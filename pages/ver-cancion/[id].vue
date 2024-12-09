@@ -524,6 +524,10 @@ onMounted(() => {
     font-size: 20px;
 }
 
+.char:hover {
+    background-color: #5561a3;
+}
+
 .poco-espacio {
     margin-right: 1px;
 }
