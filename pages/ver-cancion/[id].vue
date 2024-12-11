@@ -64,8 +64,7 @@
                             @click="openModal(calcularIndice(charIndex, lineIndex))"
                             :id="calcularIndice(charIndex, lineIndex)">
                             <div class="acorde">
-                                {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex)
-                                }}
+                                {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
                             </div>
                             <p :class="char == ' ' ? 'espacio' : ''">{{ char }}</p>
 
@@ -77,7 +76,7 @@
         </div>
         <div v-if="guardando">Guardando...</div>
         <div v-if="!song && !loading">Canción no encontrada.</div>
-        <!-- Modal -->
+        <!-- Modal para añadir acorde a letra -->
         <div v-if="showModal" class="modal-overlay">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
@@ -88,7 +87,12 @@
                         {{ acorde.acorde }}
                     </option>
                 </select>
-
+                <label for="acorde">Invertida:</label>
+                <select v-model="invertida" id="invertida">
+                    <option v-for="acorde in acordes" :key="acorde.numero" :value="acorde.numero">
+                        {{ acorde.acorde }}
+                    </option>
+                </select>
                 <label for="modificador">Modificador:</label>
                 <select v-model="modificador" id="modificador">
                     <option v-for="mod in modificadores" :key="mod.id" :value="mod.modificador">{{ mod.modificador }}
@@ -134,56 +138,57 @@ const error = ref(null)
 const showModal = ref(false)
 const showModalToRepertorio = ref(false)
 const acorde = ref('')
-const modificador = ref('')
+const modificador = ref('M')
+const invertida = ref(null)
 const selectedChar = ref(null)
 const acordes = ref([
     {
         numero: 1,
-        acorde: 'DO',
+        acorde: 'Do',
     },
     {
         numero: 2,
-        acorde: 'DO#',
+        acorde: 'Do#',
     },
     {
         numero: 3,
-        acorde: 'RE',
+        acorde: 'Re',
     },
     {
         numero: 4,
-        acorde: 'RE#',
+        acorde: 'Re#',
     },
     {
         numero: 5,
-        acorde: 'MI',
+        acorde: 'Mi',
     },
     {
         numero: 6,
-        acorde: 'FA',
+        acorde: 'Fa',
     },
     {
         numero: 7,
-        acorde: 'FA#',
+        acorde: 'Fa#',
     },
     {
         numero: 8,
-        acorde: 'SOL',
+        acorde: 'Sol',
     },
     {
         numero: 9,
-        acorde: 'SOL#',
+        acorde: 'Sol#',
     },
     {
         numero: 10,
-        acorde: 'LA',
+        acorde: 'La',
     },
     {
         numero: 11,
-        acorde: 'LA#',
+        acorde: 'La#',
     },
     {
         numero: 12,
-        acorde: 'SI',
+        acorde: 'Si',
     }
 ])
 const guardando = ref(false)
@@ -344,6 +349,7 @@ const openModal = (charIndex) => {
     }
     selectedChar.value = charIndex
     showModal.value = true
+    modificador.value = 'M'
 }
 
 const closeModal = () => {
@@ -355,11 +361,12 @@ const saveChord = () => {
     guardando.value = true
     const cancion_id = song.value.id
     const numero_nota = acorde.value
+    const invert = invertida.value
     const mod = modificador.value
     const posicion = selectedChar.value
 
     supabase.from('acordes').insert([
-        { cancion_id, numero_nota, modificador: mod, posicion }
+        { cancion_id, numero_nota, modificador: mod, posicion, invertida: invert }
     ]).then(({ error }) => {
         if (error) {
             console.error(error)
@@ -405,6 +412,24 @@ const devolverModificador = (lineIndex, charIndex) => {
     return modificador
 }
 
+const devolverInvertida = (lineIndex, charIndex) => {
+    let invertida = ''
+    acordesCancion.value.forEach(acordeCancion => {
+        if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
+            //buscar el acorde en la lista de acordes
+            acordes.value.forEach(acordeLista => {
+                if (acordeLista.numero == acordeCancion.invertida) {
+                    invertida = '/' + acordeLista.acorde
+
+                }
+            })
+        }
+    }
+    )
+    return invertida
+
+}
+
 const transportar = (numero) => {
     //transportar la cancion
     let tonoCancion = song.value.numero_tono
@@ -419,13 +444,22 @@ const transportar = (numero) => {
     //actualizar los acordes de la letra
     acordesCancion.value.forEach(acorde => {
         let nuevoAcorde = acorde.numero_nota + numero
+        let nuevoInvertida = acorde.invertida + numero
         if (nuevoAcorde > 12) {
             nuevoAcorde = 1
         }
         if (nuevoAcorde < 1) {
             nuevoAcorde = 12
         }
+        if (nuevoInvertida > 12) {
+            nuevoInvertida = 1
+        }
+        if (nuevoInvertida < 1) {
+            nuevoInvertida = 12
+        }
+
         acorde.numero_nota = nuevoAcorde
+        acorde.invertida = nuevoInvertida
     }
     )
 
