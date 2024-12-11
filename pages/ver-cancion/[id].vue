@@ -63,7 +63,7 @@
                             v-for="(char, charIndex) in line.split('')" :key="charIndex"
                             @click="openModal(calcularIndice(charIndex, lineIndex))"
                             :id="calcularIndice(charIndex, lineIndex)">
-                            <div class="acorde">
+                            <div class="acorde" @click.stop="eliminarAcorde(calcularIndice(charIndex, lineIndex))">
                                 {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
                             </div>
                             <p :class="char == ' ' ? 'espacio' : ''">{{ char }}</p>
@@ -383,6 +383,22 @@ const saveChord = () => {
     })
 }
 
+const eliminarAcorde = (index) => {
+    let confirmar = confirm('¿Estás seguro de eliminar este acorde?')
+    if (confirmar) {
+        let pos = index
+        let cancion = song.value.id
+        supabase.from('acordes').delete().eq('posicion', pos).eq('cancion_id', cancion).then(({ error }) => {
+            if (error) {
+                console.error(error)
+                alert('Ocurrió un error al eliminar el acorde')
+            } else {
+                fetchSong()
+            }
+        })
+    }
+}
+
 const devolverAcorde = (lineIndex, charIndex) => {
     let acorde = ''
     acordesCancion.value.forEach(acordeCancion => {
@@ -585,7 +601,6 @@ onMounted(() => {
 
 .acorde {
     color: #941c4e;
-    float: left;
     font-size: 15px;
 }
 
