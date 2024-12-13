@@ -144,51 +144,51 @@ const selectedChar = ref(null)
 const acordes = ref([
     {
         numero: 1,
-        acorde: 'Do',
+        acorde: 'C'
     },
     {
         numero: 2,
-        acorde: 'Do#',
+        acorde: 'C#'
     },
     {
         numero: 3,
-        acorde: 'Re',
+        acorde: 'D'
     },
     {
         numero: 4,
-        acorde: 'Re#',
+        acorde: 'D#'
     },
     {
         numero: 5,
-        acorde: 'Mi',
+        acorde: 'E'
     },
     {
         numero: 6,
-        acorde: 'Fa',
+        acorde: 'F'
     },
     {
         numero: 7,
-        acorde: 'Fa#',
+        acorde: 'F#'
     },
     {
         numero: 8,
-        acorde: 'Sol',
+        acorde: 'G'
     },
     {
         numero: 9,
-        acorde: 'Sol#',
+        acorde: 'G#'
     },
     {
         numero: 10,
-        acorde: 'La',
+        acorde: 'A'
     },
     {
         numero: 11,
-        acorde: 'La#',
+        acorde: 'A#'
     },
     {
         numero: 12,
-        acorde: 'Si',
+        acorde: 'B'
     }
 ])
 const guardando = ref(false)
