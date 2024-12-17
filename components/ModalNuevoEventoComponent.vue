@@ -50,7 +50,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="guardarEvento"
-                :disabled="(!vocesSeleccionadas.length > 0)">Guardar</button>
+                :disabled="(vocesSeleccionadas.length == 0)">Guardar</button>
         </div>
     </div>
 </template>
