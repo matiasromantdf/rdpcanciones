@@ -7,9 +7,10 @@
         </div>
         <div class="row">
             <div class="col">
-                <select class="form-select" aria-label="Default select example">
+                <select class="form-select" aria-label="Default select example" @change="getUsuariosDelGrupo"
+                    v-model="selectedReunion">
                     <option selected>Seleccione reunión</option>
-                    <option v-for="r in reuniones" :key="r.id">{{ r.nombre }}</option>
+                    <option v-for="r in reuniones" :key="r.id" :value="r.id">{{ r.nombre }}</option>
                 </select>
             </div>
             <div class="col">
@@ -34,8 +35,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="u in grupo" :key="u.id">
-                            <td>{{ u.raw_user_meta_data.name }}</td>
+                        <tr v-for="u in usuariosReunion" :key="u.id">
+                            <!-- <td>{{ u.raw_user_meta_data.name }}</td> -->
                             <td>{{ u.email }}</td>
                         </tr>
                     </tbody>
@@ -50,9 +51,10 @@
 import { useSupabase } from '~/composables/useSupabase';
 
 const usuarios = ref([])
-const grupo = ref([])
+const usuariosReunion = ref([])
 const reuniones = ref([])
 const selectedUser = ref("-1")
+const selectedReunion = ref("-1")
 const { supabase } = useSupabase();
 
 const getUsuarios = async () => {
@@ -62,16 +64,38 @@ const getUsuarios = async () => {
         console.error('Error al obtener las voces:', error.message)
     } else {
         usuarios.value = data
-
     }
 
 }
 
+const getUsuariosDelGrupo = async () => {
+    if (selectedReunion.value == "-1") {
+        return;
+    }
+    //obtener los usuarios del grupo tabla usuarios_reunion 
+    const { data, error } = await supabase.from('usuarios_reunion').select('user_id, u').eq('reunion_id', selectedReunion.value)
+    if (error) {
+        console.error('Error al obtener las voces:', error.message)
+    } else {
+        usuariosReunion.value = data
+        console.log(usuariosReunion.value)
+
+    }
+}
+
 const addUserToGroup = () => {
     let user = usuarios.value.find(u => u.id == selectedUser.value)
-    grupo.value.push(user)
-    usuarios.value = usuarios.value.filter(u => u.id != selectedUser.value)
-    selectedUser.value = "-1"
+    if (usuariosReunion.value.find(u => u.user_id == user.id)) {
+        console.log('El usuario ya está en el grupo')
+    } else {
+        supabase.from('usuarios_reunion').insert([
+            { user_id: user.id, reunion_id: selectedReunion.value }
+        ]).then(() => {
+            getUsuariosDelGrupo();
+        }).catch((error) => {
+            console.error('Error al guardar la asistencia:', error.message);
+        });
+    }
 }
 
 const getReuniones = async () => {
@@ -89,5 +113,6 @@ const getReuniones = async () => {
 onMounted(() => {
     getUsuarios();
     getReuniones();
+    getUsuariosDelGrupo();
 })
 </script>

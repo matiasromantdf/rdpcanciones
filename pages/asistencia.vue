@@ -1,12 +1,15 @@
 <template>
     <div class="container">
-        <h1>Asistencia</h1>
-        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="success">{{ successMessage }}</p>
+        <h1>Asistencia a {{ reunion }}</h1>
+        <!-- <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="success">{{ successMessage }}</p> -->
 
-        <button :disabled="!permissionGranted" @click="handleAsistencia" class="asistencia-btn">
-            Asistencia
+        <button :disabled="!permissionGranted || esMuyPronto" @click="handleAsistencia" class="asistencia-btn">
+            Enviar
         </button>
+        <div class="localization" v-if="permissionGranted">
+            <p>{{ localization }}</p>
+        </div>
     </div>
 </template>
 
@@ -22,6 +25,8 @@ export default {
         const permissionGranted = ref(false);
         const errorMessage = ref(null);
         const successMessage = ref(null);
+        const esMuyPronto = ref(null);
+        const localization = ref('Ubicación no disponible');
 
         //init router
         const route = useRoute();
@@ -29,6 +34,8 @@ export default {
         //init supabase
 
         const { usuario, roles, hasRole, supabase } = useSupabase();
+
+        const reunion = ref(route.query.id);
 
 
         // Solicitar permisos de geolocalización
@@ -43,6 +50,7 @@ export default {
                     permissionGranted.value = true;
                     successMessage.value = "Permisos OK. Podés registrar tu asistencia.";
                     console.log("Ubicación obtenida:", position);
+                    getAddress(position.coords.latitude, position.coords.longitude);
                 },
                 (error) => {
                     switch (error.code) {
@@ -92,6 +100,8 @@ export default {
                 { user_id, reunion, latitud, longitud, momento }
             ]);
 
+            getLastMark();
+
             if (error) {
                 console.error('Error al guardar la asistencia:', error.message);
                 errorMessage.value = 'Error al guardar la asistencia';
@@ -102,10 +112,51 @@ export default {
 
         }
 
+        const getLastMark = async () => {
+            const { data, error } = await supabase.from('asistencias').select('momento').eq('user_id', usuario.value.id).order('momento', { ascending: false }).limit(1)
+            if (error) {
+                console.error('Error al obtener la última marca:', error.message)
+            } else {
+                if (data.length > 0) {
+                    console.log('Última marca:', data[0].momento);
+                    let ultimaMarca = new Date(data[0].momento);
+                    let ahora = new Date();
+                    let diferencia = ahora - ultimaMarca;
+                    console.log('Ahora:', ahora);
+                    console.log('Ultima marca:', ultimaMarca);
+                    console.log('Diferencia:', diferencia);
+                    //si la diferencia es menor a 60 minutos, no se puede marcar
+                    if (diferencia < 3600000) {
+                        esMuyPronto.value = true;
+                    } else {
+                        esMuyPronto.value = false;
+                    }
+                    console.log('esMuyPronto:', esMuyPronto.value);
+                }
+            }
+        }
+
+        const getAddress = async (lat, long) => {
+            let apiKey = 'AIzaSyDeXGi3hIgV7fTbvoPs0Xk_MkAHtrs7ysY';
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${apiKey}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            console.log(data);
+
+            if (data.status === 'OK') {
+                localization.value = data.results[0].formatted_address;
+            } else {
+                localization.value = 'Ubicación no disponible';
+            }
+
+        }
+
 
         // Solicitar permisos al montar el componente
         onMounted(() => {
             requestLocationPermission();
+            getLastMark();
         });
 
         return {
@@ -113,7 +164,10 @@ export default {
             errorMessage,
             successMessage,
             handleAsistencia,
-            usuario
+            usuario,
+            esMuyPronto,
+            reunion,
+            localization
         };
     }
 };
