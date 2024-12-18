@@ -17,7 +17,6 @@
 import { ref, onMounted } from 'vue';
 import { useSupabase } from '~/composables/useSupabase';
 //importar el router
-import { useRouter } from 'vue-router';
 
 export default {
     setup() {
@@ -35,7 +34,7 @@ export default {
 
         const { usuario, roles, hasRole, supabase } = useSupabase();
 
-        const reunion = ref(route.query.id);
+        const reunion = ref('');
 
 
         // Solicitar permisos de geolocalización
@@ -97,7 +96,7 @@ export default {
             let longitud = long;
 
             const { data, error } = await supabase.from('asistencias').insert([
-                { user_id, reunion, latitud, longitud, momento }
+                { user_id, reunion, latitud, longitud, momento, direccion: localization.value }
             ]);
 
             getLastMark();
@@ -152,11 +151,21 @@ export default {
 
         }
 
+        const getReunionName = async () => {
+            const { data, error } = await supabase.from('reuniones').select('nombre').eq('id', route.query.id)
+            if (error) {
+                console.error('Error al obtener el nombre de la reunión:', error.message)
+            } else {
+                reunion.value = data[0].nombre;
+            }
+        }
+
 
         // Solicitar permisos al montar el componente
         onMounted(() => {
             requestLocationPermission();
             getLastMark();
+            getReunionName();
         });
 
         return {
@@ -202,5 +211,13 @@ button.asistencia-btn:disabled {
 .success {
     color: green;
     margin-bottom: 10px;
+}
+
+.localization {
+    margin-top: 20px;
+}
+
+.localization p {
+    color: #666;
 }
 </style>
