@@ -1,10 +1,11 @@
 <template>
     <div class="container">
         <h1>Asistencia a {{ reunion }}</h1>
-        <!-- <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="success">{{ successMessage }}</p> -->
+        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+        <!-- <p v-if="successMessage" class="success">{{ successMessage }}</p> -->
 
-        <button :disabled="!permissionGranted || esMuyPronto" @click="handleAsistencia" class="asistencia-btn">
+        <button :disabled="!permissionGranted || esMuyPronto" @click="handleAsistencia" class="asistencia-btn"
+            id="btn-asistencia">
             Enviar
         </button>
         <div class="localization" v-if="permissionGranted">
@@ -24,7 +25,7 @@ export default {
         const permissionGranted = ref(false);
         const errorMessage = ref(null);
         const successMessage = ref(null);
-        const esMuyPronto = ref(null);
+        const esMuyPronto = ref(true);
         const localization = ref('Ubicación no disponible');
 
         //init router
@@ -71,6 +72,7 @@ export default {
 
         // Manejar el evento de asistencia
         const handleAsistencia = () => {
+            document.getElementById('btn-asistencia').disabled = true;
             if (!navigator.geolocation) {
                 console.error("La geolocalización no está soportada por tu navegador.");
                 return;
@@ -131,6 +133,9 @@ export default {
                         esMuyPronto.value = false;
                     }
                     console.log('esMuyPronto:', esMuyPronto.value);
+                }
+                else {
+                    esMuyPronto.value = false;
                 }
             }
         }
