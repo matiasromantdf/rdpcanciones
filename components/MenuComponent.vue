@@ -38,12 +38,13 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsuario">
                                 <li><a class="dropdown-item" href="#">Perfil</a></li>
-                                <nuxt-link to="/asistencia" class="dropdown-item" v-if="esVoces">Asistencia</nuxt-link>
 
                                 <li><a class="dropdown-item" @click="logout">Cerrar Sesión</a></li>
                                 <nuxt-link to="/gruposAsistencia" class="dropdown-item" v-if="esAdminVoces">Grupos y
                                     asistencias</nuxt-link>
+                                <!-- <nuxt-link to="/asistencia" class="dropdown-item" v-if="esVoces">Asistencia</nuxt-link> -->
                             </ul>
+
                         </li>
                     </ul>
                     <!--divisor-->

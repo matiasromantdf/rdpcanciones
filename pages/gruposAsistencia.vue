@@ -14,13 +14,15 @@
                 </select>
             </div>
             <div class="col">
-                <select class="form-select" aria-label="Default select example" @change="addUserToGroup"
-                    v-model="selectedUser">
+                <select class="form-select" aria-label="Default select example" v-model="selectedUser">
                     <option selected value="-1">Selecciona un usuario</option>
                     <option v-for="u in usuarios" :key="u.id" :value="u.id">{{ u.raw_user_meta_data.name }} -
                         {{ u.email }}
                     </option>
                 </select>
+            </div>
+            <div class="col-1">
+                <button class="btn btn-primary" @click="addUserToGroup">Agregar</button>
             </div>
 
         </div>
@@ -73,9 +75,9 @@ const getUsuariosDelGrupo = async () => {
         return;
     }
     //obtener los usuarios del grupo tabla usuarios_reunion 
-    const { data, error } = await supabase.from('usuarios_reunion').select('user_id, u').eq('reunion_id', selectedReunion.value)
+    const { data, error } = await supabase.rpc('obtener_datos_reunion', { reunion_id_param: 1 })
     if (error) {
-        console.error('Error al obtener las voces:', error.message)
+        console.error('Error:', error.message)
     } else {
         usuariosReunion.value = data
         console.log(usuariosReunion.value)
