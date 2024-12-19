@@ -1,11 +1,12 @@
 <template>
     <div class="container">
-        <h1>Asistencia a {{ reunion }}</h1>
+        <h1 v-if="reunion != ''">Asistencia a {{ reunion }}</h1>
+        <h1 v-else>Seleccione Reunión</h1>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         <!-- <p v-if="successMessage" class="success">{{ successMessage }}</p> -->
 
-        <button :disabled="!permissionGranted || esMuyPronto" @click="handleAsistencia" class="asistencia-btn"
-            id="btn-asistencia">
+        <button :disabled="!permissionGranted || esMuyPronto || reunion.length == 0" @click="handleAsistencia"
+            class="asistencia-btn" id="btn-asistencia">
             Enviar
         </button>
         <div class="localization" v-if="permissionGranted">
