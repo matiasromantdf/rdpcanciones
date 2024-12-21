@@ -7,16 +7,22 @@ export const useSupabase = () => {
   const roles = ref(null);               // Almacena los roles del usuario
   const errorMessage = ref(null);        // Para capturar errores
 
-  // Iniciar sesión
-//   const signIn = async (email, password) => {
-//     try {
-//       const { error } = await supabase.auth.signInWithPassword({ email, password });
-//       if (error) throw error;
-//       await fetchUserRoles();
-//     } catch (error) {
-//       errorMessage.value = error.message;
-//     }
-//   };
+  const signIn = async () => {
+    let url = new URL(window.location.href);
+    //guardar la url de origen en el localStorage
+    localStorage.setItem('originUrl', url)
+    const { user, session, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+    })
+
+    if (error) {
+        console.error('Error al iniciar sesión:', error.message)
+    } else {
+        console.log('Usuario:', user)
+        console.log('Sesión:', session)
+    }
+  };
+
 
   // Cerrar sesión
   const signOut = async () => {
@@ -74,5 +80,6 @@ export const useSupabase = () => {
     signUp,             // Función para registrar un nuevo usuario
     hasRole,            // Verifica si el usuario tiene un rol específico
     supabase,           // Cliente de Supabase
+    signIn,             // Función para iniciar sesión
   };
 };

@@ -73,6 +73,24 @@ const logout = async () => {
     }
 }
 
+const redirect = () => {
+    let originUrl = localStorage.getItem('originUrl')
+    let url = window.location.href
+    //si la url actual contiene ?code= significa que es una url de autenticación
+    if (url.includes('?code=')) {
+        //si la url de origen es diferente a la actual, redirigir a la url de origen
+        if (originUrl && originUrl !== url) {
+            window.location.href = originUrl
+        } else {
+            router.push('/')
+        }
+    }
+
+
+}
+
+redirect()
+
 
 
 </script>

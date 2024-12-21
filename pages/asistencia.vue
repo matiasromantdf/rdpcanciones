@@ -5,13 +5,17 @@
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         <!-- <p v-if="successMessage" class="success">{{ successMessage }}</p> -->
 
-        <button :disabled="!permissionGranted || esMuyPronto || reunion.length == 0" @click="handleAsistencia"
-            class="asistencia-btn" id="btn-asistencia">
-            Enviar
-        </button>
-        <div class="localization" v-if="permissionGranted">
-            <p>{{ localization }}</p>
+        <div class="botones">
+            <button class="btn btn-warning mb-3" @click="login" id="btn" v-if="!usuario">Identificarse</button>
+            <button :disabled="!permissionGranted || esMuyPronto || reunion.length == 0 || !usuario"
+                @click="handleAsistencia" class="asistencia-btn" id="btn-asistencia">
+                Enviar Registro
+            </button>
+            <div class="localization" v-if="permissionGranted">
+                <p>{{ localization }}</p>
+            </div>
         </div>
+
     </div>
 </template>
 
@@ -34,9 +38,19 @@ export default {
 
         //init supabase
 
-        const { usuario, roles, hasRole, supabase } = useSupabase();
+        const { usuario, roles, hasRole, supabase, signIn } = useSupabase();
 
         const reunion = ref('');
+
+        const login = async () => {
+            //guardar la url completa para redirigir al usuario
+            let origen = window.location.href;
+            console.log('origen:', origen);
+            await signIn(origen);
+            console.log('usuario:', usuario.value);
+
+        }
+
 
 
         // Solicitar permisos de geolocalización
@@ -115,6 +129,10 @@ export default {
         }
 
         const getLastMark = async () => {
+            console.log('usuario:', usuario.value);
+            if (!usuario.value) {
+                return;
+            }
             const { data, error } = await supabase.from('asistencias').select('momento').eq('user_id', usuario.value.id).order('momento', { ascending: false }).limit(1)
             if (error) {
                 console.error('Error al obtener la última marca:', error.message)
@@ -182,13 +200,23 @@ export default {
             usuario,
             esMuyPronto,
             reunion,
-            localization
+            localization,
+            usuario,
+            login
         };
     }
 };
 </script>
 
 <style scoped>
+.botones {
+    text-align: center;
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .container {
     text-align: center;
     margin-top: 50px;

@@ -7,43 +7,22 @@
                 </div>
                 <div v-else class="datos-user">
                     <h1>Bienvenido, {{ usuario.user_metadata.full_name }}</h1>
-                    <img :src="usuario.user_metadata.avatar_url" alt="Avatar de usuario" />
+                    <img :src="usuario.user_metadata.avatar_url" alt="Avatar de usuario" id="fotoUsuario" />
                 </div>
             </div>
+            {{ usuario.user_metadata.avatar_url }}
         </div>
     </div>
 </template>
 
 <script setup>
-const supabase = useSupabaseClient()
-const usuario = useSupabaseUser()
-const userData = ref(null)
+import { useSupabase } from '~/composables/useSupabase';
 
-
+const { signIn, usuario } = useSupabase()
 
 const login = async () => {
-    const redirectUrl = window.location.origin;
-
-    document.getElementById('btn').innerText = 'Cargando...'
-    document.getElementById('btn').style.pointerEvents = 'none'
-    const { user, session, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-            redirectTo: redirectUrl,
-        }
-    })
-
-    if (error) {
-        console.error('Error al iniciar sesión:', error.message)
-    } else {
-        console.log('Usuario:', user)
-        console.log('Sesión:', session)
-        userData.value = user
-    }
+    await signIn()
 }
-
-
-
 
 </script>
 
@@ -75,10 +54,10 @@ const login = async () => {
     flex-direction: column;
 }
 
-.datos-user img {
+#fotoUsuario {
+    border-radius: 50%;
     width: 100px;
     height: 100px;
-    border-radius: 50%;
-    margin: 10px auto;
+    margin: 0 auto;
 }
 </style>
