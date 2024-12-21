@@ -10,7 +10,6 @@
                     <img :src="usuario.user_metadata.avatar_url" alt="Avatar de usuario" id="fotoUsuario" />
                 </div>
             </div>
-            {{ usuario.user_metadata.avatar_url }}
         </div>
     </div>
 </template>
