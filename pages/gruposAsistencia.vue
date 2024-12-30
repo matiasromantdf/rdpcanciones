@@ -117,14 +117,14 @@
                         <label for="hasta">Hasta:</label>
                         <input type="date" id="hasta" class="form-control">
                     </div>
-                    <div class="col">
+                    <div class="col col-sm-12">
                         <label for="reunion">Reunión:</label>
                         <select class="form-select" aria-label="Default select example" id="selectReunion">
                             <option selected value="-1">Seleccione reunión</option>
                             <option v-for="r in reuniones" :key="r.id" :value="r.id">{{ r.nombre }}</option>
                         </select>
                     </div>
-                    <div class="col-1 mt-4">
+                    <div class="col-1 col-sm-12 mt-4">
                         <button class="btn btn-primary" @click="getAsistencias">Buscar</button>
                     </div>
                 </div>
