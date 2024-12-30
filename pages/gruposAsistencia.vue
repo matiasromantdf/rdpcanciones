@@ -109,15 +109,15 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col">
+                    <div class="col-6 col-md-4">
                         <label for="desde">Desde:</label>
                         <input type="date" id="desde" class="form-control">
                     </div>
-                    <div class="col">
+                    <div class="col-6 col-md-4">
                         <label for="hasta">Hasta:</label>
                         <input type="date" id="hasta" class="form-control">
                     </div>
-                    <div class="col col-sm-12">
+                    <div class="col-12 col-md-4">
                         <label for="reunion">Reunión:</label>
                         <select class="form-select" aria-label="Default select example" id="selectReunion">
                             <option selected value="-1">Seleccione reunión</option>
@@ -204,7 +204,6 @@ const getUsuariosDelGrupo = async () => {
     }
     //obtener los usuarios del grupo tabla usuarios_reunion 
     const { data, error } = await supabase.from('usuarios_reunion').select('usuario_id, usuarios(raw_user_meta_data)').eq('reunion_id', selectedReunion.value)
-        .order('usuarios.raw_user_meta_data->>name', { ascending: true })
     if (error) {
         console.error('Error al obtener los usuarios del grupo:', error.message)
     } else {
