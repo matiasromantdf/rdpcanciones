@@ -460,6 +460,7 @@ onMounted(() => {
     height: 500px;
     width: fit-content;
     overflow: auto;
+    margin: 0 auto;
 
 }
 
