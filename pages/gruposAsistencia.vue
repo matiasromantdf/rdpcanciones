@@ -456,9 +456,11 @@ onMounted(() => {
 
 .contenedor-tabla {
     margin-top: 20px;
+    margin-bottom: 20px;
     height: 500px;
     width: fit-content;
     overflow: auto;
+
 }
 
 /*** hacer los scrolls finos */
