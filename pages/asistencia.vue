@@ -22,6 +22,8 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useSupabase } from '~/composables/useSupabase';
+const runtimeConfig = useRuntimeConfig(); // Asegúrate de llamarlo así
+const googleApiKey = runtimeConfig.public.googleMapsApiKey;
 //importar el router
 
 export default {
@@ -156,8 +158,7 @@ export default {
         }
 
         const getAddress = async (lat, long) => {
-            let apiKey = process.env.GOOGLE_MAPS_API_KEY;
-            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${apiKey}`;
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${googleApiKey}`;
 
             const response = await fetch(url);
             const data = await response.json();

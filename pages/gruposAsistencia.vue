@@ -177,7 +177,8 @@ const selectedReunion = ref("-1")
 const { supabase } = useSupabase();
 const diasDeReunionEntreFechas = ref([])
 const usuariosReunionTablaPresentismo = ref([])
-
+const runtimeConfig = useRuntimeConfig(); // Asegúrate de llamarlo así
+const googleApiKey = runtimeConfig.public.googleMapsApiKey;
 
 const getUsuarios = async () => {
     //obtener los usuarios del esquema users
@@ -289,8 +290,7 @@ const sendMark = async () => {
     );
 }
 const getAddress = async (lat, long) => {
-    let apiKey = 'AIzaSyDeXGi3hIgV7fTbvoPs0Xk_MkAHtrs7ysY';
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${apiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${googleApiKey}`;
 
     const response = await fetch(url);
     const data = await response.json();
