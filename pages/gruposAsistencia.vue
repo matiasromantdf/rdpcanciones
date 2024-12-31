@@ -128,6 +128,11 @@
                         <button class="btn btn-primary" @click="getAsistencias">Buscar</button>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col">
+                        <p>cantidad de ensayos: {{ diasDeReunionEntreFechas.length }}</p>
+                    </div>
+                </div>
                 <div class="row mb-4">
                     <div class="contenedor-tabla">
                         <table class="tabla">
