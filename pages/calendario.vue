@@ -44,7 +44,6 @@ const fechaNuevoEvento = ref(null)
 
 
 const getEventos = () => {
-    //emular la obtención de eventos
     supabase.from('eventos').select('*').then(({ data, error }) => {
         if (error) {
             console.error('Error al obtener los eventos:', error.message)

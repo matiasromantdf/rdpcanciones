@@ -26,17 +26,13 @@ import { useSupabase } from '~/composables/useSupabase';
 
 export default {
     setup() {
-        // Variables reactivas
         const permissionGranted = ref(false);
         const errorMessage = ref(null);
         const successMessage = ref(null);
         const esMuyPronto = ref(true);
         const localization = ref('Ubicación no disponible');
 
-        //init router
         const route = useRoute();
-
-        //init supabase
 
         const { usuario, roles, hasRole, supabase, signIn } = useSupabase();
 

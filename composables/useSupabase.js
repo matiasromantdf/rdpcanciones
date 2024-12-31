@@ -2,14 +2,13 @@ import { ref } from 'vue';
 import { useSupabaseClient, useSupabaseUser } from '#imports';
 
 export const useSupabase = () => {
-  const supabase = useSupabaseClient();  // Accede al cliente de Supabase
-  const usuario = useSupabaseUser();        // Información del usuario actual
-  const roles = ref(null);               // Almacena los roles del usuario
-  const errorMessage = ref(null);        // Para capturar errores
+  const supabase = useSupabaseClient();  
+  const usuario = useSupabaseUser();     
+  const roles = ref(null);               
+  const errorMessage = ref(null);     
 
   const signIn = async () => {
     let url = new URL(window.location.href);
-    //guardar la url de origen en el localStorage
     localStorage.setItem('originUrl', url)
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -38,12 +37,12 @@ export const useSupabase = () => {
 
   // Obtener roles del usuario autenticado
   const fetchUserRoles = async () => {
-    if(!usuario.value) return []; // Si el usuario no está autenticado, no hagas nada
+    if(!usuario.value) return []; 
     try {
       const { data, error } = await supabase
-        .from('roles_usuarios') // Asegúrate de que este sea el nombre correcto de tu tabla
+        .from('roles_usuarios')
         .select('rol')
-        .eq('user_id', usuario.value.id); // user.value.id contiene el ID del usuario autenticado
+        .eq('user_id', usuario.value.id); 
       if (error) throw error;
       roles.value = data;
     } catch (error) {
@@ -54,7 +53,7 @@ export const useSupabase = () => {
   // Verificar si el usuario tiene un rol específico
   const hasRole = async (role) => {
     if(usuario.value){
-      await fetchUserRoles(); // Asegúrate de que los roles estén disponibles
+      await fetchUserRoles(); 
       return roles.value.some((r) => r.rol === role);
     }
     return false;
