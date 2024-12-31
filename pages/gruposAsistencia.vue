@@ -25,14 +25,14 @@
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="grupos"
                 tabindex="0">
                 <div class="row mt-2">
-                    <div class="col">
+                    <div class="col-6 col-md-4 mb-2">
                         <select class="form-select" aria-label="Default select example" @change="getUsuariosDelGrupo"
                             v-model="selectedReunion">
                             <option selected value="-1">Seleccione reunión</option>
                             <option v-for="r in reuniones" :key="r.id" :value="r.id">{{ r.nombre }}</option>
                         </select>
                     </div>
-                    <div class="col">
+                    <div class="col-6 col-md-4">
                         <select class="form-select" aria-label="Default select example" v-model="selectedUser">
                             <option selected value="-1">Selecciona un usuario</option>
                             <option v-for="u in usuarios" :key="u.id" :value="u.id">{{ u.raw_user_meta_data.name }} -
@@ -45,7 +45,7 @@
                     </div>
 
                 </div>
-                <div class="row">
+                <div class="row mt-2">
                     <div class="col">
                         <h2>Usuarios en el grupo</h2>
                         <table class="table">
@@ -220,6 +220,10 @@ const getUsuariosDelGrupo = async () => {
 }
 
 const addUserToGroup = () => {
+    if (selectedReunion.value == "-1" || selectedUser.value == "-1") {
+        alert('Seleccione un usuario y una reunión')
+        return;
+    }
     let user = usuarios.value.find(u => u.id == selectedUser.value)
     if (usuariosReunion.value.find(u => u.usuario_id == user.id)) {
         alert('El usuario ya está en el grupo')
