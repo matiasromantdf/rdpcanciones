@@ -142,7 +142,8 @@
                             </thead>
                             <tbody>
                                 <tr v-for="usuario in usuariosReunionTablaPresentismo" :key="usuario.usuario_id">
-                                    <td>{{ usuario.raw_user_meta_data.name }}</td>
+                                    <td>{{ usuario.raw_user_meta_data.name }} - {{ getPorcentajeAsistencia(usuario) }}
+                                    </td>
                                     <td v-for="dia in diasDeReunionEntreFechas" :key="dia">
                                         {{ usuarioAsistio(dia, usuario) }}
 
@@ -187,7 +188,9 @@ const getUsuarios = async () => {
 }
 
 const eliminarDelGrupo = (id) => {
-    console.log('Eliminar del grupo:', id)
+    if (!confirm('¿Está seguro que desea eliminar del grupo?')) {
+        return;
+    }
     supabase.from('usuarios_reunion').delete().eq('usuario_id', id).eq('reunion_id', selectedReunion.value)
         .then(() => {
             getUsuariosDelGrupo();
@@ -343,32 +346,50 @@ const getDiasReunidos = async (id_reunion) => {
     }
 }
 
+
 const usuarioAsistio = (dia, usuario) => {
-    usuario.asistencias != null ? usuario.asistencias : [];
+    usuario.asistencias = usuario.asistencias != null ? usuario.asistencias : [];
     let fecha = new Date(dia);
     let result = [];
+
     usuario.asistencias.forEach(asistencia => {
         if (asistencia && asistencia.momento) {
             let asistencia_fecha = new Date(asistencia.momento);
-            if (fecha.getDate() == asistencia_fecha.getDate() && fecha.getMonth() == asistencia_fecha.getMonth()) {
-                //extraer la hora de momento
+            if (fecha.getDate() === asistencia_fecha.getDate() && fecha.getMonth() === asistencia_fecha.getMonth()) {
+                // Extraer la hora de momento
                 let hora = asistencia_fecha.getHours();
                 let minutos = asistencia_fecha.getMinutes();
-                let text = hora + ':' + minutos;
+                let text = hora + ':' + (minutos < 10 ? '0' : '') + minutos;
                 result.push(text);
-
             }
         }
+    });
 
-    })
     if (result.length > 0) {
+        // Incrementar cantidadDeAsistencias si aún no se ha contado esta fecha
+        if (!usuario.asistenciasContadas) {
+            usuario.asistenciasContadas = new Set(); // Usar un Set para registrar fechas contadas
+        }
+        const fechaClave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
+        if (!usuario.asistenciasContadas.has(fechaClave)) {
+            usuario.cantidadDeAsistencias = (usuario.cantidadDeAsistencias || 0) + 1;
+            usuario.asistenciasContadas.add(fechaClave); // Marcar esta fecha como contada
+        }
         return result.join(' - ');
     } else {
         return '';
     }
+};
 
+const getPorcentajeAsistencia = (usuario) => {
+    if (!usuario.asistencias) {
+        return '0%';
+    }
+    const cantidadDeAsistencias = usuario.cantidadDeAsistencias || 0;
+    const cantidadDeDias = diasDeReunionEntreFechas.value.length;
+    return `${Math.round((cantidadDeAsistencias / cantidadDeDias) * 100)}%`;
+};
 
-}
 
 const pasarDiaANumero = (dia) => {
     switch (dia) {
