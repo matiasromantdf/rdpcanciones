@@ -13,6 +13,7 @@
             </button>
             <div class="localization" v-if="permissionGranted">
                 <p>{{ localization }}</p>
+                <p>{{ errorMessage }}</p>
             </div>
         </div>
 
