@@ -160,7 +160,6 @@ export default {
             const runtimeConfig = useRuntimeConfig(); // Asegúrate de llamarlo así
             const googleApiKey = runtimeConfig.public.googleMapsApiKey;
             const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${googleApiKey}`;
-
             const response = await fetch(url);
             const data = await response.json();
             console.log(data);
