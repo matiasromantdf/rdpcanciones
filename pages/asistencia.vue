@@ -57,13 +57,12 @@ export default {
                 errorMessage.value = "La geolocalización no está soportada por tu navegador.";
                 return;
             }
-
+            localization.value = "Obteniendo ubicación...";
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     permissionGranted.value = true;
                     successMessage.value = "Permisos OK. Podés registrar tu asistencia.";
                     console.log("Ubicación obtenida:", position);
-                    localization.value = "Obteniendo dirección...";
                     getAddress(position.coords.latitude, position.coords.longitude);
                 },
                 (error) => {
