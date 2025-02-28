@@ -63,6 +63,7 @@ export default {
                     permissionGranted.value = true;
                     successMessage.value = "Permisos OK. Podés registrar tu asistencia.";
                     console.log("Ubicación obtenida:", position);
+                    localization.value = "Obteniendo dirección...";
                     getAddress(position.coords.latitude, position.coords.longitude);
                 },
                 (error) => {
