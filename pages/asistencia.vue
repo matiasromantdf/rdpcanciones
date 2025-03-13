@@ -11,7 +11,8 @@
                 @click="handleAsistencia" class="asistencia-btn" id="btn-asistencia">
                 Enviar Registro
             </button>
-            <div class="localization" v-if="permissionGranted">
+            <div class="localization">
+                <p v-if="!permissionGranted">Obteniendo Permisos</p>
                 <p>{{ localization }}</p>
                 <p>{{ errorMessage }}</p>
             </div>
