@@ -12,7 +12,7 @@
                 Enviar Registro
             </button>
             <div class="localization">
-                <p v-if="!permissionGranted">Obteniendo Permisos</p>
+                <p v-if="!permissionGranted">Obteniendo Permisos...</p>
                 <p>{{ localization }}</p>
                 <p>{{ errorMessage }}</p>
             </div>
