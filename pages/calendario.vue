@@ -42,7 +42,9 @@ const modal = ref(false)
 const eventos = ref([])
 const fechaNuevoEvento = ref(null)
 
-
+//to-do: obtener los eventos del mes y año actual solamente
+//y no todos los eventos. se debe llamar al subirUnMes o bajarUnMes
+//para actualizar los eventos
 const getEventos = () => {
     supabase.from('eventos').select('*').then(({ data, error }) => {
         if (error) {
