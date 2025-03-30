@@ -1,8 +1,23 @@
 <template>
     <div class="container">
-        <div class="row text-center mt-2">
+        <div class="row text-center">
             <div class="col">
                 <h1>Mi repertorio</h1>
+            </div>
+        </div>
+        <div class="row mb-3 mt-4 justify-content-center align-items-center border p-2 m-2">
+            <!--menu para filtrar canciones por tono-->
+            <div class="col-5">
+                <label for="tono" class="form-label">Filtrar por tono</label>
+            </div>
+            <div class="col-6">
+                <select class="form-select" v-model="tono" @change="filtrarPorTono">
+                    <option value="">Seleccionar tono</option>
+                    <option value="0">Todos</option>
+                    <option v-for="(tono, index) in tonos" :key="index" :value="index + 1">{{ tono }}</option>
+                </select>
+            </div>
+            <div class="col-6">
             </div>
         </div>
         <div class="row" v-if="cargando">
@@ -10,9 +25,9 @@
                 <h1>Cargando...</h1>
             </div>
         </div>
-        <div class="row mt-4 border p-2 shadow " v-for="cancion in repertorio" v-else
-            @click="router.push('/ver-cancion/' + cancion.canciones.id)">
-            <div class="col-12">
+        <div class="row mt-4 p-2 " v-else>
+            <div class="col-12 card-cancion" v-for="cancion in repertorio"
+                @click="router.push('/ver-cancion/' + cancion.canciones.id)">
                 <h4>{{ cancion.canciones.titulo }}</h4>
                 <p> tono: {{ convertirNumeroEnTono(cancion.tono_numero) }}</p>
             </div>
@@ -30,6 +45,18 @@ const tonos = [
     'Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'
 ]
 const cargando = ref(true)
+
+const tono = ref('')
+const filtrarPorTono = () => {
+    if (tono.value == 0) {
+        getRepertorio()
+    }
+    if (tono.value) {
+        repertorio.value = repertorio.value.filter(cancion => cancion.tono_numero == tono.value)
+    } else {
+        getRepertorio()
+    }
+}
 
 const esVoces = ref(false)
 const repertorio = ref([])
@@ -59,3 +86,18 @@ onMounted(async () => {
 })
 
 </script>
+<style>
+.card-cancion {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.border {
+    border: 1px solid #a8acac !important
+}
+</style>

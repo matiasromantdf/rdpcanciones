@@ -6,9 +6,19 @@
                 <input type="text" class="form-control m-2" placeholder="Buscar canción por titulo, autor o letra"
                     v-model="search" />
             </div>
-            <div class="col-md-2 col-sm-10">
-                <button class="btn btn-primary m-2" @click="fetchSongs()">{{ textoBoton }}</button>
+            <div class="col-md-4 col-sm-5">
+                <div class="row text-center">
+                    <div class="col">
+                        <button class="btn btn-primary m-2" @click="fetchSongs()"
+                            :disabled="search.length === 0">{{ textoBoton }}</button>
+
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-primary m-2" @click="search = ''; fetchSongs()">Mostrar Todos</button>
+                    </div>
+                </div>
             </div>
+
         </div>
         <div v-if="loading">Cargando...</div>
         <ul v-if="songs.length && !loading">
@@ -19,7 +29,7 @@
                             <div class="col">
                                 <div class="d-flex">
                                     <nuxt-link :to="'/ver-cancion/' + song.id">
-                                        <h2>{{ song.titulo }}</h2>
+                                        <h2 style="text-decoration: underline;">{{ song.titulo }}</h2>
                                     </nuxt-link>
                                     <div v-if="song.link" @click="openUrl(song.link)">
                                         <span class="material-icons boton" style="color: red;">
@@ -85,7 +95,7 @@ const fetchSongs = async () => {
     } else {
         songs.value = data
         loading.value = false
-        search.value = ''
+        // search.value = ''
     }
 
 }
@@ -130,7 +140,7 @@ const deleteSong = async (id) => {
 }
 
 const textoBoton = computed(() => {
-    return search.value ? 'Buscar' : 'Ver Todas'
+    return 'Buscar'
 })
 
 const editSong = (id) => {
@@ -160,7 +170,8 @@ onMounted(() => {
     border-radius: 5px;
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
 }
 
 /* Estilos opcionales para tu página de canciones */

@@ -3,7 +3,7 @@
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song && !guardando">
-            <div class="controles mt-4">
+            <div class="controles mt-4 ml">
                 <div class="controles-tono">
                     <p>cambiar tono</p>
                     <div>
@@ -22,15 +22,14 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-4" v-if="!cargardoRepertorio">
-                <div class="col-4 col-md-2 d-flex align-items-center" v-if="puedeAddToFavorite"
-                    @click="addToRepertorio">
-                    <span :class="'material-icons icono ' + classIcono">
+            <div class="row mb-4 text-center" v-if="!cargardoRepertorio">
+                <div class="col-6 col-md-2 d-flex align-items-center justify-content-center" v-if="puedeAddToFavorite">
+                    <span :class="'material-icons icono ' + classIcono" @click="addToRepertorio">
                         favorite
                     </span>
                     <span v-if="estaEnRepertorio">en repertorio</span>
                 </div>
-                <div class="col-2" v-if="song.link" @click="openUrl(song.link)">
+                <div class="col-4" v-if="song.link" @click="openUrl(song.link)">
                     <span class="material-icons icono-link" style="color: red;">
                         smart_display
                     </span>
@@ -44,35 +43,39 @@
                 </div>
 
             </div>
-            <div class="row">
-                <div class="col">
-                    <h3>{{ song.titulo }}</h3>
+            <div class="texto-cancion">
+
+                <div class="row">
+                    <div class="col">
+                        <h3>{{ song.titulo }}</h3>
+                    </div>
                 </div>
-            </div>
-            <div class="row mb-4">
-                <div class="col">
-                    <h4>{{ song.autor }}</h4>
-                </div>
-            </div>
-
-            <div>
-                <div v-for="(line, lineIndex) in song.letra.split('\n')" :key="line">
-                    <div class="linea-letra">
-
-                        <div :class="(char == 'm' || char == 'M') ? 'char mucho-espacio' : 'char poco-espacio'"
-                            v-for="(char, charIndex) in line.split('')" :key="charIndex"
-                            @click="openModal(calcularIndice(charIndex, lineIndex))"
-                            :id="calcularIndice(charIndex, lineIndex)">
-                            <div class="acorde" @click.stop="eliminarAcorde(calcularIndice(charIndex, lineIndex))">
-                                {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
-                            </div>
-                            <p :class="char == ' ' ? 'espacio' : ''">{{ char }}</p>
-
-                        </div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <h4>{{ song.autor }}</h4>
                     </div>
                 </div>
 
+                <div>
+                    <div v-for="(line, lineIndex) in song.letra.split('\n')" :key="line">
+                        <div class="linea-letra">
+
+                            <div :class="(char == 'm' || char == 'M') ? 'char mucho-espacio' : 'char poco-espacio'"
+                                v-for="(char, charIndex) in line.split('')" :key="charIndex"
+                                @click="openModal(calcularIndice(charIndex, lineIndex))"
+                                :id="calcularIndice(charIndex, lineIndex)">
+                                <div class="acorde" @click.stop="eliminarAcorde(calcularIndice(charIndex, lineIndex))">
+                                    {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
+                                </div>
+                                <p :class="char == ' ' ? 'espacio' : ''">{{ char }}</p>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
         </div>
         <div v-if="guardando">Guardando...</div>
         <div v-if="!song && !loading">Canción no encontrada.</div>
@@ -633,6 +636,14 @@ onMounted(() => {
     right: 10px;
     cursor: pointer;
     font-size: 24px;
+}
+
+.texto-cancion {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .controles-tono {

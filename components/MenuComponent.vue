@@ -1,6 +1,6 @@
 <template>
     <div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top text-white">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">RDP</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
