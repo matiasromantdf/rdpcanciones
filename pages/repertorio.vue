@@ -12,8 +12,7 @@
             </div>
             <div class="col-6">
                 <select class="form-select" v-model="tono" @change="filtrarPorTono">
-                    <option value="">Seleccionar tono</option>
-                    <option value="0">Todos</option>
+                    <option value="">Todos</option>
                     <option v-for="(tono, index) in tonos" :key="index" :value="index + 1">{{ tono }}</option>
                 </select>
             </div>
@@ -26,10 +25,22 @@
             </div>
         </div>
         <div class="row mt-4 p-2 " v-else>
-            <div class="col-12 card-cancion" v-for="cancion in repertorio"
-                @click="router.push('/ver-cancion/' + cancion.canciones.id)">
-                <h4>{{ cancion.canciones.titulo }}</h4>
-                <p> tono: {{ convertirNumeroEnTono(cancion.tono_numero) }}</p>
+            <div class="col-12 card-cancion" v-for="cancion in repertorio">
+                <div class="row">
+                    <div class="col-10">
+                        <h4 @click="router.push('/ver-cancion/' + cancion.canciones.id)"
+                            style="text-decoration: underline;">
+                            {{ cancion.canciones.titulo }}
+                        </h4>
+                        <p> tono: {{ convertirNumeroEnTono(cancion.tono_numero) }}</p>
+                    </div>
+                    <div class="col">
+                        <button @click="eliminarCancion(cancion.id)" class="btn btn-sm"
+                            style="float: right; color: red;">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -40,17 +51,28 @@ import { useSupabase } from '~/composables/useSupabase';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router'
 const { usuario, roles, hasRole, supabase } = useSupabase();
+import Swal from 'sweetalert2';
+
+
 
 const tonos = [
-    'Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',
 ]
 const cargando = ref(true)
 
 const tono = ref('')
 const filtrarPorTono = () => {
-    if (tono.value == 0) {
-        getRepertorio()
-    }
     if (tono.value) {
         repertorio.value = repertorio.value.filter(cancion => cancion.tono_numero == tono.value)
     } else {
@@ -70,6 +92,34 @@ const getRepertorio = async () => {
         repertorio.value = data
     }
     cargando.value = false
+}
+
+const eliminarCancion = async (id) => {
+    const { value: confirm } = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Se eliminará la canción de tu repertorio.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, eliminarla!'
+    })
+    console.log("confirm", confirm);
+    if (confirm) {
+        cargando.value = true
+        const { error } = await supabase
+            .from('repertorio_voces')
+            .delete()
+            .eq('id', id);
+        if (error) {
+            console.error('Error al eliminar la canción:', error.message);
+        } else {
+            await getRepertorio();
+        }
+        cargando.value = false
+    }
+
 }
 
 const convertirNumeroEnTono = (numero) => {

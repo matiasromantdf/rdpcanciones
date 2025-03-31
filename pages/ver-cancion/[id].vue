@@ -112,7 +112,7 @@
                 <span class="close" @click="showModalToRepertorio = false">&times;</span>
                 <h3>Indicá tu tono</h3>
                 <label for="acorde">Tono:</label>
-                <select v-model="acorde" id="acorde">
+                <select v-model="acorde" id="acorde" class="form-select">
                     <option v-for="acorde in acordes" :key="acorde.numero" :value="acorde.numero">
                         {{ acorde.acorde }}
                     </option>
@@ -132,6 +132,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import Swal from 'sweetalert2'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
@@ -224,10 +225,22 @@ const classIcono = computed(() => {
     return estaEnRepertorio.value ? 'in' : 'out'
 })
 
-const addToRepertorio = () => {
+const addToRepertorio = async () => {
     //confirmar
     if (estaEnRepertorio.value) {
-        if (confirm('¿Estás seguro de quitar esta canción a tu repertorio?')) {
+        const { value: confirmado } = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se eliminará la canción de tu repertorio.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, eliminarla!'
+        })
+        console.log("confirm", confirmado);
+
+        if (confirmado) {
             //quitar de repertorio
             supabase.from('repertorio_voces')
                 .delete()
@@ -261,7 +274,12 @@ const guardarEnRepertorio = () => {
             console.error(error)
             alert('Ocurrió un error al guardar la canción en el repertorio')
         } else {
-            alert('Canción guardada en el repertorio')
+            Swal.fire({
+                icon: 'success',
+                title: 'Canción guardada en repertorio',
+                showConfirmButton: false,
+                timer: 1500
+            })
             estaEnRepertorio.value = true
             showModalToRepertorio.value = false
         }
