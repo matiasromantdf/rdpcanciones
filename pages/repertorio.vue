@@ -46,7 +46,7 @@
         </div>
         <div v-if="repertorio.length == 0 && !cargando" class="row mt-4 p-2">
             <div class="col-12 text-center">
-                <h1>No tienes canciones en tu repertorio</h1>
+                <h1>No tenés canciones en tu repertorio</h1>
             </div>
 
         </div>
