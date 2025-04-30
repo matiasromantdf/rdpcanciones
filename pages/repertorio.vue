@@ -47,107 +47,110 @@
 </template>
 
 <script setup>
-import { useSupabase } from '~/composables/useSupabase';
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router'
-const { usuario, roles, hasRole, supabase } = useSupabase();
-import Swal from 'sweetalert2';
+    import { useSupabase } from '~/composables/useSupabase';
+    import { onMounted } from 'vue';
+    import { useRouter } from 'vue-router'
+    const { usuario, roles, hasRole, supabase } = useSupabase();
+    import Swal from 'sweetalert2';
 
 
 
-const tonos = [
-    'C',
-    'C#',
-    'D',
-    'D#',
-    'E',
-    'F',
-    'F#',
-    'G',
-    'G#',
-    'A',
-    'A#',
-    'B',
-]
-const cargando = ref(true)
+    const tonos = [
+        'C',
+        'C#',
+        'D',
+        'D#',
+        'E',
+        'F',
+        'F#',
+        'G',
+        'G#',
+        'A',
+        'A#',
+        'B',
+    ]
+    const cargando = ref(true)
 
-const tono = ref('')
-const filtrarPorTono = () => {
-    if (tono.value) {
-        repertorio.value = repertorio.value.filter(cancion => cancion.tono_numero == tono.value)
-    } else {
-        getRepertorio()
-    }
-}
-
-const esVoces = ref(false)
-const repertorio = ref([])
-const getRepertorio = async () => {
-    const { data, error } = await supabase.from('repertorio_voces')
-        .select('*, canciones(*)')
-        .eq('user_id', usuario.value.id)
-    if (error) {
-        console.error('Error al obtener el repertorio:', error.message)
-    } else {
-        repertorio.value = data
-    }
-    cargando.value = false
-}
-
-const eliminarCancion = async (id) => {
-    const { value: confirm } = await Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Se eliminará la canción de tu repertorio.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Sí, eliminarla!'
-    })
-    console.log("confirm", confirm);
-    if (confirm) {
-        cargando.value = true
-        const { error } = await supabase
-            .from('repertorio_voces')
-            .delete()
-            .eq('id', id);
-        if (error) {
-            console.error('Error al eliminar la canción:', error.message);
+    const tono = ref('')
+    const filtrarPorTono = async () => {
+        if (tono.value) {
+            await getRepertorio()
+            cargando.value = true
+            repertorio.value = repertorio.value.filter(cancion => cancion.tono_numero == tono.value)
+            cargando.value = false
         } else {
-            await getRepertorio();
+            getRepertorio()
+        }
+    }
+
+    const esVoces = ref(false)
+    const repertorio = ref([])
+    const getRepertorio = async () => {
+        const { data, error } = await supabase.from('repertorio_voces')
+            .select('*, canciones(*)')
+            .eq('user_id', usuario.value.id)
+        if (error) {
+            console.error('Error al obtener el repertorio:', error.message)
+        } else {
+            repertorio.value = data
         }
         cargando.value = false
     }
 
-}
+    const eliminarCancion = async (id) => {
+        const { value: confirm } = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se eliminará la canción de tu repertorio.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, eliminarla!'
+        })
+        console.log("confirm", confirm);
+        if (confirm) {
+            cargando.value = true
+            const { error } = await supabase
+                .from('repertorio_voces')
+                .delete()
+                .eq('id', id);
+            if (error) {
+                console.error('Error al eliminar la canción:', error.message);
+            } else {
+                await getRepertorio();
+            }
+            cargando.value = false
+        }
 
-const convertirNumeroEnTono = (numero) => {
-    return tonos[numero - 1]
-}
-
-const router = useRouter()
-
-onMounted(async () => {
-    if (!hasRole('voces')) {
-        router.push('/')
     }
-    await getRepertorio()
-})
+
+    const convertirNumeroEnTono = (numero) => {
+        return tonos[numero - 1]
+    }
+
+    const router = useRouter()
+
+    onMounted(async () => {
+        if (!hasRole('voces')) {
+            router.push('/')
+        }
+        await getRepertorio()
+    })
 
 </script>
 <style>
-.card-cancion {
-    cursor: pointer;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    padding: 10px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+    .card-cancion {
+        cursor: pointer;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-.border {
-    border: 1px solid #a8acac !important
-}
+    .border {
+        border: 1px solid #a8acac !important
+    }
 </style>
