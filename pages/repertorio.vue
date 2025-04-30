@@ -74,8 +74,8 @@
     const tono = ref('')
     const filtrarPorTono = async () => {
         if (tono.value) {
-            await getRepertorio()
             cargando.value = true
+            await getRepertorio()
             repertorio.value = repertorio.value.filter(cancion => cancion.tono_numero == tono.value)
             cargando.value = false
         } else {
