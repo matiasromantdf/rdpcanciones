@@ -24,6 +24,7 @@
                 <h1>Cargando...</h1>
             </div>
         </div>
+
         <div class="row mt-4 p-2 " v-else>
             <div class="col-12 card-cancion" v-for="cancion in repertorio">
                 <div class="row">
@@ -42,6 +43,12 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div v-if="repertorio.length == 0 && !cargando" class="row mt-4 p-2">
+            <div class="col-12 text-center">
+                <h1>No tienes canciones en tu repertorio</h1>
+            </div>
+
         </div>
     </div>
 </template>
