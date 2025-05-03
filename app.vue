@@ -4,7 +4,7 @@
   </NuxtLayout>
 </template>
 <style>
-body {
-  background-color: #dee9f3 !important;
-}
+  body {
+    background-color: #e9f0f7 !important;
+  }
 </style>

@@ -64,58 +64,83 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSupabase } from '../composables/useSupabase'
+    import { ref, onMounted, onBeforeUnmount } from 'vue'
+    import { useRouter } from 'vue-router'
+    import { useSupabase } from '../composables/useSupabase'
 
-const { hasRole, usuario, roles, signOut } = useSupabase()
+    // Definir roles y estado de usuario
+    const { hasRole, usuario, roles, signOut } = useSupabase()
+    const esVoces = ref(false)
+    const esAdminVoces = ref(false)
+    const router = useRouter()
 
-const esVoces = ref(false) // Inicializamos como `false`
-const esAdminVoces = ref(false) // Inicializamos como `false`
-const router = useRouter()
+    // Función de logout
+    const logout = async () => {
+        await signOut()
+        router.push('/')
+    }
 
-
-const logout = async () => {
-    await signOut()
-    router.push('/')
-}
-esVoces.value = await hasRole('voces');
-esAdminVoces.value = await hasRole('admin_voces');
-
-watch(usuario, async (value) => {
     esVoces.value = await hasRole('voces')
-})
+    esAdminVoces.value = await hasRole('admin_voces')
 
+    watch(usuario, async (value) => {
+        esVoces.value = await hasRole('voces')
+    })
+
+    // Función para cerrar el navbar cuando se hace clic fuera de él
+    const closeNavbarOnClickOutside = (event) => {
+        const navbarCollapse = document.getElementById('navbarSupportedContent')
+        const navbarToggle = document.querySelector('.navbar-toggler')
+
+        // Verificar si el clic fue fuera del navbar y del botón de toggle
+        if (navbarCollapse && !navbarCollapse.contains(event.target) && !navbarToggle.contains(event.target)) {
+            const collapseInstance = bootstrap.Collapse.getInstance(navbarCollapse)
+            if (collapseInstance && collapseInstance._isShown) {
+                collapseInstance.hide()
+            }
+        }
+    }
+
+    // Registrar el evento cuando el componente se monta
+    onMounted(() => {
+        document.addEventListener('click', closeNavbarOnClickOutside)
+    })
+
+    // Limpiar el evento cuando el componente se desmonta
+    onBeforeUnmount(() => {
+        document.removeEventListener('click', closeNavbarOnClickOutside)
+    })
 
 </script>
 
+
 <style>
-.nav-item {
-    margin-right: 10px;
-}
+    .nav-item {
+        margin-right: 10px;
+    }
 
-.ingresar {
-    font-size: 30px;
-    color: rgb(172, 60, 206);
-}
+    .ingresar {
+        font-size: 30px;
+        color: rgb(172, 60, 206);
+    }
 
-.dropdown-menu li {
-    position: relative;
-}
+    .dropdown-menu li {
+        position: relative;
+    }
 
-.dropdown-menu .dropdown-submenu {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: -7px;
-}
+    .dropdown-menu .dropdown-submenu {
+        display: none;
+        position: absolute;
+        left: 100%;
+        top: -7px;
+    }
 
-.dropdown-menu .dropdown-submenu-left {
-    right: 100%;
-    left: auto;
-}
+    .dropdown-menu .dropdown-submenu-left {
+        right: 100%;
+        left: auto;
+    }
 
-.dropdown-menu>li:hover>.dropdown-submenu {
-    display: block;
-}
+    .dropdown-menu>li:hover>.dropdown-submenu {
+        display: block;
+    }
 </style>
