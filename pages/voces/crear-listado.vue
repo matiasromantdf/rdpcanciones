@@ -36,84 +36,94 @@
     </div>
 </template>
 <script setup>
-import { useSupabase } from '~/composables/useSupabase';
-import { onMounted } from 'vue';
+    import { useSupabase } from '~/composables/useSupabase';
+    import { onMounted } from 'vue';
 
 
-const { usuario, roles, hasRole, supabase } = useSupabase();
-const vozSeleccionada = ref(-1)
+    const { usuario, roles, hasRole, supabase } = useSupabase();
+    const vozSeleccionada = ref(-1)
 
-const voces = ref([])
-const vocesSeleccionadas = ref([])
-const tonos = [
-    { numero: 1, valor: 'Do' },
-    { numero: 2, valor: 'Do#' },
-    { numero: 3, valor: 'Re' },
-    { numero: 4, valor: 'Re#' },
-    { numero: 5, valor: 'Mi' },
-    { numero: 6, valor: 'Fa' },
-    { numero: 7, valor: 'Fa#' },
-    { numero: 8, valor: 'Sol' },
-    { numero: 9, valor: 'Sol#' },
-    { numero: 10, valor: 'La' },
-    { numero: 11, valor: 'La#' },
-    { numero: 12, valor: 'Si' }
-]
-const tonoSeleccionado = ref(null)
+    const voces = ref([])
+    const vocesSeleccionadas = ref([])
+    const tonos = [
+        { numero: 1, valor: 'Do' },
+        { numero: 2, valor: 'Do#' },
+        { numero: 3, valor: 'Re' },
+        { numero: 4, valor: 'Re#' },
+        { numero: 5, valor: 'Mi' },
+        { numero: 6, valor: 'Fa' },
+        { numero: 7, valor: 'Fa#' },
+        { numero: 8, valor: 'Sol' },
+        { numero: 9, valor: 'Sol#' },
+        { numero: 10, valor: 'La' },
+        { numero: 11, valor: 'La#' },
+        { numero: 12, valor: 'Si' }
+    ]
+    const tonoSeleccionado = ref(null)
+    const casaUsuario = ref(null)
 
-const getVoces = async () => {
-    const { data, error } = await supabase.from('voces_users_view').select('*')
-    if (error) {
-        console.error('Error al obtener las voces:', error.message)
-    } else {
-        voces.value = data
+    const getVoces = async () => {
+        const { data, error } = await supabase.from('voces_users_view').select('*').eq('casa_id', casaUsuario.value).order('nombre', { ascending: true })
+        if (error) {
+            console.error('Error al obtener las voces:', error.message)
+        } else {
+            voces.value = data
 
+        }
     }
-}
-
-const aniadirVoz = () => {
-    const voz = voces.value.find(v => v.id === vozSeleccionada.value)
-    if (voz) {
-        vocesSeleccionadas.value.push(voz)
+    const getCasaUsuario = async () => {
+        const { data, error } = await supabase.from('usuarios').select('casa_id').eq('id', usuario.value.id).single()
+        if (error) {
+            console.error('Error al obtener la casa del usuario:', error.message)
+        } else {
+            casaUsuario.value = data.casa_id
+        }
     }
-}
 
-const eliminarVoz = (voz) => {
-    console.log('Eliminar voz:', voz)
-    vocesSeleccionadas.value = vocesSeleccionadas.value.filter(v => v.id !== voz)
-}
-
-onMounted(async () => {
-    if (!hasRole('admin_voces')) {
-        router.push('/')
+    const aniadirVoz = () => {
+        const voz = voces.value.find(v => v.id === vozSeleccionada.value)
+        if (voz) {
+            vocesSeleccionadas.value.push(voz)
+        }
     }
-    await getVoces()
-})
+
+    const eliminarVoz = (voz) => {
+        console.log('Eliminar voz:', voz)
+        vocesSeleccionadas.value = vocesSeleccionadas.value.filter(v => v.id !== voz)
+    }
+
+    onMounted(async () => {
+        if (!hasRole('admin_voces')) {
+            router.push('/')
+        }
+        await getCasaUsuario();
+        await getVoces();
+    })
 
 </script>
 
 <style scoped>
-.tabla {
-    display: flex;
-    overflow-x: scroll;
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
+    .tabla {
+        display: flex;
+        overflow-x: scroll;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
 
-.tabla::-webkit-scrollbar {
-    height: 10px;
-}
+    .tabla::-webkit-scrollbar {
+        height: 10px;
+    }
 
-.tabla::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 5px;
-}
+    .tabla::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 5px;
+    }
 
-.label {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
+    .label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
 </style>
