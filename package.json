@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.4.0",
+    "meyda": "^5.6.3",
     "nuxt": "^3.13.0",
     "sweetalert2": "^11.6.13",
     "tone": "^15.1.22",
