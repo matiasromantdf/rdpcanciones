@@ -26,8 +26,6 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'Nuxt Supabase' },
-        //colocar en idioma español
         { name: 'lang', content: 'es' },
       ],
       link: [
@@ -43,6 +41,12 @@ export default defineNuxtConfig({
       script: [
         {
           src: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
+          type: 'application/javascript',
+        },
+        {
+          src: 'https://cdn.jsdelivr.net/gh/bbc/rubberband@master/dist/rubberband.min.js',
+          type: 'application/javascript',
+          async: true,
         }
       ]
     },
