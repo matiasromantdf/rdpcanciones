@@ -43,8 +43,7 @@
                 </div>
 
             </div>
-            <div class="row" v-if="puedeAddToFavorite">
-                <!-- reproductor de mp3-->
+            <!-- <div class="row" v-if="puedeAddToFavorite">
                 <div class="col-12 ">
                     <div>
                         <ReproductoPista />
@@ -54,7 +53,7 @@
                     <div class="col">
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="texto-cancion">
 
                 <div class="row">

@@ -8,6 +8,7 @@
         <label for="tono-cancion">Tono de la canción: {{ tonoActual }}</label>
         <button @click="bajarPitch">Bajar tono</button>
         <!-- <input type="range" min="-12" max="12" v-model="pitch" @input="updatePitch" /> -->
+        <button @click="iniciarAnalisisDeTono">ver tono predominante</button>
 
 
     </div>
@@ -16,6 +17,8 @@
 <script setup>
     import { ref, onMounted } from "vue";
     import * as Tone from "tone";
+    import Meyda from "meyda";
+
 
     const audioUrl = "https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/pista.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvcGlzdGEubXAzIiwiaWF0IjoxNzQ2OTk0MjE5LCJleHAiOjE3Nzg1MzAyMTl9.zXACQV5-nq6KxaZm6BJzEqqQsp6DuK7fInScNHOmhX8"; // Reemplaza con la URL real
 
@@ -101,6 +104,48 @@
             pitchShift.pitch = pitch.value;
         }
     };
+
+    // Función para detectar el tono predominante con Meyda
+    const iniciarAnalisisDeTono = () => {
+        if (!Meyda) {
+            console.error("Meyda no está cargado");
+            return;
+        }
+
+        if (!player) {
+            console.error("El reproductor no está inicializado.");
+            return;
+        }
+
+        const audioCtx = Tone.context;
+        const gainNode = new Tone.Gain().toDestination();
+        player.connect(gainNode);
+
+        const meydaAnalyzer = Meyda.createAnalyzer({
+            audioContext: audioCtx,
+            source: audioCtx.createMediaStreamSource(audioCtx.createMediaStreamDestination().stream), // Conexión alternativa
+            bufferSize: 1024,
+            featureExtractors: ["spectralCentroid"],
+            callback: (features) => {
+                console.log("Frecuencia dominante:", features.spectralCentroid);
+            }
+        });
+
+        meydaAnalyzer.start();
+
+        setTimeout(() => {
+            meydaAnalyzer.stop();
+            console.log("Análisis finalizado.");
+        }, 10000); // Analiza por 10 segundos
+    };
+
+    // Función para encontrar el tono más cercano en la escala musical
+    const calcularTonoCercano = (tono) => {
+        const tonoEncontrado = tonos.value.find(t => tono.startsWith(t.name));
+        return tonoEncontrado ? tonoEncontrado.value : tonoCancion.value;
+    };
+
+
 
 
 
