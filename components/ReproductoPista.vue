@@ -2,14 +2,21 @@
     <div class="">
         <div class="row border p-3 text-center">
             <div class="col">
-                <button id="btn-inc-key" @click="incrementarNota">+</button>
-                <!-- <input type="range" v-model="key" @input="updateKey" max="7" min="-7" step="1" /> -->
+                <button id="btn-inc-key" :disabled="loadingNotaMas" @click="incrementarNota">
+                    <span v-if="loadingNotaMas" class="spinner-border spinner-border-sm" role="status"
+                        aria-hidden="true"></span>
+                    <span v-else>+</span>
+                </button>
             </div>
             <div class="col text-tono">
                 <span>Tono: {{ getNota }}</span>
             </div>
             <div class="col">
-                <button id="btn-dec-key" @click="decrementarNota">-</button>
+                <button id="btn-dec-key" :disabled="loadingNotaMenos" @click="decrementarNota">
+                    <span v-if="loadingNotaMenos" class="spinner-border spinner-border-sm" role="status"
+                        aria-hidden="true"></span>
+                    <span v-else>-</span>
+                </button>
             </div>
         </div>
         <!-- Controles -->
@@ -67,6 +74,8 @@
     // const url = ref('https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/Pista%20Padre%20Nuestro-%20Si.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvUGlzdGEgUGFkcmUgTnVlc3Ryby0gU2kubXAzIiwiaWF0IjoxNzQ3MTA1NDgzLCJleHAiOjE3Nzg2NDE0ODN9.qRCWcA0IYhEJ1U8jPIuv9EqvuMSv0mmkSenaPqoWN7k');
     // Función para inicializar el AudioContext y GainNode
     const loadingAudio = ref(true);
+    const loadingNotaMas = ref(false);
+    const loadingNotaMenos = ref(false);
 
 
     const initAudioContext = () => {
@@ -113,23 +122,37 @@
                 console.error('Error cargando el archivo de audio:', error);
             });
     };
+    const incrementarNota = async () => {
+        if (loadingNotaMas.value) return;
+        loadingNotaMas.value = true;
 
-    const incrementarNota = () => {
-        if (key.value == 7) {
+        if (key.value === 7) {
             key.value = -7;
         } else {
             key.value++;
         }
         updateKey();
+
+        setTimeout(() => {
+            loadingNotaMas.value = false;
+        }, 5000);
     };
 
-    const decrementarNota = () => {
-        if (key.value == -7) {
+    const decrementarNota = async () => {
+        if (loadingNotaMenos.value) return;
+
+        loadingNotaMenos.value = true;
+
+        if (key.value === -7) {
             key.value = 7;
         } else {
             key.value--;
         }
         updateKey();
+
+        setTimeout(() => {
+            loadingNotaMenos.value = false;
+        }, 5000);
     };
 
     // Función para reproducir el audio
@@ -200,6 +223,13 @@
         notaActual.value = notaOriginal.value; // Nota actual
         console.log('Nota original:', notaOriginal.value);
         console.log('Nota actual:', notaActual.value);
+    });
+
+    // Limpiar el AudioContext al destruir el componente
+    onBeforeUnmount(() => {
+        if (audioCtx.value) {
+            audioCtx.value.close();
+        }
     });
 </script>
 <style>
