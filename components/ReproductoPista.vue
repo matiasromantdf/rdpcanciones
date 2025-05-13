@@ -2,14 +2,14 @@
     <div class="">
         <div class="row border p-3 text-center">
             <div class="col">
-                <button id="btn-inc-key" @click="key++; updateKey()">+</button>
+                <button id="btn-inc-key" @click="incrementarNota">+</button>
                 <!-- <input type="range" v-model="key" @input="updateKey" max="7" min="-7" step="1" /> -->
             </div>
             <div class="col text-tono">
-                <span>Tono: {{ notas[(notaActual - 1) + key] }}</span>
+                <span>Tono: {{ getNota }}</span>
             </div>
             <div class="col">
-                <button id="btn-dec-key" @click="key--; updateKey()">-</button>
+                <button id="btn-dec-key" @click="decrementarNota">-</button>
             </div>
         </div>
         <!-- Controles -->
@@ -84,6 +84,11 @@
             default: 0
         }
     })
+    const getNota = computed(() => {
+
+        const index = (notaOriginal.value - 1 + key.value + 11) % 12;
+        return notas[index];
+    });
 
     // Función para cargar el archivo de audio
     const loadSource = (url) => {
@@ -109,7 +114,23 @@
             });
     };
 
+    const incrementarNota = () => {
+        if (key.value == 7) {
+            key.value = -7;
+        } else {
+            key.value++;
+        }
+        updateKey();
+    };
 
+    const decrementarNota = () => {
+        if (key.value == -7) {
+            key.value = 7;
+        } else {
+            key.value--;
+        }
+        updateKey();
+    };
 
     // Función para reproducir el audio
     const play = () => {
