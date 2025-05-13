@@ -6,7 +6,7 @@
                 <!-- <input type="range" v-model="key" @input="updateKey" max="7" min="-7" step="1" /> -->
             </div>
             <div class="col text-tono">
-                <span>Tono: {{ notas[notaActual + key] }}</span>
+                <span>Tono: {{ notas[(notaActual - 1) + key] }}</span>
             </div>
             <div class="col">
                 <button id="btn-dec-key" @click="key--; updateKey()">-</button>
@@ -18,7 +18,14 @@
         <!-- <input type="range" v-model="volume" @input="updateVolume" /> -->
 
         <div class="row border p-3 text-center">
-            <div class="col">
+
+            <div class="col" v-if="loadingAudio">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+
+            </div>
+            <div class="col" v-else>
                 <button id="btn-play" :disabled="isPlaying" @click="play"><i class="bi bi-play"></i></button>
             </div>
             <div class="col">
@@ -57,12 +64,26 @@
     const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const notaOriginal = ref(null);
     const notaActual = ref(null);
-    const url = ref('https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/Pista%20Padre%20Nuestro-%20Si.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvUGlzdGEgUGFkcmUgTnVlc3Ryby0gU2kubXAzIiwiaWF0IjoxNzQ3MTA1NDgzLCJleHAiOjE3Nzg2NDE0ODN9.qRCWcA0IYhEJ1U8jPIuv9EqvuMSv0mmkSenaPqoWN7k');
+    // const url = ref('https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/Pista%20Padre%20Nuestro-%20Si.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvUGlzdGEgUGFkcmUgTnVlc3Ryby0gU2kubXAzIiwiaWF0IjoxNzQ3MTA1NDgzLCJleHAiOjE3Nzg2NDE0ODN9.qRCWcA0IYhEJ1U8jPIuv9EqvuMSv0mmkSenaPqoWN7k');
     // Función para inicializar el AudioContext y GainNode
+    const loadingAudio = ref(true);
+
+
     const initAudioContext = () => {
         audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
         gainNode.value = audioCtx.value.createGain();
     };
+
+    const props = defineProps({
+        url: {
+            type: String,
+            default: ''
+        },
+        tonoOriginal: {
+            type: Number,
+            default: 0
+        }
+    })
 
     // Función para cargar el archivo de audio
     const loadSource = (url) => {
@@ -80,6 +101,7 @@
                     });
 
                     duration.value = shifter.value.formattedDuration;
+                    loadingAudio.value = false; // Cambia el estado de carga
                 });
             })
             .catch((error) => {
@@ -115,7 +137,7 @@
             currentTime.value = 0;
             progress.value = 0;
             shifter.value.position = 0; // Reiniciar la posición del audio
-            loadSource(url.value);
+            loadSource(props.url); // Recargar el audio
             notaActual.value = notaOriginal.value; // Reiniciar la nota actual
             key.value = 1; // Reiniciar la clave
         }
@@ -152,9 +174,11 @@
     // Cargar el archivo de audio y configurar los controles cuando el componente esté montado
     onMounted(() => {
         initAudioContext();
-        loadSource(url.value); // Ajusta la ruta del archivo de audio
-        notaOriginal.value = 3; // Nota original (D#)
-        notaActual.value = notaOriginal.value; // Nota actual (D#)
+        loadSource(props.url); // Ajusta la ruta del archivo de audio
+        notaOriginal.value = props.tonoOriginal; // Nota original
+        notaActual.value = notaOriginal.value; // Nota actual
+        console.log('Nota original:', notaOriginal.value);
+        console.log('Nota actual:', notaActual.value);
     });
 </script>
 <style>

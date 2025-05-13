@@ -33,13 +33,16 @@
                         <div class="col">
                             <label for="tono" class="form-label">Tono</label>
                             <select class="form-select" id="tono" v-model="cancion.numero_tono">
-                                <option v-for="nota in notas" :key="nota.numero" :value="nota.numero">{{ nota.nota }}</option>
+                                <option v-for="nota in notas" :key="nota.numero" :value="nota.numero">{{ nota.nota }}
+                                </option>
                             </select>
                         </div>
                         <div class="col">
                             <label for="mod" class="form-label">Modificador</label>
                             <select class="form-select" id="mod" v-model="cancion.modificador">
-                                <option v-for="mod in modificadores" :key="mod.id" :value="mod.modificador">{{ mod.modificador }}</option>
+                                <option v-for="mod in modificadores" :key="mod.id" :value="mod.modificador">
+                                    {{ mod.modificador }}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -53,7 +56,8 @@
                         </div>
                         <div class="col-6">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="es_adaptacion" v-model="cancion.es_adaptacion">
+                                <input class="form-check-input" type="checkbox" id="es_adaptacion"
+                                    v-model="cancion.es_adaptacion">
                                 <label class="form-check-label" for="es_adaptacion">Es adaptación</label>
                             </div>
                         </div>
@@ -67,14 +71,19 @@
                     <div class="row">
                         <div class="col">
                             <label for="tonoPista">Tono pista</label>
-                            <input type="text" class="form-control" id="tonoPista" v-model="cancion.pista_tono" />
+                            <select class="form-select" id="tonoPista" v-model="cancion.pista_tono">
+                                <option value="0">Seleccionar...</option>
+                                <option v-for="nota in notas" :key="nota.numero" :value="nota.numero">{{ nota.nota }}
+                                </option>
+                            </select>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="letra" class="form-label">Letra</label>
                         <textarea class="form-control" id="letra" rows="20" v-model="cancion.letra"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary mb-3" :disabled="cargando" id="btn-enviar">Actualizar</button>
+                    <button type="submit" class="btn btn-primary mb-3" :disabled="cargando"
+                        id="btn-enviar">Actualizar</button>
                 </form>
             </div>
         </div>
@@ -86,7 +95,6 @@
     import { useSupabase } from '../../composables/useSupabase'
     import { useRoute } from 'vue-router'
     import { useRouter } from 'vue-router'
-    import { defineEmits } from 'vue'
 
     const { supabase } = useSupabase()
     const router = useRoute()
@@ -107,7 +115,7 @@
         link: '',
         tonoPista: '',
         pista_url: '',
-        pista_tono: ''
+        pista_tono: '0'
     })
 
     const notas = [
@@ -171,12 +179,12 @@
     }
 
     const handleNotaChroma = (nota) => {
-        cancion.value.tonoPista = nota
+        cancion.value.pista_tono = nota;
     }
 
     const handleFile = async (file) => {
         // Subir el archivo a Supabase Storage
-        const { data, error } = await supabase.storage.from('pistas').upload(`${file.name}`, file,{
+        const { data, error } = await supabase.storage.from('pistas').upload(`${file.name}`, file, {
             upsert: true
         })
 
@@ -205,4 +213,3 @@
         getModificadores()
     })
 </script>
-

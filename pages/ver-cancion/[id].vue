@@ -45,8 +45,8 @@
             </div>
             <div class="row" v-if="puedeAddToFavorite">
                 <div class="col-12 ">
-                    <div>
-                        <!-- <ReproductoPista /> -->
+                    <div v-if="song.pista_url">
+                        <ReproductoPista :url="song.pista_url" :tonoOriginal="song.pista_tono" />
                     </div>
                 </div>
                 <div class="row">
