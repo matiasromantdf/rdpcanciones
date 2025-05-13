@@ -27,7 +27,7 @@
                     <span :class="'material-icons icono ' + classIcono" @click="addToRepertorio">
                         favorite
                     </span>
-                    <span v-if="estaEnRepertorio">en repertorio {{ acordes[tonoEnRepertorio].acorde }}</span>
+                    <span v-if="estaEnRepertorio">en repertorio {{ acordes[tonoEnRepertorio - 1].acorde }}</span>
                 </div>
                 <div class="col-4" v-if="song.link" @click="openUrl(song.link)">
                     <span class="material-icons icono-link" style="color: red;">
@@ -296,6 +296,7 @@
                 })
                 estaEnRepertorio.value = true
                 showModalToRepertorio.value = false
+                tonoEnRepertorio.value = tono
             }
         })
     }
