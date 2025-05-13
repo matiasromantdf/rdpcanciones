@@ -1,153 +1,211 @@
 <template>
-    <div>
-        <h1>Reproductor de Pista</h1>
+    <div class="">
+        <div class="row border p-3 text-center">
+            <div class="col">
+                <button id="btn-inc-key" @click="key++; updateKey()">+</button>
+                <!-- <input type="range" v-model="key" @input="updateKey" max="7" min="-7" step="1" /> -->
+            </div>
+            <div class="col text-tono">
+                <span>Tono: {{ notas[notaActual + key] }}</span>
+            </div>
+            <div class="col">
+                <button id="btn-dec-key" @click="key--; updateKey()">-</button>
+            </div>
+        </div>
+        <!-- Controles -->
+        <!-- <input type="range" v-model="tempo" @input="updateTempo" /> -->
+        <!-- <input type="range" v-model="pitch" @input="updatePitch" max="2" min="0.1" step="0.01" /> -->
+        <!-- <input type="range" v-model="volume" @input="updateVolume" /> -->
 
-        <button @click="playAudio">Reproducir</button>
-        <button @click="stopAudio">Detener</button>
-        <button @click="subirPitch">Subir tono</button>
-        <label for="tono-cancion">Tono de la canción: {{ tonoActual }}</label>
-        <button @click="bajarPitch">Bajar tono</button>
-        <!-- <input type="range" min="-12" max="12" v-model="pitch" @input="updatePitch" /> -->
-        <button @click="iniciarAnalisisDeTono">ver tono predominante</button>
-
+        <div class="row border p-3 text-center">
+            <div class="col">
+                <button id="btn-play" :disabled="isPlaying" @click="play"><i class="bi bi-play"></i></button>
+            </div>
+            <div class="col">
+                <button id="btn-pause" :disabled="!isPlaying" @click="pause"><i class="bi bi-pause"></i></button>
+            </div>
+            <div class="col">
+                <button id="btn-stop" @click="stop"><i class="bi bi-stop"></i></button>
+            </div>
+            <div class="col">
+                <progress :value="progress" max="100"></progress>
+                <div>
+                    <span>{{ currentTime }}</span> / <span>{{ duration }}</span>
+                </div>
+            </div>
+        </div>
 
     </div>
 </template>
 
 <script setup>
-    import { ref, onMounted } from "vue";
-    import * as Tone from "tone";
-    import Meyda from "meyda";
+    import { ref, onMounted } from 'vue';
+    import { PitchShifter } from 'soundtouchjs'; // Ajusta el path si es necesario
+
+    // Variables reactivas
+    // const tempo = ref(1.0);
+    const pitch = ref(1.0);
+    // const volume = ref(1.0);
+    const key = ref(1);
+    const currentTime = ref('0:00');
+    const duration = ref('0:00');
+    const progress = ref(0);
+    const isPlaying = ref(false);
+    const shifter = ref(null);
+    const audioCtx = ref(null);
+    const gainNode = ref(null);
+    const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const notaOriginal = ref(null);
+    const notaActual = ref(null);
+    const url = ref('https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/Pista%20Padre%20Nuestro-%20Si.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvUGlzdGEgUGFkcmUgTnVlc3Ryby0gU2kubXAzIiwiaWF0IjoxNzQ3MTA1NDgzLCJleHAiOjE3Nzg2NDE0ODN9.qRCWcA0IYhEJ1U8jPIuv9EqvuMSv0mmkSenaPqoWN7k');
+    // Función para inicializar el AudioContext y GainNode
+    const initAudioContext = () => {
+        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode.value = audioCtx.value.createGain();
+    };
+
+    // Función para cargar el archivo de audio
+    const loadSource = (url) => {
+        fetch(url)
+            .then((response) => response.arrayBuffer())
+            .then((buffer) => {
+                audioCtx.value.decodeAudioData(buffer, (audioBuffer) => {
+                    shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384);
+                    // shifter.value.tempo = tempo.value;
+                    shifter.value.pitch = pitch.value;
+
+                    shifter.value.on('play', (detail) => {
+                        currentTime.value = detail.formattedTimePlayed;
+                        progress.value = detail.percentagePlayed;
+                    });
+
+                    duration.value = shifter.value.formattedDuration;
+                });
+            })
+            .catch((error) => {
+                console.error('Error cargando el archivo de audio:', error);
+            });
+    };
 
 
-    const audioUrl = "https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/pista.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvcGlzdGEubXAzIiwiaWF0IjoxNzQ2OTk0MjE5LCJleHAiOjE3Nzg1MzAyMTl9.zXACQV5-nq6KxaZm6BJzEqqQsp6DuK7fInScNHOmhX8"; // Reemplaza con la URL real
 
-    let player = null;
-    let pitchShift = null;
-    const pitch = ref(0);
-    const tonoCancion = ref(0);
-    const tonos = ref([
-        { name: "C", value: 1 },
-        { name: "C#", value: 2 },
-        { name: "D", value: 3 },
-        { name: "D#", value: 4 },
-        { name: "E", value: 5 },
-        { name: "F", value: 6 },
-        { name: "F#", value: 7 },
-        { name: "G", value: 8 },
-        { name: "G#", value: 9 },
-        { name: "A", value: 10 },
-        { name: "A#", value: 11 },
-        { name: "B", value: 12 },
-    ]);
+    // Función para reproducir el audio
+    const play = () => {
+        if (shifter.value) {
+            shifter.value.connect(gainNode.value);
+            gainNode.value.connect(audioCtx.value.destination);
+            audioCtx.value.resume().then(() => {
+                isPlaying.value = true;
+            });
+        }
+    };
 
+    // Función para pausar el audio
+    const pause = () => {
+        if (shifter.value) {
+            shifter.value.disconnect();
+            isPlaying.value = false;
+        }
+    };
+    // Función para detener el audio
+    const stop = () => {
+        if (shifter.value) {
+            shifter.value.disconnect();
+            isPlaying.value = false;
+            currentTime.value = 0;
+            progress.value = 0;
+            shifter.value.position = 0; // Reiniciar la posición del audio
+            loadSource(url.value);
+            notaActual.value = notaOriginal.value; // Reiniciar la nota actual
+            key.value = 1; // Reiniciar la clave
+        }
+    };
+
+    // // Actualizar tempo
+    // const updateTempo = () => {
+    //     if (shifter.value) {
+    //         shifter.value.tempo = tempo.value;
+    //     }
+    // };
+
+    // // Actualizar pitch
+    // const updatePitch = () => {
+    //     if (shifter.value) {
+    //         shifter.value.pitch = pitch.value;
+    //     }
+    // };
+
+    // // Actualizar volumen
+    // const updateVolume = () => {
+    //     if (gainNode.value) {
+    //         gainNode.value.gain.value = volume.value;
+    //     }
+    // };
+
+    // Actualizar key
+    const updateKey = () => {
+        if (shifter.value) {
+            shifter.value.pitchSemitones = key.value;
+        }
+    };
+
+    // Cargar el archivo de audio y configurar los controles cuando el componente esté montado
     onMounted(() => {
-        pitchShift = new Tone.PitchShift({
-            pitch: pitch.value,
-        }).toDestination();
-
-        player = new Tone.Player(audioUrl, () => {
-            console.log("Audio cargado");
-        }).connect(pitchShift);
-        tonoCancion.value = 5;// Reemplaza con el tono de la canción cuando viene de la API
+        initAudioContext();
+        loadSource(url.value); // Ajusta la ruta del archivo de audio
+        notaOriginal.value = 3; // Nota original (D#)
+        notaActual.value = notaOriginal.value; // Nota actual (D#)
     });
-
-    const playAudio = async () => {
-        Tone.loaded().then(() => {
-            if (player) {
-                player.start();
-            }
-        });
-    };
-
-    const tonoActual = computed(() => {
-        if (tonoCancion.value === null || tonoCancion.value === undefined) {
-            return "Desconocido";
-        }
-        const tono = tonos.value.find((t) => t.value === tonoCancion.value);
-        return tono ? tono.name : "Desconocido";
-
-    });
-
-
-    const stopAudio = () => {
-        if (player) {
-            player.stop();
-        }
-    };
-
-
-
-    const subirPitch = () => {
-        if (pitch.value < 12) {
-            pitch.value++;
-            tonoCancion.value++;
-            if (tonoCancion.value === 13) {
-                tonoCancion.value = 1;
-            }
-            updatePitch();
-        }
-    };
-
-    const bajarPitch = () => {
-        if (pitch.value > -12) {
-            pitch.value--;
-            tonoCancion.value--;
-            if (tonoCancion.value === 0) {
-                tonoCancion.value = 12;
-            }
-            updatePitch();
-        }
-    };
-    const updatePitch = () => {
-        if (pitchShift) {
-            pitchShift.pitch = pitch.value;
-        }
-    };
-
-    // Función para detectar el tono predominante con Meyda
-    const iniciarAnalisisDeTono = () => {
-        if (!Meyda) {
-            console.error("Meyda no está cargado");
-            return;
-        }
-
-        if (!player) {
-            console.error("El reproductor no está inicializado.");
-            return;
-        }
-
-        const audioCtx = Tone.context;
-        const gainNode = new Tone.Gain().toDestination();
-        player.connect(gainNode);
-
-        const meydaAnalyzer = Meyda.createAnalyzer({
-            audioContext: audioCtx,
-            source: audioCtx.createMediaStreamSource(audioCtx.createMediaStreamDestination().stream), // Conexión alternativa
-            bufferSize: 1024,
-            featureExtractors: ["spectralCentroid"],
-            callback: (features) => {
-                console.log("Frecuencia dominante:", features.spectralCentroid);
-            }
-        });
-
-        meydaAnalyzer.start();
-
-        setTimeout(() => {
-            meydaAnalyzer.stop();
-            console.log("Análisis finalizado.");
-        }, 10000); // Analiza por 10 segundos
-    };
-
-    // Función para encontrar el tono más cercano en la escala musical
-    const calcularTonoCercano = (tono) => {
-        const tonoEncontrado = tonos.value.find(t => tono.startsWith(t.name));
-        return tonoEncontrado ? tonoEncontrado.value : tonoCancion.value;
-    };
-
-
-
-
-
-
 </script>
+<style>
+
+    #btn-inc-key,
+    #btn-dec-key {
+        background-color: transparent;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        border-radius: 5px;
+        transition: color 0.3s ease;
+        border: 1px solid #007bff;
+        background-color: #d4e4f5;
+
+    }
+
+    .text-tono {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    #btn-play,
+    #btn-pause,
+    #btn-stop {
+        background-color: transparent;
+        border: none;
+        color: #b670e4;
+        cursor: pointer;
+        font-size: 2rem;
+        padding: 0.5rem;
+        border-radius: 5px;
+        transition: color 0.3s ease;
+        border: 1px solid #dd8fec;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        background-color: #d4e4f5;
+    }
+
+
+
+</style>

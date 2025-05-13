@@ -71,6 +71,18 @@
 
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="pista">Pista</label>
+                            <ReconocerTonoCancion @nota-chroma="handleNotaChroma" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="tonoPista">Tono pista</label>
+                            <input type="text" class="form-control" id="tonoPista" v-model="cancion.tonoPista">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="letra" class="form-label">Letra</label>
                         <textarea class="form-control" id="letra" rows="20" v-model="cancion.letra"></textarea>
@@ -85,100 +97,105 @@
 
 <script setup>
 
-import { ref, onMounted } from 'vue'
-import { useSupabase } from '../../composables/useSupabase'
+    import { ref, onMounted } from 'vue'
+    import { useSupabase } from '../../composables/useSupabase'
 
-const { user, hasRole, supabase, roles } = useSupabase()
-//importar router
-import { useRoute } from 'vue-router'
-import { useRouter } from 'vue-router'
+    const { supabase } = useSupabase()
+    //importar router
+    import { useRoute } from 'vue-router'
+    import { useRouter } from 'vue-router'
 
-const router = useRoute()
-const routers = useRouter()
-const modificadores = ref([]);
+    const router = useRoute()
+    const routers = useRouter()
+    const modificadores = ref([]);
 
-const cargando = ref(false)
-const cancion = ref({
-    titulo: '',
-    autor: '',
-    tono: 1,
-    mod: 1,
-    tipo: 1,
-    es_adaptacion: false,
-    letra: '',
-    id: 0,
-    numero_tono: 1,
-    modificador: '',
-    link: ''
-})
+    const cargando = ref(false)
+    const cancion = ref({
+        titulo: '',
+        autor: '',
+        tono: 1,
+        mod: 1,
+        tipo: 1,
+        es_adaptacion: false,
+        letra: '',
+        id: 0,
+        numero_tono: 1,
+        modificador: '',
+        link: '',
+        tonoPista: ''
+    })
 
-const notas = [
-    { nota: 'Do', numero: 1 },
-    { nota: 'Do#', numero: 2 },
-    { nota: 'Re', numero: 3 },
-    { nota: 'Re#', numero: 4 },
-    { nota: 'Mi', numero: 5 },
-    { nota: 'Fa', numero: 6 },
-    { nota: 'Fa#', numero: 7 },
-    { nota: 'Sol', numero: 8 },
-    { nota: 'Sol#', numero: 9 },
-    { nota: 'La', numero: 10 },
-    { nota: 'La#', numero: 11 },
-    { nota: 'Si', numero: 12 }
-]
-const puedeEditar = ref(true)
+    const notas = [
+        { nota: 'Do', numero: 1 },
+        { nota: 'Do#', numero: 2 },
+        { nota: 'Re', numero: 3 },
+        { nota: 'Re#', numero: 4 },
+        { nota: 'Mi', numero: 5 },
+        { nota: 'Fa', numero: 6 },
+        { nota: 'Fa#', numero: 7 },
+        { nota: 'Sol', numero: 8 },
+        { nota: 'Sol#', numero: 9 },
+        { nota: 'La', numero: 10 },
+        { nota: 'La#', numero: 11 },
+        { nota: 'Si', numero: 12 }
+    ]
+    const puedeEditar = ref(true)
 
 
-const getCancion = async () => {
-    cargando.value = true
-    const id = router.params.id
+    const getCancion = async () => {
+        cargando.value = true
+        const id = router.params.id
 
-    const { data, error } = await supabase
-        .from('canciones')
-        .select('*')
-        .eq('id', id)
-    if (error) {
-        console.error(error)
-    } else {
-        console.log(data)
-        cancion.value = data[0]
+        const { data, error } = await supabase
+            .from('canciones')
+            .select('*')
+            .eq('id', id)
+        if (error) {
+            console.error(error)
+        } else {
+            console.log(data)
+            cancion.value = data[0]
+        }
+        cargando.value = false
     }
-    cargando.value = false
-}
 
-const getModificadores = async () => {
-    const { data, error } = await supabase.from('modificadores').select('*')
-    if (error) {
-        console.error(error)
-    } else {
-        modificadores.value = data
-        modificadores.value.unshift({ id: 0, modificador: '' })
+    const getModificadores = async () => {
+        const { data, error } = await supabase.from('modificadores').select('*')
+        if (error) {
+            console.error(error)
+        } else {
+            modificadores.value = data
+            modificadores.value.unshift({ id: 0, modificador: '' })
+        }
     }
-}
 
-const handleUpdate = async () => {
-    cargando.value = true
-    document.getElementById('btn-enviar').innerText = 'Actualizando...'
-    const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link } = cancion.value
-    const id = router.params.id
-    const { data, error } = await supabase.from('canciones').update({
-        titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link
-    }).eq('id', id)
-    if (error) {
-        console.error(error)
-        alert('Ocurrió un error al actualizar la canción')
-    } else {
-        alert('Canción actualizada')
+    const handleUpdate = async () => {
+        cargando.value = true
+        document.getElementById('btn-enviar').innerText = 'Actualizando...'
+        const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link } = cancion.value
+        const id = router.params.id
+        const { data, error } = await supabase.from('canciones').update({
+            titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link
+        }).eq('id', id)
+        if (error) {
+            console.error(error)
+            alert('Ocurrió un error al actualizar la canción')
+        } else {
+            alert('Canción actualizada')
+        }
+        cargando.value = false
+        document.getElementById('btn-enviar').innerText = 'Actualizar'
+        routers.push('/canciones')
     }
-    cargando.value = false
-    document.getElementById('btn-enviar').innerText = 'Actualizar'
-    routers.push('/canciones')
-}
 
-onMounted(() => {
-    getCancion();
-    getModificadores();
-})
+    const handleNotaChroma = (nota) => {
+        cancion.value.tonoPista = nota
+    }
+
+    onMounted(() => {
+        getCancion();
+        getModificadores();
+    })
 
 
 </script>

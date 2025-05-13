@@ -3,9 +3,9 @@
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song && !guardando">
-            <div class="controles mt-4 ml">
+            <div class="controles mt-4 ms-auto me-auto">
                 <div class="controles-tono">
-                    <p>cambiar tono</p>
+                    <p>Tono acordes</p>
                     <div>
                         <!-- botones mas +1 y -1 para transportar la cancion -->
                         <button class="btn border" @click="transportar(1)">+1 </button>
@@ -43,17 +43,17 @@
                 </div>
 
             </div>
-            <!-- <div class="row" v-if="puedeAddToFavorite">
+            <div class="row" v-if="puedeAddToFavorite">
                 <div class="col-12 ">
                     <div>
-                        <ReproductoPista />
+                        <!-- <ReproductoPista /> -->
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                     </div>
                 </div>
-            </div> -->
+            </div>
             <div class="texto-cancion">
 
                 <div class="row">
