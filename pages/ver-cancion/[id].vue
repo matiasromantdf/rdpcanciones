@@ -27,7 +27,7 @@
                     <span :class="'material-icons icono ' + classIcono" @click="addToRepertorio">
                         favorite
                     </span>
-                    <span v-if="estaEnRepertorio">en repertorio</span>
+                    <span v-if="estaEnRepertorio">en repertorio {{ acordes[tonoEnRepertorio].acorde }}</span>
                 </div>
                 <div class="col-4" v-if="song.link" @click="openUrl(song.link)">
                     <span class="material-icons icono-link" style="color: red;">
@@ -211,6 +211,7 @@
     const modificadores = ref([])
     const usuario = ref(useSupabaseUser())
     const cargardoRepertorio = ref(true)
+    const tonoEnRepertorio = ref(1)
 
     const estaEnRepertorio = ref(false)
 
@@ -218,7 +219,7 @@
         if (usuario.value) {
             const { data, error } = await supabase
                 .from('repertorio_voces')
-                .select('id')
+                .select('*')
                 .eq('cancion_id', song.value.id)
                 .eq('user_id', usuario.value.id)
             if (error) {
@@ -226,6 +227,9 @@
             } else {
                 console.log('Repertorio:', data)
                 estaEnRepertorio.value = data.length > 0
+                if (data.length > 0) {
+                    tonoEnRepertorio.value = data[0].tono_numero
+                }
             }
         }
         cargardoRepertorio.value = false
