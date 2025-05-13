@@ -36,6 +36,10 @@
                                             smart_display
                                         </span>
                                     </div>
+                                    <div class="col d-flex justify-content-center"
+                                        v-if="song.pista_url && puedeEliminar">
+                                        <i class="bi bi-file-music ms-2" style="font-size: 1.5rem;"></i>
+                                    </div>
 
                                 </div>
                             </div>
@@ -43,14 +47,12 @@
                         </div>
 
                     </div>
-                    <div class="row justify-content-between border p-1">
+                    <div class="row justify-content-between p-1">
                         <div class="col d-flex">
                             <p>{{ song.autor }}</p>
                             <span v-if="song.es_adaptacion" class="es_adapt">Adaptación</span>
                         </div>
-                        <div class="col d-flex justify-content-center" v-if="song.pista_url && puedeEliminar">
-                            <i class="bi bi-file-music" style="font-size: 1.5rem;"></i>
-                        </div>
+
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-12 d-flex align-items-center justify-content-center mt-2">
