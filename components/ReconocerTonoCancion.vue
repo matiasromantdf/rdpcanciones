@@ -8,10 +8,23 @@
     const acumuladorChroma = new Array(12).fill(0);
     const emit = defineEmits(['nota-chroma', 'archivo-cargado']);
     const archivoCargado = ref(false);
-    const counter = ref(65);
+    const counter = ref(30);
+
+    const majorProfile = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
+    const minorProfile = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+    const notas = ['DO', 'DO#', 'RE', 'RE#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
+
+    function correlation(a, b) {
+        const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+        const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+        const numerator = a.reduce((sum, v, i) => sum + ((v - meanA) * (b[i] - meanB)), 0);
+        const denomA = Math.sqrt(a.reduce((sum, v) => sum + Math.pow(v - meanA, 2), 0));
+        const denomB = Math.sqrt(b.reduce((sum, v) => sum + Math.pow(v - meanB, 2), 0));
+        return numerator / (denomA * denomB);
+    }
+
 
     async function analyzeAudio(file) {
-
         if (!analizarCancion.value) return;
 
         analyzing.value = true;
@@ -28,10 +41,12 @@
             audioContext: audioCtx,
             source,
             bufferSize: 4096,
-            featureExtractors: ['chroma'],
+            featureExtractors: ['chroma', 'rms'],
             callback: (features) => {
-                if (features?.chroma) {
-                    features.chroma.forEach((valor, i) => {
+                if (features?.chroma && features.rms > 0.01) {
+                    const suma = features.chroma.reduce((a, b) => a + b, 0);
+                    const normalizedChroma = features.chroma.map(v => v / suma);
+                    normalizedChroma.forEach((valor, i) => {
                         acumuladorChroma[i] += valor;
                     });
                 }
@@ -46,26 +61,43 @@
             source.stop();
             audioCtx.close();
 
-            const indexNotaMax = acumuladorChroma.indexOf(Math.max(...acumuladorChroma));
-            console.log('Nota por Chroma:', indexNotaMax);
-            emit('nota-chroma', indexNotaMax + 1);//En el array de notas, la primera posición es 0, por lo que se suma 1
+            let mejorCorrelacion = -Infinity;
+            let tonalidad = '';
+
+            for (let i = 0; i < 12; i++) {
+                const rotado = [...acumuladorChroma.slice(i), ...acumuladorChroma.slice(0, i)];
+
+                const corrMayor = correlation(rotado, majorProfile);
+                const corrMenor = correlation(rotado, minorProfile);
+
+                if (corrMayor > mejorCorrelacion) {
+                    mejorCorrelacion = corrMayor;
+                    tonalidad = `${notas[i]} Mayor`;
+                }
+                if (corrMenor > mejorCorrelacion) {
+                    mejorCorrelacion = corrMenor;
+                    tonalidad = `${notas[i]} menor`;
+                }
+            }
+
+            pitch.value = tonalidad;
+            emit('nota-chroma', tonalidad);
             analyzing.value = false;
 
-        }, 65000);
+        }, 30000); // 30 segundos
     }
 
-    //crear un contador hacia atrás para el tiempo de análisis
+    // contador para mostrar el tiempo restante
     if (process.client) {
         setInterval(() => {
             if (analyzing.value) {
                 counter.value--;
                 if (counter.value <= 0) {
-                    counter.value = 65;
+                    counter.value = 30;
                 }
             }
         }, 1000);
     }
-
 
     function handleFileChange(event) {
         const file = event.target.files[0];
@@ -95,13 +127,15 @@
                 Activar análisis de tono
             </label>
         </div>
+
         <p v-if="archivoCargado" class="archivo-ok">Archivo cargado correctamente ✅</p>
+
         <div class="d-flex align-items-center" v-if="analyzing">
             <strong class="me-2">Detectando tono... {{ counter }}</strong>
             <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
         </div>
 
-        <p v-if="pitch" class="result">Resultado: {{ pitch }}</p>
+        <p v-if="pitch" class="result">Tonalidad detectada: {{ pitch }}</p>
     </div>
 </template>
 
