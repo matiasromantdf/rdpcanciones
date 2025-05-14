@@ -178,10 +178,10 @@
         if (shifter.value) {
             shifter.value.disconnect();
             isPlaying.value = false;
+            loadSource(props.url); // Recargar el audio
             currentTime.value = 0;
             progress.value = 0;
             shifter.value.position = 0; // Reiniciar la posición del audio
-            loadSource(props.url); // Recargar el audio
             notaActual.value = notaOriginal.value; // Reiniciar la nota actual
             key.value = 1; // Reiniciar la clave
         }
