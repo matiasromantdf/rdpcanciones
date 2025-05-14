@@ -69,7 +69,6 @@
 
     const shifter = ref(null)
     const audioCtx = ref(null)
-    const gainNode = ref(null)
     const sourceBuffer = ref(null)
 
     const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -82,7 +81,6 @@
 
     function initAudioContext() {
         audioCtx.value = new (window.AudioContext)()
-        gainNode.value = audioCtx.value.createGain()
     }
 
     async function loadSource() {
@@ -97,8 +95,7 @@
 
             shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384)
             shifter.value.pitchSemitones = key.value
-            shifter.value.connect(gainNode.value)
-            gainNode.value.connect(audioCtx.value.destination)
+            shifter.value.connect(audioCtx.value.destination)
 
             shifter.value.on('play', (detail) => {
                 currentTime.value = detail.formattedTimePlayed
@@ -120,10 +117,9 @@
             shifter.value.disconnect()
         }
 
-        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 8192)
+        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 8196)
         shifter.value.pitchSemitones = key.value
-        shifter.value.connect(gainNode.value)
-        gainNode.value.connect(audioCtx.value.destination)
+        shifter.value.connect(audioCtx.value.destination)
 
         shifter.value.on('play', (detail) => {
             currentTime.value = detail.formattedTimePlayed
@@ -159,8 +155,7 @@
 
     function play() {
         if (shifter.value) {
-            shifter.value.connect(gainNode.value)
-            gainNode.value.connect(audioCtx.value.destination)
+            shifter.value.connect(audioCtx.value.destination)
 
             audioCtx.value.resume().then(() => {
                 isPlaying.value = true
