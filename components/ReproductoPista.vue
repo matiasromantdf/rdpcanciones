@@ -81,7 +81,7 @@
     })
 
     function initAudioContext() {
-        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)()
+        audioCtx.value = new (window.AudioContext)()
         gainNode.value = audioCtx.value.createGain()
     }
 
@@ -95,7 +95,7 @@
 
             sourceBuffer.value = audioBuffer
 
-            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 4096)
+            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384)
             shifter.value.pitchSemitones = key.value
             shifter.value.connect(gainNode.value)
             gainNode.value.connect(audioCtx.value.destination)
@@ -120,7 +120,7 @@
             shifter.value.disconnect()
         }
 
-        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 16384)
+        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 512)
         shifter.value.pitchSemitones = key.value
         shifter.value.connect(gainNode.value)
         gainNode.value.connect(audioCtx.value.destination)
