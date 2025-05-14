@@ -29,7 +29,8 @@
                 </div>
             </div>
             <div class="col" v-else>
-                <button id="btn-play" :disabled="isPlaying" @click="play"><i class="bi bi-play"></i></button>
+                <button id="btn-play" :disabled="isPlaying" :class="isPlaying ? 'playing' : ''" @click="play"><i
+                        class="bi bi-play"></i></button>
             </div>
             <div class="col">
                 <button id="btn-pause" :disabled="!isPlaying" @click="pause"><i class="bi bi-pause"></i></button>
@@ -94,7 +95,7 @@
 
             sourceBuffer.value = audioBuffer
 
-            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384)
+            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 8192)
             shifter.value.pitchSemitones = key.value
             shifter.value.connect(gainNode.value)
             gainNode.value.connect(audioCtx.value.destination)
@@ -233,5 +234,10 @@
         align-items: center;
         justify-content: center;
         margin: 0 1rem 1rem;
+    }
+
+    #btn-play.playing {
+        background-color: #b670e4;
+        color: #fff;
     }
 </style>
