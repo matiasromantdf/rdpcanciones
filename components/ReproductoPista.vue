@@ -3,22 +3,24 @@
         <!-- Controles de tono -->
         <div class="row border p-3 text-center">
             <div class="col">
-                <button id="btn-inc-key" :disabled="loadingNotaMas" @click="incrementarNota">
-                    <span v-if="loadingNotaMas" class="spinner-border spinner-border-sm" role="status"
-                        aria-hidden="true"></span>
-                    <span v-else>+</span>
-                </button>
-            </div>
-            <div class="col text-tono">
-                <span>Tono: {{ getNota }}</span>
-            </div>
-            <div class="col">
                 <button id="btn-dec-key" :disabled="loadingNotaMenos" @click="decrementarNota">
                     <span v-if="loadingNotaMenos" class="spinner-border spinner-border-sm" role="status"
                         aria-hidden="true"></span>
                     <span v-else>-</span>
                 </button>
             </div>
+            <div class="col text-tono">
+                <span>Tono: {{ getNota }}</span>
+            </div>
+            <div class="col">
+                <button id="btn-inc-key" :disabled="loadingNotaMas" @click="incrementarNota">
+                    <span v-if="loadingNotaMas" class="spinner-border spinner-border-sm" role="status"
+                        aria-hidden="true"></span>
+                    <span v-else>+</span>
+                </button>
+            </div>
+
+
         </div>
 
         <!-- Controles de reproducción -->
@@ -57,7 +59,6 @@
         tonoOriginal: { type: Number, default: 0 },
     })
 
-    const pitch = ref(1.0)
     const key = ref(1)
     const currentTime = ref('0:00')
     const duration = ref('0:00')
@@ -80,7 +81,7 @@
     })
 
     function initAudioContext() {
-        audioCtx.value = new (window.AudioContext)()
+        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     async function loadSource() {
