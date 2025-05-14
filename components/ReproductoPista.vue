@@ -93,7 +93,7 @@
 
             sourceBuffer.value = audioBuffer
 
-            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384)
+            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 8196)
             shifter.value.pitchSemitones = key.value
             shifter.value.connect(audioCtx.value.destination)
 
