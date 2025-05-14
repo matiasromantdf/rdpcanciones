@@ -1,5 +1,6 @@
 <template>
-    <div class="">
+    <div>
+        <!-- Controles de tono -->
         <div class="row border p-3 text-center">
             <div class="col">
                 <button id="btn-inc-key" :disabled="loadingNotaMas" @click="incrementarNota">
@@ -19,18 +20,13 @@
                 </button>
             </div>
         </div>
-        <!-- Controles -->
-        <!-- <input type="range" v-model="tempo" @input="updateTempo" /> -->
-        <!-- <input type="range" v-model="pitch" @input="updatePitch" max="2" min="0.1" step="0.01" /> -->
-        <!-- <input type="range" v-model="volume" @input="updateVolume" /> -->
 
+        <!-- Controles de reproducción -->
         <div class="row border p-3 text-center">
-
             <div class="col" v-if="loadingAudio">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-
             </div>
             <div class="col" v-else>
                 <button id="btn-play" :disabled="isPlaying" @click="play"><i class="bi bi-play"></i></button>
@@ -48,196 +44,164 @@
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 
 <script setup>
-    import { ref, onMounted } from 'vue';
-    import { PitchShifter } from 'soundtouchjs'; // Ajusta el path si es necesario
-
-    // Variables reactivas
-    // const tempo = ref(1.0);
-    const pitch = ref(1.0);
-    // const volume = ref(1.0);
-    const key = ref(1);
-    const currentTime = ref('0:00');
-    const duration = ref('0:00');
-    const progress = ref(0);
-    const isPlaying = ref(false);
-    const shifter = ref(null);
-    const audioCtx = ref(null);
-    const gainNode = ref(null);
-    const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const notaOriginal = ref(null);
-    const notaActual = ref(null);
-    // const url = ref('https://bvgoedrihwmwjipwtwfl.supabase.co/storage/v1/object/sign/pistas/Pista%20Padre%20Nuestro-%20Si.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJwaXN0YXMvUGlzdGEgUGFkcmUgTnVlc3Ryby0gU2kubXAzIiwiaWF0IjoxNzQ3MTA1NDgzLCJleHAiOjE3Nzg2NDE0ODN9.qRCWcA0IYhEJ1U8jPIuv9EqvuMSv0mmkSenaPqoWN7k');
-    // Función para inicializar el AudioContext y GainNode
-    const loadingAudio = ref(true);
-    const loadingNotaMas = ref(false);
-    const loadingNotaMenos = ref(false);
-
-
-    const initAudioContext = () => {
-        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode.value = audioCtx.value.createGain();
-    };
+    import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+    import { PitchShifter } from 'soundtouchjs'
 
     const props = defineProps({
-        url: {
-            type: String,
-            default: ''
-        },
-        tonoOriginal: {
-            type: Number,
-            default: 0
-        }
+        url: { type: String, required: true },
+        tonoOriginal: { type: Number, default: 0 },
     })
+
+    const pitch = ref(1.0)
+    const key = ref(1)
+    const currentTime = ref('0:00')
+    const duration = ref('0:00')
+    const progress = ref(0)
+    const isPlaying = ref(false)
+    const loadingAudio = ref(true)
+    const loadingNotaMas = ref(false)
+    const loadingNotaMenos = ref(false)
+
+    const shifter = ref(null)
+    const audioCtx = ref(null)
+    const gainNode = ref(null)
+    const sourceBuffer = ref(null)
+
+    const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    const notaOriginal = ref(props.tonoOriginal)
+
     const getNota = computed(() => {
+        const index = (notaOriginal.value - 1 + key.value + 12) % 12
+        return notas[index]
+    })
 
-        const index = (notaOriginal.value - 1 + key.value + 11) % 12;
-        return notas[index];
-    });
+    function initAudioContext() {
+        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)()
+        gainNode.value = audioCtx.value.createGain()
+    }
 
-    // Función para cargar el archivo de audio
-    const loadSource = (url) => {
-        fetch(url)
-            .then((response) => response.arrayBuffer())
-            .then((buffer) => {
-                audioCtx.value.decodeAudioData(buffer, (audioBuffer) => {
-                    shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384);
-                    // shifter.value.tempo = tempo.value;
-                    shifter.value.pitch = pitch.value;
+    async function loadSource() {
+        loadingAudio.value = true
 
-                    shifter.value.on('play', (detail) => {
-                        currentTime.value = detail.formattedTimePlayed;
-                        progress.value = detail.percentagePlayed;
-                    });
+        try {
+            const response = await fetch(props.url)
+            const buffer = await response.arrayBuffer()
+            const audioBuffer = await audioCtx.value.decodeAudioData(buffer)
 
-                    duration.value = shifter.value.formattedDuration;
-                    loadingAudio.value = false; // Cambia el estado de carga
-                });
+            sourceBuffer.value = audioBuffer
+
+            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 16384)
+            shifter.value.pitchSemitones = key.value
+            shifter.value.connect(gainNode.value)
+            gainNode.value.connect(audioCtx.value.destination)
+
+            shifter.value.on('play', (detail) => {
+                currentTime.value = detail.formattedTimePlayed
+                progress.value = detail.percentagePlayed
             })
-            .catch((error) => {
-                console.error('Error cargando el archivo de audio:', error);
-            });
-    };
-    const incrementarNota = async () => {
-        if (loadingNotaMas.value) return;
-        loadingNotaMas.value = true;
 
-        if (key.value === 7) {
-            key.value = -7;
-        } else {
-            key.value++;
+            duration.value = shifter.value.formattedDuration
+        } catch (err) {
+            console.error('Error cargando audio:', err)
         }
-        updateKey();
 
-        setTimeout(() => {
-            loadingNotaMas.value = false;
-        }, 5000);
-    };
+        loadingAudio.value = false
+    }
+
+    async function updateKey() {
+        if (!sourceBuffer.value || !audioCtx.value) return
+
+        if (shifter.value) {
+            shifter.value.disconnect()
+        }
+
+        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 16384)
+        shifter.value.pitchSemitones = key.value
+        shifter.value.connect(gainNode.value)
+        gainNode.value.connect(audioCtx.value.destination)
+
+        shifter.value.on('play', (detail) => {
+            currentTime.value = detail.formattedTimePlayed
+            progress.value = detail.percentagePlayed
+        })
+
+        duration.value = shifter.value.formattedDuration
+
+        if (isPlaying.value) {
+            play()
+        }
+    }
+
+    const incrementarNota = async () => {
+        if (loadingNotaMas.value) return
+        loadingNotaMas.value = true
+
+        key.value = key.value === 7 ? -7 : key.value + 1
+        await updateKey()
+
+        loadingNotaMas.value = false
+    }
 
     const decrementarNota = async () => {
-        if (loadingNotaMenos.value) return;
+        if (loadingNotaMenos.value) return
+        loadingNotaMenos.value = true
 
-        loadingNotaMenos.value = true;
+        key.value = key.value === -7 ? 7 : key.value - 1
+        await updateKey()
 
-        if (key.value === -7) {
-            key.value = 7;
-        } else {
-            key.value--;
-        }
-        updateKey();
+        loadingNotaMenos.value = false
+    }
 
-        setTimeout(() => {
-            loadingNotaMenos.value = false;
-        }, 5000);
-    };
-
-    // Función para reproducir el audio
-    const play = () => {
+    function play() {
         if (shifter.value) {
-            shifter.value.connect(gainNode.value);
-            gainNode.value.connect(audioCtx.value.destination);
+            shifter.value.connect(gainNode.value)
+            gainNode.value.connect(audioCtx.value.destination)
+
             audioCtx.value.resume().then(() => {
-                isPlaying.value = true;
-            });
+                isPlaying.value = true
+            })
         }
-    };
+    }
 
-    // Función para pausar el audio
-    const pause = () => {
+    function pause() {
         if (shifter.value) {
-            shifter.value.disconnect();
-            isPlaying.value = false;
+            shifter.value.disconnect()
+            isPlaying.value = false
         }
-    };
-    // Función para detener el audio
-    const stop = () => {
+    }
+
+    function stop() {
         if (shifter.value) {
-            shifter.value.disconnect();
-            isPlaying.value = false;
-            loadSource(props.url); // Recargar el audio
-            currentTime.value = 0;
-            progress.value = 0;
-            shifter.value.position = 0; // Reiniciar la posición del audio
-            notaActual.value = notaOriginal.value; // Reiniciar la nota actual
-            key.value = 1; // Reiniciar la clave
+            shifter.value.disconnect()
+            isPlaying.value = false
+            shifter.value.position = 0
+            currentTime.value = '0:00'
+            progress.value = 0
         }
-    };
+    }
 
-    // // Actualizar tempo
-    // const updateTempo = () => {
-    //     if (shifter.value) {
-    //         shifter.value.tempo = tempo.value;
-    //     }
-    // };
+    onMounted(async () => {
+        initAudioContext()
+        await loadSource()
+    })
 
-    // // Actualizar pitch
-    // const updatePitch = () => {
-    //     if (shifter.value) {
-    //         shifter.value.pitch = pitch.value;
-    //     }
-    // };
-
-    // // Actualizar volumen
-    // const updateVolume = () => {
-    //     if (gainNode.value) {
-    //         gainNode.value.gain.value = volume.value;
-    //     }
-    // };
-
-    // Actualizar key
-    const updateKey = () => {
-        if (shifter.value) {
-            shifter.value.pitchSemitones = key.value;
-        }
-    };
-
-    // Cargar el archivo de audio y configurar los controles cuando el componente esté montado
-    onMounted(() => {
-        initAudioContext();
-        loadSource(props.url); // Ajusta la ruta del archivo de audio
-        notaOriginal.value = props.tonoOriginal; // Nota original
-        notaActual.value = notaOriginal.value; // Nota actual
-        console.log('Nota original:', notaOriginal.value);
-        console.log('Nota actual:', notaActual.value);
-    });
-
-    // Limpiar el AudioContext al destruir el componente
     onBeforeUnmount(() => {
         if (audioCtx.value) {
-            audioCtx.value.close();
+            audioCtx.value.close()
         }
-    });
+    })
 </script>
+
 <style>
 
     #btn-inc-key,
     #btn-dec-key {
-        background-color: transparent;
-        border: none;
+        background-color: #d4e4f5;
+        border: 1px solid #007bff;
         color: #007bff;
         cursor: pointer;
         width: 60px;
@@ -246,9 +210,6 @@
         padding: 0.5rem;
         border-radius: 5px;
         transition: color 0.3s ease;
-        border: 1px solid #007bff;
-        background-color: #d4e4f5;
-
     }
 
     .text-tono {
@@ -260,27 +221,17 @@
     #btn-play,
     #btn-pause,
     #btn-stop {
-        background-color: transparent;
-        border: none;
+        background-color: #d4e4f5;
+        border: 1px solid #dd8fec;
         color: #b670e4;
         cursor: pointer;
         font-size: 2rem;
-        padding: 0.5rem;
-        border-radius: 5px;
-        transition: color 0.3s ease;
-        border: 1px solid #dd8fec;
         border-radius: 50%;
         width: 50px;
         height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
-        margin-left: 1rem;
-        margin-right: 1rem;
-        background-color: #d4e4f5;
+        margin: 0 1rem 1rem;
     }
-
-
-
 </style>
