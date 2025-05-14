@@ -65,7 +65,7 @@
                     <div class="row">
                         <div class="col">
                             <label for="pista">Pista</label>
-                            <ReconocerTonoCancion @nota-chroma="handleNotaChroma" @archivo-cargado="handleFile" />
+                            <ReconocerTonoCancion @archivo-cargado="setUrl" :id="router.params.id" />
                         </div>
                     </div>
                     <div class="row">
@@ -158,6 +158,10 @@
         }
     }
 
+    const setUrl = (url) => {
+        cancion.value.pista_url = url
+    }
+
     const handleUpdate = async () => {
         cargando.value = true
         document.getElementById('btn-enviar').innerText = 'Actualizando...'
@@ -178,33 +182,7 @@
         routers.push('/canciones')
     }
 
-    const handleNotaChroma = (nota) => {
-        cancion.value.pista_tono = nota;
-    }
 
-    const handleFile = async (file) => {
-        // Subir el archivo a Supabase Storage
-        const { data, error } = await supabase.storage.from('pistas').upload(`${file.name}`, file, {
-            upsert: true
-        })
-
-        if (error) {
-            console.error('Error al subir el archivo:', error)
-            return
-        }
-
-        // Obtener la URL pública del archivo
-        const { data: publicData } = supabase.storage
-            .from('pistas')
-            .getPublicUrl(`${file.name}`)
-
-        if (publicData && publicData.publicUrl) {
-            console.log('URL pública:', publicData.publicUrl)
-            cancion.value.pista_url = publicData.publicUrl
-        } else {
-            console.error('No se pudo obtener la URL pública.')
-        }
-    }
 
 
 
