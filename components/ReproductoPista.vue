@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="">
         <div class="row">
             <div class="col">
                 <audio ref="audioRef" :src="props.url" @loadedmetadata="onLoadedMetadata" @timeupdate="actualizarTiempo"
@@ -27,20 +27,22 @@
         </div>
 
         <!-- Controles de reproducción -->
-        <div class="row border p-3 text-center">
-            <div class="col" v-if="!audioListo">
-                <div class="spinner-border" role="status">
+        <div class="row border p-3 text-center" v-if="!audioListo">
+            <div class="col">
+                <div class="spinner-border mt-2" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
-            <div class="col" v-else>
-                <button id="btn-play" :disabled="isPlaying" @click="togglePlay"><i
+        </div>
+        <div class="row border p-3 " v-else>
+            <div class="col d-flex justify-content-center">
+                <button id="btn-play" @click="togglePlay" :class="isPlaying ? 'playing' : ''"><i
                         :class="!isPlaying ? 'bi bi-play' : 'bi bi-pause'"></i></button>
             </div>
-            <div class="col">
+            <div class="col d-flex justify-content-center">
                 <button id="btn-stop" @click="stopAudio"><i class="bi bi-stop"></i></button>
             </div>
-            <div class="col">
+            <div class="col text-center">
                 <progress :value="progress" max="100"></progress>
                 <div>
                     <span>{{ tiempo }}</span> / <span>{{ duracion }}</span>
@@ -54,7 +56,7 @@
     import { ref, onMounted } from 'vue';
 
     const tonos = ['DO', 'DO#', 'RE', 'RE#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
-    const tonoIndex = ref(null); // DO# por defecto
+    const tonoIndex = ref(0); // DO por defecto
 
     const audioRef = ref(null);
     const audioCtx = ref(null);
@@ -145,17 +147,24 @@
         audioRef.value.currentTime = 0;
         tiempo.value = '00:00';
         isPlaying.value = false;
+        tonoIndex.value = props.tonoOriginal
 
         // NO cerramos el audioContext para evitar errores al reconectar
         // Lo dejamos abierto para la próxima reproducción
     };
 
     const subirTono = () => {
+        if (tonoIndex.value === 11) {
+            tonoIndex.value = 0;
+        }
         tonoIndex.value = (tonoIndex.value + 1) % tonos.length;
         actualizarPitch();
     };
 
     const bajarTono = () => {
+        if (tonoIndex.value === 0) {
+            tonoIndex.value = 11;
+        }
         tonoIndex.value = (tonoIndex.value - 1 + tonos.length) % tonos.length;
         actualizarPitch();
     };
@@ -165,7 +174,8 @@
         if (audioRef.value && audioRef.value.readyState >= 3) {
             onLoadedMetadata();
         }
-        tonoIndex.value = props.tonoOriginal;
+        tonoIndex.value = props.tonoOriginal - 1; // Ajustar el índice para que coincida con el array de tonos
+        console.log('Tono original:', props.tonoOriginal);
     });
 </script>
 

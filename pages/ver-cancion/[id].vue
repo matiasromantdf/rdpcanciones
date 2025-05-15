@@ -3,8 +3,8 @@
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song && !guardando">
-            <div class="controles mt-4 ms-auto me-auto">
-                <div class="controles-tono">
+            <div class="row">
+                <div class="control col border p-2 text-center">
                     <p>Tono acordes</p>
                     <div>
                         <!-- botones mas +1 y -1 para transportar la cancion -->
@@ -13,7 +13,7 @@
                         <button class="btn border" @click="transportar(-1)">-1</button>
                     </div>
                 </div>
-                <div class="controles-letra">
+                <div class="control col border p-2 text-center">
                     <!-- botones mas +1 y -1 para transportar la cancion -->
                     <p>Cambiar tamaño</p>
                     <div>
@@ -22,14 +22,14 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-4 text-center" v-if="!cargardoRepertorio">
-                <div class="col-6 col-md-2 d-flex align-items-center justify-content-center" v-if="puedeAddToFavorite">
+            <div class="row mb-4 text-center border mt-4 p-2" v-if="!cargardoRepertorio">
+                <div class="col d-flex align-items-center justify-content-center" v-if="puedeAddToFavorite">
                     <span :class="'material-icons icono ' + classIcono" @click="addToRepertorio">
                         favorite
                     </span>
                     <span v-if="estaEnRepertorio">en repertorio {{ acordes[tonoEnRepertorio - 1].acorde }}</span>
                 </div>
-                <div class="col-4" v-if="song.link" @click="openUrl(song.link)">
+                <div class="col" v-if="song.link" @click="openUrl(song.link)">
                     <span class="material-icons icono-link" style="color: red;">
                         smart_display
                     </span>
@@ -44,14 +44,10 @@
 
             </div>
             <div class="row" v-if="puedeAddToFavorite">
-                <div class="col-12 ">
+                <div class="col">
                     <div v-if="song.pista_url">
-                        <ReproductoPista :url="song.pista_url" :tonoOriginal="song.pista_tono" />
+                        <ReproductoPista :url="song.pista_url" :tonoOriginal="parseInt(song.pista_tono)" />
                         <!-- <Reproductor2 :url="song.pista_url" :tonoOriginal="song.numero_tono" /> -->
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
                     </div>
                 </div>
             </div>
@@ -681,45 +677,12 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .controles-tono {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 20px;
-        align-items: center;
-        width: fit-content;
-        border: solid 1px #ccc;
-        padding: 10px;
+
+
+    .control {
         border-radius: 5px;
-        background-color: #f5f5f5;
     }
 
-
-    .controles-tono button {
-        margin: 0 10px;
-
-    }
-
-    .controles-letra {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 20px;
-        align-items: center;
-        width: fit-content;
-        border: solid 1px #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #f5f5f5;
-        margin-left: 20px;
-    }
-
-    .controles-letra button {
-        margin: 0 10px;
-    }
-
-    .controles {
-        display: flex;
-        margin-bottom: 20px;
-    }
 
     .icono-link {
         font-size: 24px;
