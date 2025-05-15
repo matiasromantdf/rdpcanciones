@@ -147,7 +147,7 @@
         audioRef.value.currentTime = 0;
         tiempo.value = '00:00';
         isPlaying.value = false;
-        tonoIndex.value = props.tonoOriginal
+        tonoIndex.value = props.tonoOriginal - 1
 
         // NO cerramos el audioContext para evitar errores al reconectar
         // Lo dejamos abierto para la próxima reproducción
