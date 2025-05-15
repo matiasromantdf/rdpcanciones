@@ -47,6 +47,7 @@
                 <div class="col-12 ">
                     <div v-if="song.pista_url">
                         <ReproductoPista :url="song.pista_url" :tonoOriginal="song.pista_tono" />
+                        <!-- <Reproductor2 :url="song.pista_url" :tonoOriginal="song.numero_tono" /> -->
                     </div>
                 </div>
                 <div class="row">

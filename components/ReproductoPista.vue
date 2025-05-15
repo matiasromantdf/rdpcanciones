@@ -1,22 +1,25 @@
 <template>
     <div>
+        <div class="row">
+            <div class="col">
+                <audio ref="audioRef" :src="props.url" @loadedmetadata="onLoadedMetadata" @timeupdate="actualizarTiempo"
+                    preload="auto" crossorigin="anonymous"></audio>
+
+            </div>
+        </div>
         <!-- Controles de tono -->
         <div class="row border p-3 text-center">
             <div class="col">
-                <button id="btn-dec-key" :disabled="loadingNotaMenos" @click="decrementarNota">
-                    <span v-if="loadingNotaMenos" class="spinner-border spinner-border-sm" role="status"
-                        aria-hidden="true"></span>
-                    <span v-else>-</span>
+                <button id="btn-dec-key" @click="bajarTono">
+                    <span>-</span>
                 </button>
             </div>
             <div class="col text-tono">
                 <span>Tono: {{ getNota }}</span>
             </div>
             <div class="col">
-                <button id="btn-inc-key" :disabled="loadingNotaMas" @click="incrementarNota">
-                    <span v-if="loadingNotaMas" class="spinner-border spinner-border-sm" role="status"
-                        aria-hidden="true"></span>
-                    <span v-else>+</span>
+                <button id="btn-inc-key" @click="subirTono">
+                    <span>+</span>
                 </button>
             </div>
 
@@ -25,25 +28,22 @@
 
         <!-- Controles de reproducción -->
         <div class="row border p-3 text-center">
-            <div class="col" v-if="loadingAudio">
+            <div class="col" v-if="!audioListo">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
             <div class="col" v-else>
-                <button id="btn-play" :disabled="isPlaying" :class="isPlaying ? 'playing' : ''" @click="play"><i
-                        class="bi bi-play"></i></button>
+                <button id="btn-play" :disabled="isPlaying" @click="togglePlay"><i
+                        :class="!isPlaying ? 'bi bi-play' : 'bi bi-pause'"></i></button>
             </div>
             <div class="col">
-                <button id="btn-pause" :disabled="!isPlaying" @click="pause"><i class="bi bi-pause"></i></button>
-            </div>
-            <div class="col">
-                <button id="btn-stop" @click="stop"><i class="bi bi-stop"></i></button>
+                <button id="btn-stop" @click="stopAudio"><i class="bi bi-stop"></i></button>
             </div>
             <div class="col">
                 <progress :value="progress" max="100"></progress>
                 <div>
-                    <span>{{ currentTime }}</span> / <span>{{ duration }}</span>
+                    <span>{{ tiempo }}</span> / <span>{{ duracion }}</span>
                 </div>
             </div>
         </div>
@@ -51,146 +51,122 @@
 </template>
 
 <script setup>
-    import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-    import { PitchShifter } from 'soundtouchjs'
+    import { ref, onMounted } from 'vue';
 
-    const props = defineProps({
-        url: { type: String, required: true },
-        tonoOriginal: { type: Number, default: 0 },
-    })
+    const tonos = ['DO', 'DO#', 'RE', 'RE#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
+    const tonoIndex = ref(null); // DO# por defecto
 
-    const key = ref(1)
-    const currentTime = ref('0:00')
-    const duration = ref('0:00')
-    const progress = ref(0)
-    const isPlaying = ref(false)
-    const loadingAudio = ref(true)
-    const loadingNotaMas = ref(false)
-    const loadingNotaMenos = ref(false)
+    const audioRef = ref(null);
+    const audioCtx = ref(null);
+    const soundtouchNode = ref(null);
+    const sourceNode = ref(null);
 
-    const shifter = ref(null)
-    const audioCtx = ref(null)
-    const sourceBuffer = ref(null)
+    const audioListo = ref(false);
+    const isPlaying = ref(false);
+    const tiempo = ref('00:00');
+    const duracion = ref('00:00');
 
-    const notas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    const notaOriginal = ref(props.tonoOriginal)
+
+    const props = defineProps(['url', 'tonoOriginal']);
+
+    const formatTime = (segundos) => {
+        const min = Math.floor(segundos / 60);
+        const sec = Math.floor(segundos % 60);
+        return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    };
+
+    const onLoadedMetadata = () => {
+        duracion.value = formatTime(audioRef.value.duration);
+        audioListo.value = true;
+    };
+    const progress = computed(() => {
+        if (audioRef.value && audioRef.value.duration) {
+            return (audioRef.value.currentTime / audioRef.value.duration) * 100;
+        }
+        return 0;
+    });
 
     const getNota = computed(() => {
-        const index = (notaOriginal.value - 1 + key.value + 12) % 12
-        return notas[index]
-    })
+        return tonos[tonoIndex.value];
+    });
 
-    function initAudioContext() {
-        audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
-    }
 
-    async function loadSource() {
-        loadingAudio.value = true
+    const actualizarTiempo = () => {
+        if (audioRef.value) {
+            tiempo.value = formatTime(audioRef.value.currentTime);
+        }
+    };
 
-        try {
-            const response = await fetch(props.url)
-            const buffer = await response.arrayBuffer()
-            const audioBuffer = await audioCtx.value.decodeAudioData(buffer)
+    const actualizarPitch = () => {
+        if (soundtouchNode.value) {
+            // Asumiendo que 'pitchSemitones' es el parámetro correcto
+            soundtouchNode.value.parameters.get('pitchSemitones').value = tonoIndex.value;
+        }
+    };
 
-            sourceBuffer.value = audioBuffer
+    const inicializarAudioContext = async () => {
+        if (audioCtx.value) return; // Ya inicializado
 
-            shifter.value = new PitchShifter(audioCtx.value, audioBuffer, 8192)
-            shifter.value.pitchSemitones = key.value
-            shifter.value.connect(audioCtx.value.destination)
+        audioCtx.value = new AudioContext();
+        await audioCtx.value.audioWorklet.addModule('/soundtouch-worklet.js');
 
-            shifter.value.on('play', (detail) => {
-                currentTime.value = detail.formattedTimePlayed
-                progress.value = detail.percentagePlayed
-            })
+        sourceNode.value = audioCtx.value.createMediaElementSource(audioRef.value);
+        soundtouchNode.value = new AudioWorkletNode(audioCtx.value, 'soundtouch-processor');
+        sourceNode.value.connect(soundtouchNode.value).connect(audioCtx.value.destination);
 
-            duration.value = shifter.value.formattedDuration
-        } catch (err) {
-            console.error('Error cargando audio:', err)
+        actualizarPitch();
+    };
+
+    const togglePlay = async () => {
+
+        if (!audioRef.value) return;
+
+        if (!audioCtx.value) {
+            await inicializarAudioContext();
         }
 
-        loadingAudio.value = false
-    }
-
-    async function updateKey() {
-        if (!sourceBuffer.value || !audioCtx.value) return
-
-        if (shifter.value) {
-            shifter.value.disconnect()
+        if (audioCtx.value.state === 'suspended') {
+            await audioCtx.value.resume();
         }
-
-        shifter.value = new PitchShifter(audioCtx.value, sourceBuffer.value, 8192)
-        shifter.value.pitchSemitones = key.value
-        shifter.value.connect(audioCtx.value.destination)
-
-        shifter.value.on('play', (detail) => {
-            currentTime.value = detail.formattedTimePlayed
-            progress.value = detail.percentagePlayed
-        })
-
-        duration.value = shifter.value.formattedDuration
 
         if (isPlaying.value) {
-            play()
+            audioRef.value.pause();
+        } else {
+            await audioRef.value.play();
         }
-    }
 
-    const incrementarNota = async () => {
-        if (loadingNotaMas.value) return
-        loadingNotaMas.value = true
+        isPlaying.value = !isPlaying.value;
+    };
 
-        key.value = key.value === 7 ? -7 : key.value + 1
-        await updateKey()
+    const stopAudio = async () => {
+        if (!audioRef.value) return;
 
-        loadingNotaMas.value = false
-    }
+        audioRef.value.pause();
+        audioRef.value.currentTime = 0;
+        tiempo.value = '00:00';
+        isPlaying.value = false;
 
-    const decrementarNota = async () => {
-        if (loadingNotaMenos.value) return
-        loadingNotaMenos.value = true
+        // NO cerramos el audioContext para evitar errores al reconectar
+        // Lo dejamos abierto para la próxima reproducción
+    };
 
-        key.value = key.value === -7 ? 7 : key.value - 1
-        await updateKey()
+    const subirTono = () => {
+        tonoIndex.value = (tonoIndex.value + 1) % tonos.length;
+        actualizarPitch();
+    };
 
-        loadingNotaMenos.value = false
-    }
+    const bajarTono = () => {
+        tonoIndex.value = (tonoIndex.value - 1 + tonos.length) % tonos.length;
+        actualizarPitch();
+    };
 
-    function play() {
-        if (shifter.value) {
-            shifter.value.connect(audioCtx.value.destination)
 
-            audioCtx.value.resume().then(() => {
-                isPlaying.value = true
-            })
+    onMounted(() => {
+        if (audioRef.value && audioRef.value.readyState >= 3) {
+            onLoadedMetadata();
         }
-    }
-
-    function pause() {
-        if (shifter.value) {
-            shifter.value.disconnect()
-            isPlaying.value = false
-        }
-    }
-
-    function stop() {
-        if (shifter.value) {
-            shifter.value.disconnect()
-            isPlaying.value = false
-            shifter.value.position = 0
-            currentTime.value = '0:00'
-            progress.value = 0
-        }
-    }
-
-    onMounted(async () => {
-        initAudioContext()
-        await loadSource()
-    })
-
-    onBeforeUnmount(() => {
-        if (audioCtx.value) {
-            audioCtx.value.close()
-        }
-    })
+        tonoIndex.value = props.tonoOriginal;
+    });
 </script>
 
 <style>
