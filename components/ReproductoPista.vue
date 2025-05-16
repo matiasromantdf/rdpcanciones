@@ -9,15 +9,25 @@
         </div>
         <!-- Controles de tono -->
         <div class="row border p-3 text-center">
-            <div class="col">
+            <div class="col-3">
                 <button id="btn-dec-key" @click="bajarTono">
                     <span>-</span>
                 </button>
             </div>
             <div class="col text-tono">
-                <span>Tono: {{ getNota }}</span>
+                <div class="row">
+                    <div class="col">
+                        <span>Tono: {{ getNota }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <span style="font-size: 0.5em; color:darkviolet;">Semitonos:{{ pitchFactor > 0 ? '+' : '' }}{{
+                            pitchFactor }}</span>
+                    </div>
+                </div>
             </div>
-            <div class="col">
+            <div class="col-3">
                 <button id="btn-inc-key" @click="subirTono">
                     <span>+</span>
                 </button>
@@ -49,6 +59,11 @@
                 </div>
             </div>
         </div>
+        <!-- <div class="row">
+            <div class="col">
+                {{ pitchFactor }}
+            </div>
+        </div> -->
     </div>
 </template>
 
@@ -56,7 +71,7 @@
     import { ref, onMounted } from 'vue';
 
     const tonos = ['DO', 'DO#', 'RE', 'RE#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
-    const tonoIndex = ref(0); // DO por defecto
+    const pitchFactor = ref(0);
 
     const audioRef = ref(null);
     const audioCtx = ref(null);
@@ -89,7 +104,14 @@
     });
 
     const getNota = computed(() => {
-        return tonos[tonoIndex.value];
+
+        let indice = props.tonoOriginal + pitchFactor.value;
+        if (indice < 1) {
+            indice += tonos.length;
+        } if (indice >= tonos.length + 1) {
+            indice -= tonos.length;
+        }
+        return tonos[indice - 1];
     });
 
 
@@ -102,7 +124,7 @@
     const actualizarPitch = () => {
         if (soundtouchNode.value) {
             // Asumiendo que 'pitchSemitones' es el parámetro correcto
-            soundtouchNode.value.parameters.get('pitchSemitones').value = tonoIndex.value;
+            soundtouchNode.value.parameters.get('pitchSemitones').value = pitchFactor.value;
         }
     };
 
@@ -147,25 +169,27 @@
         audioRef.value.currentTime = 0;
         tiempo.value = '00:00';
         isPlaying.value = false;
-        tonoIndex.value = props.tonoOriginal - 1
-
+        pitchFactor.value = 0;
+        actualizarPitch();
         // NO cerramos el audioContext para evitar errores al reconectar
         // Lo dejamos abierto para la próxima reproducción
     };
 
     const subirTono = () => {
-        if (tonoIndex.value === 11) {
-            tonoIndex.value = 0;
-        }
-        tonoIndex.value = (tonoIndex.value + 1) % tonos.length;
+        // if (pitchFactor.value === 11) {
+        //     pitchFactor.value = 0;
+        // }
+        // pitchFactor.value = (pitchFactor.value + 1) % tonos.length;
+        pitchFactor.value++;
         actualizarPitch();
     };
 
     const bajarTono = () => {
-        if (tonoIndex.value === 0) {
-            tonoIndex.value = 11;
-        }
-        tonoIndex.value = (tonoIndex.value - 1 + tonos.length) % tonos.length;
+        // if (pitchFactor.value === 0) {
+        //     pitchFactor.value = 11;
+        // }
+        // pitchFactor.value = (pitchFactor.value - 1 + tonos.length) % tonos.length;
+        pitchFactor.value--;
         actualizarPitch();
     };
 
@@ -174,7 +198,6 @@
         if (audioRef.value && audioRef.value.readyState >= 3) {
             onLoadedMetadata();
         }
-        tonoIndex.value = props.tonoOriginal - 1; // Ajustar el índice para que coincida con el array de tonos
         console.log('Tono original:', props.tonoOriginal);
     });
 </script>
