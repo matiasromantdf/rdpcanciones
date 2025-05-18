@@ -89,7 +89,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" v-if="cancion.pista_url">
                         <div class="col">
                             <label for="tonoPista">Tono pista</label>
                             <select class="form-select" id="tonoPista" v-model="cancion.pista_tono">
@@ -106,12 +106,16 @@
                             </select>
                         </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 mt-2">
                         <label for="letra" class="form-label">Letra</label>
                         <textarea class="form-control" id="letra" rows="20" v-model="cancion.letra"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary mb-3" :disabled="cargando"
-                        id="btn-enviar">Actualizar</button>
+                    <div class="row mt-3 mb-4 d-flex justify-content-center">
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-primary mb-3 w-100" :disabled="cargando"
+                                id="btn-enviar">Actualizar</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
