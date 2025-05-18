@@ -46,7 +46,8 @@
             <div class="row" v-if="puedeAddToFavorite">
                 <div class="col">
                     <div v-if="song.pista_url">
-                        <ReproductoPista :url="song.pista_url" :tonoOriginal="parseInt(song.pista_tono)" />
+                        <ReproductoPista :url="song.pista_url" :tonoOriginal="parseInt(song.pista_tono)"
+                            :modo="song.pista_tono_esmenor == true ? 'm' : ''" />
                         <!-- <Reproductor2 :url="song.pista_url" :tonoOriginal="song.numero_tono" /> -->
                     </div>
                 </div>

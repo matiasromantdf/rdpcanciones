@@ -67,6 +67,27 @@
                             <label for="pista">Pista</label>
                             <ReconocerTonoCancion @archivo-cargado="setUrl" :id="router.params.id" />
                         </div>
+
+                    </div>
+                    <div class="row" v-if="cancion.pista_url">
+                        <div class="col">
+                            <label for="pista_url">URL Pista</label>
+                            <input type="text" class="form-control" id="pista_url" aria-describedby="pista_urlHelp"
+                                v-model="cancion.pista_url" readonly>
+                            <div id="pista_urlHelp" class="form-text">Ingresa la URL de la pista</div>
+                        </div>
+                        <div class="col-4 mt-4" v-if="!analizandoCancion">
+                            <button class="btn btn-info" @click="analizarCancion" type="button" id="btn-analizar-url">
+                                <i class="bi bi-mic"></i>
+                                ver tono
+                            </button>
+                        </div>
+                        <div class="col-4 mt-4" v-else>
+                            <button class="btn btn-info w-75" type="button" disabled>
+                                <div class="spinner-border ml-auto mt-1" role="status" aria-hidden="true"
+                                    style="width: 1rem; height: 1rem;"></div>
+                            </button>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col">
@@ -75,6 +96,13 @@
                                 <option value="0">Seleccionar...</option>
                                 <option v-for="nota in notas" :key="nota.numero" :value="nota.numero">{{ nota.nota }}
                                 </option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="pista_tono_esmenor">Modo:</label>
+                            <select class="form-select" id="pista_tono_esmenor" v-model="cancion.pista_tono_esmenor">
+                                <option value="false">Mayor</option>
+                                <option value="true">Menor</option>
                             </select>
                         </div>
                     </div>
@@ -95,6 +123,7 @@
     import { useSupabase } from '../../composables/useSupabase'
     import { useRoute } from 'vue-router'
     import { useRouter } from 'vue-router'
+    import Swal from 'sweetalert2'
 
     const { supabase } = useSupabase()
     const router = useRoute()
@@ -115,9 +144,10 @@
         link: '',
         tonoPista: '',
         pista_url: '',
-        pista_tono: '0'
+        pista_tono: '0',
+        pista_tono_esmenor: false
     })
-
+    const analizandoCancion = ref(false)
     const notas = [
         { nota: 'Do', numero: 1 },
         { nota: 'Do#', numero: 2 },
@@ -161,14 +191,36 @@
     const setUrl = (url) => {
         cancion.value.pista_url = url
     }
+    const analizarCancion = async () => {
+
+        analizandoCancion.value = true
+
+        let baseUrl = "https://detect-key-service.onrender.com/detect-key?url="
+        let url = baseUrl + encodeURIComponent(cancion.value.pista_url)
+        const response = await fetch(url)
+        const data = await response.json()
+        analizandoCancion.value = false
+        if (data.escala == 'major') {
+            data.escala = 'Mayor'
+        }
+        else {
+            data.escala = 'Menor'
+        }
+
+        Swal.fire({
+            title: 'Análisis de tono',
+            text: `El tono de la pista es: ${data.tono}` + ` escala: ${data.escala}`,
+            icon: 'info'
+        })
+    }
 
     const handleUpdate = async () => {
         cargando.value = true
         document.getElementById('btn-enviar').innerText = 'Actualizando...'
-        const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link, pista_url, pista_tono } = cancion.value
+        const { titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link, pista_url, pista_tono, pista_tono_esmenor } = cancion.value
         const id = router.params.id
         const { data, error } = await supabase.from('canciones').update({
-            titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link, pista_url, pista_tono
+            titulo, autor, letra, numero_tono, modificador, es_adaptacion, tipo, link, pista_url, pista_tono, pista_tono_esmenor
         }).eq('id', id)
         if (error) {
             console.error(error)

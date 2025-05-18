@@ -17,12 +17,12 @@
             <div class="col text-tono">
                 <div class="row">
                     <div class="col">
-                        <span>Tono: {{ getNota }}</span>
+                        <span>Tono: {{ getNota }}{{ props.modo }}</span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <span style="font-size: 0.5em; color:darkviolet;">Semitonos:{{ pitchFactor > 0 ? '+' : '' }}{{
+                        <span style="font-size: 0.5em; color:darkviolet;">Semitonos: {{ pitchFactor > 0 ? '+' : '' }}{{
                             pitchFactor }}</span>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
     const duracion = ref('00:00');
 
 
-    const props = defineProps(['url', 'tonoOriginal']);
+    const props = defineProps(['url', 'tonoOriginal', 'modo']);
 
     const formatTime = (segundos) => {
         const min = Math.floor(segundos / 60);

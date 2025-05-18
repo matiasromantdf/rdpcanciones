@@ -85,7 +85,7 @@
         <p v-if="uploading" class="">Cargando archivo...</p>
         <p v-if="archivoSubido" class="archivo-ok">Archivo subido correctamente</p>
 
-        <div class="row">
+        <!-- <div class="row">
             <div class="col">
                 <button class="btn btn-primary" @click.prevent="analizarCancion" :disabled="!archivoSubido"
                     id="btn-analizar">Analizar</button>
@@ -93,7 +93,7 @@
             <div class="col d-flex align-items-center justify-content-center" v-if="analyzing">
                 <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
             </div>
-        </div>
+        </div> -->
         <div class="row">
             <div class="col">
                 {{ respuestaAnalisis }}
