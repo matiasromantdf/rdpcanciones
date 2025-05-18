@@ -9,7 +9,7 @@
             <div class="col-md-4 col-sm-5">
                 <div class="row text-center">
                     <div class="col">
-                        <button class="btn btn-primary m-2" @click="fetchSongs()"
+                        <button class="btn btn-primary m-2" @click="applySearchFilter"
                             :disabled="search.length === 0">{{ textoBoton }}</button>
 
                     </div>
@@ -20,9 +20,23 @@
             </div>
 
         </div>
+        <div class="row p-2 d-flex align-items-center" v-if="puedeEliminar">
+            <div class="col-6">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" v-model="tipoFilter" @change="applyTipoFilter">
+                    <option value="0">Todas</option>
+                    <option value="1">Adoración</option>
+                    <option value="2">Alabanza</option>
+                </select>
+            </div>
+            <div class="col">
+                <p class="mt-4">{{ songsForShow.length }} canciones encontradas</p>
+            </div>
+
+        </div>
         <div v-if="loading">Cargando...</div>
         <ul v-if="songs.length && !loading">
-            <div class="row border p-2 m-2 cancion" v-for="song in songs">
+            <div class="row border p-2 m-2 cancion" v-for="song in songsForShow">
                 <div class="col md-10 sm-9">
                     <div class="row">
                         <div class="col-10 d-flex">
@@ -82,7 +96,28 @@
     const error = ref(null)
     const search = ref('')
     const router = useRouter()
+    const tipoFilter = ref(0)
+    const songsForShow = ref([])
 
+    const applyTipoFilter = () => {
+        if (tipoFilter.value == 0) {
+            songsForShow.value = songs.value
+        } else {
+            songsForShow.value = songs.value.filter((song) => song.tipo == tipoFilter.value)
+        }
+    }
+    const applySearchFilter = () => {
+        if (search.value.length > 0) {
+            //agregar los % para que busque en cualquier parte del titulo o autor
+            songsForShow.value = songs.value.filter((song) => {
+                return song.titulo.toLowerCase().includes(search.value.toLowerCase()) ||
+                    song.autor.toLowerCase().includes(search.value.toLowerCase()) ||
+                    song.letra.toLowerCase().includes(search.value.toLowerCase())
+            })
+        } else {
+            songsForShow.value = songs.value
+        }
+    }
 
     const fetchSongs = async () => {
         loading.value = true
@@ -90,8 +125,8 @@
         const { data, error } = await supabase
             .from('canciones')
             .select('*')
-            .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
-            .order('id', { ascending: false })
+            // .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
+            .order('titulo', { ascending: true })
 
         if (error) {
             console.error('Error al obtener las canciones:', error.message)
@@ -100,7 +135,7 @@
         } else {
             songs.value = data
             loading.value = false
-            // search.value = ''
+            songsForShow.value = songs.value
         }
 
     }
