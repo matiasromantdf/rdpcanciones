@@ -5,7 +5,7 @@
 
 
     const { supabase } = useSupabase();
-    const analyzing = ref(false);
+    // const analyzing = ref(false);
     const uploading = ref(false);
     const archivoSubido = ref(false);
     const respuestaAnalisis = ref(null);
@@ -24,19 +24,19 @@
 
     const emit = defineEmits(['archivo-cargado']);
 
-    const analizarCancion = async () => {
-        document.getElementById('btn-analizar').disabled = true;
-        analyzing.value = true;
-        console.log('Analizando canción con ID:', props.id);
-        const response = await fetch(
-            'https://detect-key-service.onrender.com/detect-key?url=' +
-            encodeURIComponent(urlCancionSubida.value)
-        );
-        respuestaAnalisis.value = await response.json();
-        document.getElementById('btn-analizar').disabled = false;
-        analyzing.value = false;
+    // const analizarCancion = async () => {
+    //     document.getElementById('btn-analizar').disabled = true;
+    //     analyzing.value = true;
+    //     console.log('Analizando canción con ID:', props.id);
+    //     const response = await fetch(
+    //         'https://detect-key-service.onrender.com/detect-key?url=' +
+    //         encodeURIComponent(urlCancionSubida.value)
+    //     );
+    //     respuestaAnalisis.value = await response.json();
+    //     document.getElementById('btn-analizar').disabled = false;
+    //     analyzing.value = false;
 
-    }
+    // }
 
 
     const handleFile = async () => {
@@ -44,9 +44,10 @@
         const file = fileInput.files[0];
         console.log('Archivo recibido:', file);
         uploading.value = true;
+        const fileName = props.id + '_pista';
 
         // Subir el archivo a Supabase Storage
-        const { data, error } = await supabase.storage.from('pistas').upload(`${file.name}`, file, {
+        const { data, error } = await supabase.storage.from('pistas').upload(`${fileName}`, file, {
             upsert: true
         })
 
@@ -58,7 +59,7 @@
         // Obtener la URL pública del archivo
         const { data: publicData } = supabase.storage
             .from('pistas')
-            .getPublicUrl(`${file.name}`)
+            .getPublicUrl(`${fileName}`)
 
         if (publicData && publicData.publicUrl) {
             console.log('URL pública:', publicData.publicUrl)

@@ -65,7 +65,7 @@
                     <div class="row">
                         <div class="col">
                             <label for="pista">Pista</label>
-                            <ReconocerTonoCancion @archivo-cargado="setUrl" :id="router.params.id" />
+                            <SubirCancion @archivo-cargado="setUrl" :id="router.params.id" />
                         </div>
 
                     </div>
@@ -128,6 +128,7 @@
     import { useRoute } from 'vue-router'
     import { useRouter } from 'vue-router'
     import Swal from 'sweetalert2'
+    import SubirCancion from '~/components/SubirCancion.vue'
 
     const { supabase } = useSupabase()
     const router = useRoute()
