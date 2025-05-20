@@ -10,13 +10,16 @@
             <div class="col-5">
                 <label for="tono" class="form-label">Filtrar por tono</label>
             </div>
-            <div class="col-6">
+            <div class="col-5">
                 <select class="form-select" v-model="tono" @change="filtrarPorTono">
                     <option value="">Todos</option>
                     <option v-for="(tono, index) in tonos" :key="index" :value="index + 1">{{ tono }}</option>
                 </select>
             </div>
-            <div class="col-6">
+            <div class="col-2">
+                <!-- <input type="checkbox" v-model="tonoEsMenor" class="form-check
+                    form-check-input" id="modo">
+                <label class="form-check-label" for="modo">Menor</label> -->
             </div>
         </div>
         <div class="row" v-if="cargando">
@@ -33,7 +36,9 @@
                             style="text-decoration: underline;">
                             {{ cancion.canciones.titulo }}
                         </h4>
-                        <p> tono: {{ convertirNumeroEnTono(cancion.tono_numero) }}</p>
+                        <p> tono:
+                            {{ convertirNumeroEnTono(cancion.tono_numero) }}{{ cancion.tono_esmenor == '1' ? 'm' : '' }}
+                        </p>
                     </div>
                     <div class="col">
                         <button @click="eliminarCancion(cancion.id)" class="btn btn-sm"
@@ -57,7 +62,7 @@
     import { useSupabase } from '~/composables/useSupabase';
     import { onMounted } from 'vue';
     import { useRouter } from 'vue-router'
-    const { usuario, roles, hasRole, supabase } = useSupabase();
+    const { usuario, hasRole, supabase } = useSupabase();
     import Swal from 'sweetalert2';
 
 
@@ -76,6 +81,8 @@
         'A#',
         'B',
     ]
+    const tonoEsMenor = ref(false)
+
     const cargando = ref(true)
 
     const tono = ref('')

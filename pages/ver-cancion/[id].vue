@@ -27,7 +27,11 @@
                     <span :class="'material-icons icono ' + classIcono" @click="addToRepertorio">
                         favorite
                     </span>
-                    <span v-if="estaEnRepertorio">en repertorio {{ acordes[tonoEnRepertorio - 1].acorde }}</span>
+                    <span v-if="estaEnRepertorio">en repertorio
+                        <span style="font-weight: bold">
+                            {{ acordes[tonoEnRepertorio - 1].acorde }}{{ tonoRepertorioEsMenor == '1' ? 'm' : '' }}
+                        </span>
+                    </span>
                 </div>
                 <div class="col" v-if="song.link" @click="openUrl(song.link)">
                     <span class="material-icons icono-link" style="color: red;">
@@ -126,6 +130,12 @@
                         {{ acorde.acorde }}
                     </option>
                 </select>
+                <label for="tono">Modo:</label>
+
+                <select name="modo" id="modo" v-model="tonoRepertorioEsMenor" class="form-select">
+                    <option value="1">Menor</option>
+                    <option value="0">Mayor</option>
+                </select>
                 <!-- <label for="modificador">Modificador:</label>
                 <select v-model="modificador" id="modificador">
                     <option v-for="mod in modificadores" :key="mod.id" :value="mod.modificador">{{ mod.modificador }}
@@ -210,6 +220,7 @@
     const usuario = ref(useSupabaseUser())
     const cargardoRepertorio = ref(true)
     const tonoEnRepertorio = ref(1)
+    const tonoRepertorioEsMenor = ref(false)
 
     const estaEnRepertorio = ref(false)
 
@@ -227,6 +238,7 @@
                 estaEnRepertorio.value = data.length > 0
                 if (data.length > 0) {
                     tonoEnRepertorio.value = data[0].tono_numero
+                    tonoRepertorioEsMenor.value = data[0].tono_esmenor
                 }
             }
         }
@@ -279,8 +291,9 @@
         const cancion_id = song.value.id
         const user_id = usuario.value.id
         const tono = acorde.value
+        const modo = tonoRepertorioEsMenor.value
         supabase.from('repertorio_voces').insert([
-            { cancion_id, user_id, tono_numero: tono }
+            { cancion_id, user_id, tono_numero: tono, tono_esmenor: modo }
         ]).then(({ error }) => {
             if (error) {
                 console.error(error)
