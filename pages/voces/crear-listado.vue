@@ -20,17 +20,24 @@
             <voz-seleccionada-component v-for="voz in vocesSeleccionadas" :voz="voz" @eliminar="eliminarVoz" />
         </div>
         <div class="row mb-4">
-            <div class="col-md-4 col-sm-12">
+            <div class="col-8 col-md-4">
                 <label for="tonos" class="label">Seleccionar tono</label>
                 <select name="tonos" id="tonos" class="form-control" v-model="tonoSeleccionado">
                     <option v-for="tono in tonos" :value="tono.numero">{{ tono.valor }}</option>
+                </select>
+            </div>
+            <div class="col-4 col-md-4">
+                <label for="tonoEsMenor" class="label">Modo</label>
+                <select name="tonoEsMenor" id="tonoEsMenor" class="form-control" v-model="tonoEsMenor">
+                    <option value="0">Mayor</option>
+                    <option value="1">Menor</option>
                 </select>
             </div>
 
         </div>
         <div class="tabla">
             <tabla-canciones-voces-component v-for="voz in vocesSeleccionadas" :voz="voz" :tono="tonoSeleccionado"
-                v-if="tonoSeleccionado != null" />
+                v-if="tonoSeleccionado != null" :modo="tonoEsMenor" />
 
         </div>
     </div>
@@ -40,7 +47,7 @@
     import { onMounted } from 'vue';
 
 
-    const { usuario, roles, hasRole, supabase } = useSupabase();
+    const { usuario, hasRole, supabase } = useSupabase();
     const vozSeleccionada = ref(-1)
 
     const voces = ref([])
@@ -59,6 +66,7 @@
         { numero: 11, valor: 'La#' },
         { numero: 12, valor: 'Si' }
     ]
+    const tonoEsMenor = ref(0)
     const tonoSeleccionado = ref(null)
     const casaUsuario = ref(null)
 
