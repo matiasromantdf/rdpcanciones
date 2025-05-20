@@ -20,8 +20,8 @@
             <voz-seleccionada-component v-for="voz in vocesSeleccionadas" :voz="voz" @eliminar="eliminarVoz" />
         </div>
         <div class="row mb-4">
-            <div class="col-8 col-md-4">
-                <label for="tonos" class="label">Seleccionar tono</label>
+            <div class="col-4 col-md-4">
+                <label for="tonos" class="label">Tono</label>
                 <select name="tonos" id="tonos" class="form-control" v-model="tonoSeleccionado">
                     <option v-for="tono in tonos" :value="tono.numero">{{ tono.valor }}</option>
                 </select>
@@ -33,11 +33,19 @@
                     <option value="1">Menor</option>
                 </select>
             </div>
+            <div class="col-4 col-md-4">
+                <label for="tonoEsMenor" class="label">Tipo</label>
+                <select name="tonoEsMenor" id="tonoEsMenor" class="form-control" v-model="tipoCancion">
+                    <option value="1">Adoración</option>
+                    <option value="2">Alabanza</option>
+                </select>
+            </div>
+
 
         </div>
         <div class="tabla">
             <tabla-canciones-voces-component v-for="voz in vocesSeleccionadas" :voz="voz" :tono="tonoSeleccionado"
-                v-if="tonoSeleccionado != null" :modo="tonoEsMenor" />
+                v-if="tonoSeleccionado != null" :modo="tonoEsMenor" :tipo="tipoCancion" />
 
         </div>
     </div>
@@ -69,6 +77,7 @@
     const tonoEsMenor = ref(0)
     const tonoSeleccionado = ref(null)
     const casaUsuario = ref(null)
+    const tipoCancion = ref(1)
 
     const getVoces = async () => {
         const { data, error } = await supabase.from('voces_users_view').select('*').eq('casa_id', casaUsuario.value).order('nombre', { ascending: true })

@@ -41,21 +41,33 @@
         modo: {
             type: Boolean,
             required: true
+        },
+        tipo: {
+            type: Number,
+            required: true
         }
     })
 
     const getCancionesDeVoces = async (voz) => {
         cargando.value = true
-        const { error, data } = await supabase.from('repertorio_voces').select('*, canciones(*)').eq('user_id', voz.id).eq('tono_numero', props.tono).eq('tono_esmenor', props.modo)
+
+        const { data, error } = await supabase
+            .rpc('get_repertorio_filtrado', {
+                p_user_id: voz.id,
+                p_tono_numero: props.tono,
+                p_tono_esmenor: props.modo,
+                p_tipo: props.tipo
+            })
+
+        cargando.value = false
+
         if (error) {
-            cargando.value = false
             console.error('Error al obtener el repertorio:', error.message)
         } else {
             canciones.value = data
-            cargando.value = false
         }
-
     }
+
 
     watch(() => props.tono, async (newValue) => {
         await getCancionesDeVoces(props.voz)
@@ -64,6 +76,9 @@
         await getCancionesDeVoces(newValue)
     })
     watch(() => props.modo, async (newValue) => {
+        await getCancionesDeVoces(props.voz)
+    })
+    watch(() => props.tipo, async (newValue) => {
         await getCancionesDeVoces(props.voz)
     })
 
