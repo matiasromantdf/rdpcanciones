@@ -51,7 +51,7 @@
                                         </span>
                                     </div>
                                     <div class="col d-flex justify-content-center"
-                                        v-if="song.pista_url && puedeEliminar">
+                                        v-if="song.pista_url && esVoces">
                                         <i class="bi bi-file-music ms-2" style="font-size: 1.5rem;"></i>
                                     </div>
 
@@ -160,6 +160,11 @@
     const puedeEliminar = computed(() => {
         //si en el array de roles del usuario esta el rol de admin
         return roles.value.some((rol) => rol.rol === 'letras_editor')
+    })
+
+    const esVoces = computed(()=>{
+        return roles.value.some((rol) => rol.rol === 'voces')
+
     })
 
     const deleteSong = async (id) => {
