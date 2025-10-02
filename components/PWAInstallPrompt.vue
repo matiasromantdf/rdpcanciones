@@ -49,6 +49,11 @@
     let deferredPrompt = null
 
     onMounted(() => {
+        // Verificar que estemos en el navegador
+        if (typeof navigator === 'undefined' || typeof window === 'undefined') {
+            return
+        }
+
         // Detectar iOS
         isIOS.value = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
 
@@ -75,7 +80,7 @@
         if (isIOS.value && !isInstalled.value) {
             setTimeout(() => {
                 // Solo mostrar si no está en modo standalone
-                if (!window.navigator.standalone) {
+                if (window.navigator && !window.navigator.standalone) {
                     console.log('Showing iOS install hint')
                 }
             }, 3000)
@@ -83,6 +88,9 @@
     })
 
     const checkIfInstalled = () => {
+        // Verificar que estemos en el navegador
+        if (typeof window === 'undefined') return
+
         // Verificar si está en modo standalone (instalada)
         if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
             isInstalled.value = true
@@ -90,13 +98,13 @@
         }
 
         // Verificar en iOS
-        if (window.navigator.standalone) {
+        if (window.navigator && window.navigator.standalone) {
             isInstalled.value = true
             return
         }
 
         // Verificar si está instalada en Android/Chrome
-        if (document.referrer.includes('android-app://')) {
+        if (typeof document !== 'undefined' && document.referrer.includes('android-app://')) {
             isInstalled.value = true
             return
         }

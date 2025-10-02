@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+    import { ref, onMounted } from 'vue'
     import { usePWACache } from '~/composables/usePWACache'
 
     defineProps({
@@ -44,8 +45,16 @@
 
     defineEmits(['clear-cache'])
 
-    const { isOnline, isInstalled, getCacheInfo } = usePWACache()
-    const cacheInfo = getCacheInfo()
+    const { isOnline, isInstalled, getCacheInfo, setupConnectivityListeners } = usePWACache()
+    const cacheInfo = ref({ songs: 0, size: '0 KB' })
+
+    onMounted(() => {
+        // Configurar listeners de conectividad
+        setupConnectivityListeners()
+
+        // Obtener info del cache solo en cliente
+        cacheInfo.value = getCacheInfo()
+    })
 </script>
 
 <style scoped>

@@ -17,17 +17,24 @@ interface CachedRepertoire {
 }
 
 export const usePWACache = () => {
-  const isOnline = ref(navigator.onLine)
+  // Inicializar con valor por defecto y actualizar en cliente
+  const isOnline = ref(true) // Default a true para SSR
   const isInstalled = ref(false)
 
   // Detectar cambios en el estado de conexión
   const updateOnlineStatus = () => {
-    isOnline.value = navigator.onLine
+    if (process.client && typeof navigator !== 'undefined') {
+      isOnline.value = navigator.onLine
+    }
   }
 
   // Configurar listeners para detectar cambios de conectividad
   const setupConnectivityListeners = () => {
-    if (process.client) {
+    if (process.client && typeof navigator !== 'undefined') {
+      // Actualizar estado inicial
+      isOnline.value = navigator.onLine
+      
+      // Agregar listeners
       window.addEventListener('online', updateOnlineStatus)
       window.addEventListener('offline', updateOnlineStatus)
     }

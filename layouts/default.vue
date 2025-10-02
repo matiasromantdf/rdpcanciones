@@ -1,7 +1,9 @@
 <template>
     <div>
-        <PWAStatusBar />
-        <PWAInstallPrompt />
+        <ClientOnly>
+            <PWAStatusBar />
+            <PWAInstallPrompt />
+        </ClientOnly>
         <MenuComponent />
         <slot />
     </div>
