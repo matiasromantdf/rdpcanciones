@@ -19,5 +19,8 @@
     "tone": "^15.1.23",
     "vue": "latest",
     "vue-router": "latest"
+  },
+  "devDependencies": {
+    "@vite-pwa/nuxt": "^1.0.4"
   }
 }

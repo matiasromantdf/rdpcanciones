@@ -62,7 +62,9 @@
     import { useSupabase } from '~/composables/useSupabase';
     import { onMounted } from 'vue';
     import { useRouter } from 'vue-router'
+    import { usePWACache } from '~/composables/usePWACache'
     const { usuario, hasRole, supabase } = useSupabase();
+    const { isOnline, cacheRepertorio, getCachedRepertorio } = usePWACache();
     import Swal from 'sweetalert2';
 
 
@@ -100,15 +102,63 @@
     const esVoces = ref(false)
     const repertorio = ref([])
     const getRepertorio = async () => {
-        const { data, error } = await supabase.from('repertorio_voces')
-            .select('*, canciones(*)')
-            .eq('user_id', usuario.value.id)
-        if (error) {
-            console.error('Error al obtener el repertorio:', error.message)
-        } else {
-            repertorio.value = data
+        // Intentar cargar desde cache si está offline
+        if (!isOnline.value) {
+            const cachedRepertoire = getCachedRepertorio(usuario.value.id)
+            if (cachedRepertoire.length > 0) {
+                // Convertir formato de cache a formato esperado
+                repertorio.value = cachedRepertoire.map(song => ({
+                    tono_numero: song.numero_tono,
+                    tono_esmenor: song.tono_esmenor,
+                    canciones: {
+                        id: song.id,
+                        titulo: song.titulo,
+                        letra: song.letra,
+                        pista_url: song.pista_url
+                    }
+                }))
+                cargando.value = false
+                return
+            }
         }
-        cargando.value = false
+
+        try {
+            const { data, error } = await supabase.from('repertorio_voces')
+                .select('*, canciones(*)')
+                .eq('user_id', usuario.value.id)
+            if (error) {
+                console.error('Error al obtener el repertorio:', error.message)
+            } else {
+                repertorio.value = data
+                // Cachear para uso offline
+                if (isOnline.value) {
+                    await cacheRepertorio(usuario.value.id, data)
+                }
+            }
+        } catch (err) {
+            // Si hay error y estamos offline, intentar cache
+            if (!isOnline.value) {
+                const cachedRepertoire = getCachedRepertorio(usuario.value.id)
+                if (cachedRepertoire.length > 0) {
+                    repertorio.value = cachedRepertoire.map(song => ({
+                        tono_numero: song.numero_tono,
+                        tono_esmenor: song.tono_esmenor,
+                        canciones: {
+                            id: song.id,
+                            titulo: song.titulo,
+                            letra: song.letra,
+                            pista_url: song.pista_url
+                        }
+                    }))
+                } else {
+                    console.error('No hay repertorio disponible sin conexión')
+                }
+            } else {
+                console.error('Error al cargar repertorio:', err)
+            }
+        } finally {
+            cargando.value = false
+        }
     }
 
     const eliminarCancion = async (id) => {

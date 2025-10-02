@@ -152,9 +152,11 @@
     import { ref, onMounted } from 'vue'
     import { useRoute } from 'vue-router'
     import Swal from 'sweetalert2'
+    import { usePWACache } from '~/composables/usePWACache'
 
     const route = useRoute()
     const supabase = useSupabaseClient()
+    const { isOnline, cacheCancion, getCachedCancion } = usePWACache()
     const song = ref(null)
     const loading = ref(true)
     const error = ref(null)
@@ -314,6 +316,19 @@
 
     const fetchSong = async () => {
         const songId = route.params.id
+
+        // Intentar cargar desde cache si está offline
+        if (!isOnline.value) {
+            const cachedSong = getCachedCancion(songId)
+            if (cachedSong) {
+                song.value = cachedSong
+                fetchAcordes()
+                // No intentar cargar repertorio si está offline
+                loading.value = false
+                return
+            }
+        }
+
         try {
             const { data, error: fetchError } = await supabase
                 .from('canciones')
@@ -324,11 +339,28 @@
                 throw fetchError
             }
             song.value = data
+
+            // Cachear la canción para uso offline
+            await cacheCancion(data)
+
             fetchAcordes()
-            getIsInRepertorio()
+            if (isOnline.value) {
+                getIsInRepertorio()
+            }
 
         } catch (err) {
-            error.value = err
+            // Si hay error y estamos offline, intentar cache
+            if (!isOnline.value) {
+                const cachedSong = getCachedCancion(songId)
+                if (cachedSong) {
+                    song.value = cachedSong
+                    fetchAcordes()
+                } else {
+                    error.value = new Error('Canción no disponible sin conexión')
+                }
+            } else {
+                error.value = err
+            }
         } finally {
             loading.value = false
         }

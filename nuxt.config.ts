@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  modules:['@nuxtjs/supabase'],
+  modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'],
  
   supabase: {
     redirectOptions:{
@@ -59,7 +59,54 @@ export default defineNuxtConfig({
       ]
     },
    
-  }, 
+  },
+  
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'RDP Canciones - Repertorio Digital',
+      short_name: 'RDP Canciones',
+      description: 'Aplicación para gestionar repertorio de canciones, crear listados por voces y reproducir pistas musicales',
+      theme_color: '#f6d365',
+      background_color: '#e9f0f7',
+      display: 'standalone',
+      orientation: 'portrait',
+      scope: '/',
+      start_url: '/',
+      lang: 'es',
+      icons: [
+        {
+          src: 'pwa-64x64.png',
+          sizes: '64x64',
+          type: 'image/png'
+        },
+        {
+          src: 'pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: 'pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        },
+        {
+          src: 'maskable-icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
+        }
+      ]
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}']
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module'
+    }
+  }
 
 });
   
