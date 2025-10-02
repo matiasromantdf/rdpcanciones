@@ -35,6 +35,11 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'lang', content: 'es' },
+        { name: 'theme-color', content: '#f6d365' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        { name: 'apple-mobile-web-app-title', content: 'RDP Canciones' },
+        { name: 'msapplication-TileColor', content: '#f6d365' }
       ],
       link: [
         {
@@ -49,6 +54,20 @@ export default defineNuxtConfig({
           //bootstrap icons
           rel: 'stylesheet',
           href: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css',
+        },
+        {
+          rel: 'manifest',
+          href: '/manifest.webmanifest'
+        },
+        {
+          rel: 'apple-touch-icon',
+          href: '/apple-icon-180.png'
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '196x196',
+          href: '/favicon-196.png'
         }
       ],
       script: [
@@ -68,53 +87,9 @@ export default defineNuxtConfig({
   
   pwa: {
     registerType: 'autoUpdate',
-    manifest: {
-      name: 'RDP Canciones - Repertorio Digital',
-      short_name: 'RDP Canciones',
-      description: 'Aplicación para gestionar repertorio de canciones, crear listados por voces y reproducir pistas musicales',
-      theme_color: '#f6d365',
-      background_color: '#e9f0f7',
-      display: 'standalone',
-      orientation: 'portrait',
-      scope: '/',
-      start_url: '/',
-      lang: 'es',
-      icons: [
-        {
-          src: 'pwa-64x64.png',
-          sizes: '64x64',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: 'pwa-192x192.png',
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: 'maskable-icon-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'maskable'
-        }
-      ],
-      categories: ['music', 'entertainment'],
-      shortcuts: [
-        {
-          name: 'Mi Repertorio',
-          short_name: 'Repertorio',
-          description: 'Acceder a mi repertorio de canciones',
-          url: '/repertorio',
-          icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
-        }
-      ]
+    // Usar el manifest manual en lugar de generado automáticamente
+    injectManifest: {
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}']
     },
     workbox: {
       navigateFallback: '/',
@@ -129,8 +104,6 @@ export default defineNuxtConfig({
     devOptions: {
       enabled: true,
       suppressWarnings: true,
-      navigateFallback: 'index.html',
-      navigateFallbackAllowlist: [/^\/$/],
       type: 'module'
     }
   }

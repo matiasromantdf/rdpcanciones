@@ -1,0 +1,67 @@
+{
+  "name": "RDP Canciones - Repertorio Digital",
+  "short_name": "RDP Canciones",
+  "description": "Aplicación para gestionar repertorio de canciones, crear listados por voces y reproducir pistas musicales",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e9f0f7",
+  "theme_color": "#f6d365",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "es",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    {
+      "src": "pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mi Repertorio",
+      "short_name": "Repertorio",
+      "description": "Acceder a mi repertorio de canciones",
+      "url": "/repertorio",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Canciones",
+      "short_name": "Canciones",
+      "description": "Ver todas las canciones",
+      "url": "/canciones",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

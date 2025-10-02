@@ -13,35 +13,8 @@ export default defineNuxtPlugin(() => {
     // Limpiar cache viejo al iniciar la app
     cleanOldCache()
     
-    // Registrar el service worker manualmente si no se registra automáticamente
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          // Intentar registrar el service worker
-          const registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/'
-          })
-          
-          console.log('Service Worker registered successfully:', registration)
-          
-          // Verificar actualizaciones
-          registration.addEventListener('updatefound', () => {
-            console.log('New service worker found')
-            const newWorker = registration.installing
-            
-            newWorker?.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New service worker installed')
-                // Aquí puedes mostrar un mensaje al usuario sobre la actualización
-              }
-            })
-          })
-          
-        } catch (error) {
-          console.log('Service Worker registration failed:', error)
-        }
-      })
-    }
+    // No registrar manualmente el service worker, dejarlo al módulo PWA
+    // El módulo @vite-pwa/nuxt se encarga automáticamente del registro
     
     // Debug: Verificar si todos los requisitos para PWA están cumplidos
     setTimeout(() => {
@@ -54,7 +27,17 @@ function checkPWARequirements() {
   console.log('=== PWA Requirements Check ===')
   console.log('HTTPS:', location.protocol === 'https:' || location.hostname === 'localhost')
   console.log('Service Worker supported:', 'serviceWorker' in navigator)
-  console.log('Service Worker registered:', navigator.serviceWorker?.controller ? 'Yes' : 'No')
+  
+  // Verificar service worker de manera más robusta
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(registration => {
+      console.log('Service Worker registered:', registration ? 'Yes' : 'No')
+      console.log('Service Worker state:', registration?.active?.state || 'unknown')
+    }).catch(error => {
+      console.log('Service Worker error:', error)
+    })
+  }
+  
   console.log('Manifest link:', document.querySelector('link[rel="manifest"]') ? 'Yes' : 'No')
   console.log('Display mode:', window.matchMedia('(display-mode: standalone)').matches ? 'Standalone' : 'Browser')
   
@@ -67,8 +50,28 @@ function checkPWARequirements() {
     .then(manifest => {
       console.log('Manifest content:', manifest)
       console.log('Icons in manifest:', manifest.icons?.length || 0)
+      
+      // Verificar si la app cumple con todos los criterios de instalación
+      const canBeInstalled = checkInstallCriteria(manifest)
+      console.log('Can be installed:', canBeInstalled ? 'Yes' : 'No')
     })
     .catch(error => {
       console.log('Manifest error:', error)
     })
+}
+
+function checkInstallCriteria(manifest) {
+  const criteria = {
+    https: location.protocol === 'https:' || location.hostname === 'localhost',
+    manifest: !!manifest,
+    serviceWorker: 'serviceWorker' in navigator,
+    displayStandalone: manifest?.display === 'standalone',
+    icons: manifest?.icons?.length >= 2,
+    name: !!manifest?.name,
+    startUrl: !!manifest?.start_url
+  }
+  
+  console.log('Install criteria:', criteria)
+  
+  return Object.values(criteria).every(Boolean)
 }
