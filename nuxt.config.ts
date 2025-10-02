@@ -10,6 +10,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'],
+  
+  devServer: {
+    https: true,
+    port: 3000
+  },
  
   supabase: {
     redirectOptions:{
@@ -78,17 +83,20 @@ export default defineNuxtConfig({
         {
           src: 'pwa-64x64.png',
           sizes: '64x64',
-          type: 'image/png'
+          type: 'image/png',
+          purpose: 'any'
         },
         {
           src: 'pwa-192x192.png',
           sizes: '192x192',
-          type: 'image/png'
+          type: 'image/png',
+          purpose: 'any'
         },
         {
           src: 'pwa-512x512.png',
           sizes: '512x512',
-          type: 'image/png'
+          type: 'image/png',
+          purpose: 'any'
         },
         {
           src: 'maskable-icon-512x512.png',
@@ -96,14 +104,33 @@ export default defineNuxtConfig({
           type: 'image/png',
           purpose: 'maskable'
         }
+      ],
+      categories: ['music', 'entertainment'],
+      shortcuts: [
+        {
+          name: 'Mi Repertorio',
+          short_name: 'Repertorio',
+          description: 'Acceder a mi repertorio de canciones',
+          url: '/repertorio',
+          icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+        }
       ]
     },
     workbox: {
       navigateFallback: '/',
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}']
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+      skipWaiting: true,
+      clientsClaim: true
+    },
+    client: {
+      installPrompt: true,
+      periodicSyncForUpdates: 20
     },
     devOptions: {
       enabled: true,
+      suppressWarnings: true,
+      navigateFallback: 'index.html',
+      navigateFallbackAllowlist: [/^\/$/],
       type: 'module'
     }
   }
