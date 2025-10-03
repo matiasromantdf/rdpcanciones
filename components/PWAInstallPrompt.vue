@@ -15,9 +15,16 @@
                             <i class="bi bi-plus-circle me-1"></i>
                             Instalar
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" @click="dismissPrompt">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-secondary" @click="dismissTemporarily"
+                                title="Recordar por esta sesión">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" @click="dismissPermanently"
+                                title="No mostrar más">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -43,14 +50,39 @@
 <script setup>
     import { ref, onMounted } from 'vue'
 
+    // Props para configurar el comportamiento
+    const props = defineProps({
+        showOnAllPages: {
+            type: Boolean,
+            default: true
+        },
+        delayBeforeShow: {
+            type: Number,
+            default: 1000 // 1 segundo por defecto (reducido de 3)
+        },
+        enabledRoutes: {
+            type: Array,
+            default: () => ['/'] // Solo en home por defecto
+        }
+    })
+
     const showInstallPrompt = ref(false)
     const isIOS = ref(false)
     const isInstalled = ref(false)
+    const shouldShowOnThisPage = ref(true)
     let deferredPrompt = null
 
     onMounted(() => {
         // Verificar que estemos en el navegador
         if (typeof navigator === 'undefined' || typeof window === 'undefined') {
+            return
+        }
+
+        // Verificar si debemos mostrar en esta página
+        checkIfShouldShowOnCurrentPage()
+
+        // Si no debemos mostrar en esta página, salir
+        if (!shouldShowOnThisPage.value) {
             return
         }
 
@@ -60,12 +92,26 @@
         // Detectar si ya está instalada
         checkIfInstalled()
 
+        // Verificar si el usuario ya rechazó la instalación en esta sesión
+        const dismissedInSession = sessionStorage.getItem('installPromptDismissed')
+        const dismissedPermanently = localStorage.getItem('installPromptDismissedPermanently')
+
+        if (dismissedInSession || dismissedPermanently) {
+            return
+        }
+
         // Listener para el evento beforeinstallprompt
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('beforeinstallprompt event fired')
             e.preventDefault()
             deferredPrompt = e
-            showInstallPrompt.value = true
+
+            // Mostrar después del delay configurado
+            setTimeout(() => {
+                if (!isInstalled.value && shouldShowOnThisPage.value) {
+                    showInstallPrompt.value = true
+                }
+            }, props.delayBeforeShow)
         })
 
         // Listener para cuando se instala la app
@@ -74,18 +120,32 @@
             showInstallPrompt.value = false
             isInstalled.value = true
             deferredPrompt = null
+            // Limpiar rechazos previos ya que se instaló
+            sessionStorage.removeItem('installPromptDismissed')
+            localStorage.removeItem('installPromptDismissedPermanently')
         })
 
-        // En iOS, mostrar hint si no está instalada
-        if (isIOS.value && !isInstalled.value) {
+        // En iOS, mostrar hint si no está instalada (con delay reducido)
+        if (isIOS.value && !isInstalled.value && !dismissedInSession && !dismissedPermanently) {
             setTimeout(() => {
                 // Solo mostrar si no está en modo standalone
                 if (window.navigator && !window.navigator.standalone) {
                     console.log('Showing iOS install hint')
                 }
-            }, 3000)
+            }, props.delayBeforeShow)
         }
     })
+
+    const checkIfShouldShowOnCurrentPage = () => {
+        if (props.showOnAllPages) {
+            shouldShowOnThisPage.value = true
+            return
+        }
+
+        // Verificar la ruta actual
+        const currentPath = window.location.pathname
+        shouldShowOnThisPage.value = props.enabledRoutes.includes(currentPath)
+    }
 
     const checkIfInstalled = () => {
         // Verificar que estemos en el navegador
@@ -139,13 +199,21 @@
         }
     }
 
-    const dismissPrompt = () => {
+    const dismissPrompt = (permanent = false) => {
         showInstallPrompt.value = false
         deferredPrompt = null
 
-        // Recordar que el usuario rechazó la instalación por esta sesión
-        sessionStorage.setItem('installPromptDismissed', 'true')
+        if (permanent) {
+            // No mostrar más en esta instalación del navegador
+            localStorage.setItem('installPromptDismissedPermanently', 'true')
+        } else {
+            // Solo rechazar por esta sesión
+            sessionStorage.setItem('installPromptDismissed', 'true')
+        }
     }
+
+    const dismissTemporarily = () => dismissPrompt(false)
+    const dismissPermanently = () => dismissPrompt(true)
 </script>
 
 <style scoped>
