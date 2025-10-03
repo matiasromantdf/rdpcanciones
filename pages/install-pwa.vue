@@ -4,7 +4,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="bi bi-download"></i> Instalación de PWA - RDP Canciones</h3>
+                        <h3><i class="bi bi-download"></i> Instalación de PWA - Alabanza RDP</h3>
                     </div>
                     <div class="card-body">
 
@@ -61,7 +61,7 @@
                                 <h5>Instalación:</h5>
                                 <button class="btn btn-primary btn-lg" @click="installApp">
                                     <i class="bi bi-download"></i>
-                                    Instalar RDP Canciones
+                                    Instalar Alabanza RDP
                                 </button>
                                 <p class="text-muted mt-2">
                                     Al instalar, podrás acceder a la aplicación desde tu escritorio o pantalla de
@@ -91,10 +91,10 @@
                                                 <ol>
                                                     <li>Busca el ícono <i class="bi bi-download"></i> en la barra de
                                                         direcciones</li>
-                                                    <li>Haz clic en "Instalar RDP Canciones"</li>
+                                                    <li>Haz clic en "Instalar Alabanza RDP"</li>
                                                     <li>Confirma la instalación</li>
                                                 </ol>
-                                                <p><strong>Alternativa:</strong> Menú (⋮) > "Instalar RDP Canciones..."
+                                                <p><strong>Alternativa:</strong> Menú (⋮) > "Instalar Alabanza RDP..."
                                                 </p>
                                             </div>
                                         </div>
@@ -273,9 +273,9 @@
 
     // Meta tags para la página
     useHead({
-        title: 'Instalar PWA - RDP Canciones',
+        title: 'Instalar PWA - Alabanza RDP',
         meta: [
-            { name: 'description', content: 'Instrucciones para instalar RDP Canciones como aplicación web progresiva' }
+            { name: 'description', content: 'Instrucciones para instalar Alabanza RDP como aplicación web progresiva' }
         ]
     })
 </script>

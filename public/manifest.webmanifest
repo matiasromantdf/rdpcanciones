@@ -1,6 +1,6 @@
 {
-  "name": "RDP Canciones - Repertorio Digital",
-  "short_name": "RDP Canciones",
+  "name": "Alabanza RDP - Repertorio Digital",
+  "short_name": "Alabanza RDP",
   "description": "Aplicación para gestionar repertorio de canciones, crear listados por voces y reproducir pistas musicales",
   "start_url": "/",
   "display": "standalone",

@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'RDP',
+      title: 'Alabanza RDP',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -38,7 +38,7 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#f6d365' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-        { name: 'apple-mobile-web-app-title', content: 'RDP Canciones' },
+        { name: 'apple-mobile-web-app-title', content: 'Alabanza RDP' },
         { name: 'msapplication-TileColor', content: '#f6d365' }
       ],
       link: [

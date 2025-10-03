@@ -7,7 +7,7 @@
                     <div class="col">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-download me-2"></i>
-                            <span>¿Instalar RDP Canciones como aplicación?</span>
+                            <span>¿Instalar Alabanza RDP como aplicación?</span>
                         </div>
                     </div>
                     <div class="col-auto">
