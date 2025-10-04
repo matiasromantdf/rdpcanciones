@@ -20,10 +20,10 @@
                                 title="Recordar por esta sesión">
                                 <i class="bi bi-x-lg"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" @click="dismissPermanently"
+                            <!-- <button class="btn btn-sm btn-outline-danger" @click="dismissPermanently"
                                 title="No mostrar más">
                                 <i class="bi bi-x-circle"></i>
-                            </button>
+                            </button> -->
                         </div>
                     </div>
                 </div>

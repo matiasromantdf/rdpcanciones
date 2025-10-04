@@ -12,7 +12,6 @@ export default defineNuxtConfig({
   modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'],
   
   devServer: {
-    https: true,
     port: 3000
   },
  

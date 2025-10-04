@@ -15,48 +15,63 @@
 </template>
 
 <script setup>
-import { useSupabase } from '~/composables/useSupabase';
+    import { useSupabase } from '~/composables/useSupabase';
 
-const { signIn, usuario } = useSupabase()
+    const { signIn, usuario } = useSupabase()
+    const router = useRouter()
 
-const login = async () => {
-    await signIn()
-}
+    const login = async () => {
+        await signIn()
+    }
+
+    // Redirigir a home si el usuario ya está logueado
+    watch(usuario, (newUser) => {
+        if (newUser) {
+            router.push('/')
+        }
+    }, { immediate: true })
+
+    // También verificar en el onMounted por si acaso
+    onMounted(() => {
+        if (usuario.value) {
+            router.push('/')
+        }
+    })
 
 </script>
 
 <style>
-.boto-login {
-    background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    cursor: pointer;
-}
+    .boto-login {
+        background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+        cursor: pointer;
+    }
 
-.boto-login:hover {
-    background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    transform: scale(1.05);
-    transition: 0.3s;
-}
+    .boto-login:hover {
+        background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+        transition: 0.3s;
+    }
 
-.datos-user {
-    background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-}
+    .datos-user {
+        background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+    }
 
-#fotoUsuario {
-    border-radius: 50%;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-}
+    #fotoUsuario {
+        border-radius: 50%;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
 </style>
