@@ -7,9 +7,6 @@
                         <i class="bi bi-music-note-list me-3"></i>
                         Mi Repertorio
                     </h1>
-                    <p class="lead text-muted">
-                        Gestiona las canciones de tu repertorio personal
-                    </p>
                 </div>
             </div>
         </div>

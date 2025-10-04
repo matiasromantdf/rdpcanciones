@@ -31,15 +31,20 @@
         </div>
 
         <!-- Información de instalación manual para iOS -->
-        <div v-if="isIOS && !isInstalled" class="ios-install-hint">
+        <div v-if="isIOS && !isInstalled && showIOSHint" class="ios-install-hint">
             <div class="container-fluid">
-                <div class="row">
+                <div class="row align-items-center">
                     <div class="col">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle me-2"></i>
                             <small>Para instalar: toca <i class="bi bi-box-arrow-up"></i> y "Agregar a pantalla de
                                 inicio"</small>
                         </div>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-outline-primary" @click="dismissIOSHint" title="Cerrar aviso">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -70,6 +75,7 @@
     const isIOS = ref(false)
     const isInstalled = ref(false)
     const shouldShowOnThisPage = ref(true)
+    const showIOSHint = ref(false)
     let deferredPrompt = null
 
     onMounted(() => {
@@ -127,12 +133,17 @@
 
         // En iOS, mostrar hint si no está instalada (con delay reducido)
         if (isIOS.value && !isInstalled.value && !dismissedInSession && !dismissedPermanently) {
-            setTimeout(() => {
-                // Solo mostrar si no está en modo standalone
-                if (window.navigator && !window.navigator.standalone) {
-                    console.log('Showing iOS install hint')
-                }
-            }, props.delayBeforeShow)
+            // Verificar si el hint de iOS fue rechazado específicamente
+            const iOSHintDismissed = sessionStorage.getItem('iOSInstallHintDismissed')
+            if (!iOSHintDismissed) {
+                setTimeout(() => {
+                    // Solo mostrar si no está en modo standalone
+                    if (window.navigator && !window.navigator.standalone && shouldShowOnThisPage.value) {
+                        console.log('Showing iOS install hint')
+                        showIOSHint.value = true
+                    }
+                }, props.delayBeforeShow)
+            }
         }
     })
 
@@ -214,6 +225,12 @@
 
     const dismissTemporarily = () => dismissPrompt(false)
     const dismissPermanently = () => dismissPrompt(true)
+
+    const dismissIOSHint = () => {
+        showIOSHint.value = false
+        // Recordar que el usuario rechazó el hint de iOS por esta sesión
+        sessionStorage.setItem('iOSInstallHintDismissed', 'true')
+    }
 </script>
 
 <style scoped>
