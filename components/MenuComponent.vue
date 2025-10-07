@@ -26,6 +26,14 @@
                                     repertorio</nuxt-link>
                                 <nuxt-link to="/voces/crear-listado" class="dropdown-item" v-if="esAdminVoces">Crear
                                     listado</nuxt-link>
+                                <nuxt-link to="/admgrupos" class="dropdown-item" v-if="esAdminVoces">Administrar
+                                    grupos</nuxt-link>
+                                <nuxt-link to="/reuniones" class="dropdown-item" v-if="esAdminVoces">
+                                    <i class="bi bi-calendar-event me-2"></i>Reuniones
+                                </nuxt-link>
+                                <nuxt-link to="/setup-chat" class="dropdown-item" v-if="esAdminVoces">
+                                    <i class="bi bi-gear me-2"></i>Configurar Chat
+                                </nuxt-link>
                                 <nuxt-link to="/calendario" class="dropdown-item" v-if="esVoces">Calendario</nuxt-link>
 
                             </ul>
@@ -42,8 +50,8 @@
                                     <i class="bi bi-download me-2"></i>Instalar App
                                 </nuxt-link>
                                 <li><a class="dropdown-item" @click="logout">Cerrar Sesión</a></li>
-                                <nuxt-link to="/gruposAsistencia" class="dropdown-item" v-if="esAdminVoces">Grupos y
-                                    asistencias</nuxt-link>
+                                <!-- <nuxt-link to="/gruposAsistencia" class="dropdown-item" v-if="esAdminVoces">Grupos y
+                                    asistencias</nuxt-link> -->
                                 <!-- <nuxt-link to="/asistencia" class="dropdown-item" v-if="esVoces">Asistencia</nuxt-link> -->
                             </ul>
 

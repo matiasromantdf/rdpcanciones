@@ -35,11 +35,168 @@
                 </div>
             </div>
         </div>
-        <div class="row text-center" v-if="usuario && roles.length > 0">
-            <div class="row bienvenida">
-                <div class="col">
-                    <h5 class="card-title">Bienvenido, {{ usuario?.user_metadata.full_name }}</h5>
+        <div v-if="usuario && roles.length > 0">
+            <!-- Bienvenida -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="welcome-card">
+                        <div class="welcome-content">
+                            <h2 class="welcome-title">
+                                ¡Hola, {{ usuario?.user_metadata.full_name }}! 👋
+                            </h2>
+                            <p class="welcome-subtitle">
+                                Bienvenido de vuelta a Alabanza RDP
+                            </p>
+                        </div>
+                        <div class="welcome-actions">
+                            <button @click="logout" class="btn btn-outline-light">
+                                <i class="bi bi-box-arrow-right me-2"></i>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Reuniones próximas -->
+            <div class="row mb-4" v-if="!cargandoReuniones">
+                <div class="col-12">
+                    <div class="reuniones-section">
+                        <h4 class="section-title">
+                            <i class="bi bi-calendar-event me-2"></i>
+                            Próximas Reuniones
+                        </h4>
+
+                        <!-- Loading reuniones -->
+                        <div v-if="cargandoReuniones" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando reuniones...</span>
+                            </div>
+                        </div>
+
+                        <!-- Sin reuniones -->
+                        <div v-else-if="reunionesProximas.length === 0" class="no-reuniones">
+                            <div class="text-center py-4">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 2.5rem;"></i>
+                                <h5 class="mt-3 text-muted">No hay reuniones próximas</h5>
+                                <p class="text-muted mb-0">Cuando seas convocado a una reunión, aparecerá aquí</p>
+                            </div>
+                        </div>
+
+                        <!-- Lista de reuniones -->
+                        <div v-else>
+                            <div v-for="reunion in reunionesProximas" :key="reunion.id" class="reunion-card-home">
+                                <div class="reunion-header">
+                                    <div class="reunion-icon">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </div>
+                                    <div class="reunion-info">
+                                        <h5 class="reunion-titulo">{{ reunion.titulo }}</h5>
+                                        <div class="reunion-datetime">
+                                            <span class="fecha">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                {{ formatearFecha(reunion.fecha, reunion.hora) }}
+                                            </span>
+                                            <span class="hora">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ reunion.hora }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="reunion-status">
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Convocado
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div v-if="reunion.detalles" class="reunion-detalles">
+                                    <p class="mb-0">
+                                        <i class="bi bi-journal-text me-2"></i>
+                                        {{ reunion.detalles }}
+                                    </p>
+                                </div>
+
+                                <div class="reunion-footer">
+                                    <div class="tiempo-restante">
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        <span
+                                            class="text-muted">{{ calcularTiempoRestante(reunion.fecha, reunion.hora) }}</span>
+                                    </div>
+                                    <div class="reunion-actions">
+                                        <button class="btn btn-sm btn-primary" @click="irAlChat(reunion.id)"
+                                            title="Chat de la reunión">
+                                            <i class="bi bi-chat-dots me-1"></i>
+                                            Chat
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" @click="verDetallesReunion(reunion)"
+                                            title="Ver más detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enlaces rápidos -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="quick-links-section">
+                        <h4 class="section-title">
+                            <i class="bi bi-lightning me-2"></i>
+                            Accesos Rápidos
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-3" v-if="tieneRol('voces')">
+                                <nuxt-link to="/repertorio" class="quick-link-card">
+                                    <div class="quick-link-icon bg-primary">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <div class="quick-link-content">
+                                        <h6>Mi Repertorio</h6>
+                                        <p class="text-muted mb-0">Gestiona tus canciones</p>
+                                    </div>
+                                </nuxt-link>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <nuxt-link to="/canciones" class="quick-link-card">
+                                    <div class="quick-link-icon bg-success">
+                                        <i class="bi bi-music-note-beamed"></i>
+                                    </div>
+                                    <div class="quick-link-content">
+                                        <h6>Canciones</h6>
+                                        <p class="text-muted mb-0">Explora el catálogo</p>
+                                    </div>
+                                </nuxt-link>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <nuxt-link to="/calendario" class="quick-link-card">
+                                    <div class="quick-link-icon bg-warning">
+                                        <i class="bi bi-calendar3"></i>
+                                    </div>
+                                    <div class="quick-link-content">
+                                        <h6>Calendario</h6>
+                                        <p class="text-muted mb-0">Ver eventos</p>
+                                    </div>
+                                </nuxt-link>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3" v-if="tieneRol('admin') || tieneRol('lider')">
+                                <nuxt-link to="/reuniones" class="quick-link-card">
+                                    <div class="quick-link-icon bg-info">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                    <div class="quick-link-content">
+                                        <h6>Reuniones</h6>
+                                        <p class="text-muted mb-0">Gestionar convocatorias</p>
+                                    </div>
+                                </nuxt-link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,14 +215,20 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref, onMounted, watch } from 'vue'
     import { useRouter } from 'vue-router'
+    import Swal from 'sweetalert2'
 
     const supabase = useSupabaseClient()
     const router = useRouter()
 
+    // Estados reactivos
     const usuario = ref(useSupabaseUser())
     const roles = ref([])
+    const reunionesProximas = ref([])
+    const cargandoReuniones = ref(true)
+
+    // Obtener roles del usuario
     const getRolesUsuario = async () => {
         if (usuario.value) {
             const { data, error } = await supabase
@@ -81,8 +244,192 @@
             }
         }
     }
-    getRolesUsuario()
 
+    // Obtener reuniones donde el usuario está convocado
+    const getReunionesProximas = async () => {
+        if (!usuario.value) return
+
+        try {
+            cargandoReuniones.value = true
+
+            // Obtener reuniones donde el usuario está convocado
+            const { data: convocatorias, error } = await supabase
+                .from('convocatorias_users')
+                .select(`
+                convocatorias (
+                    id,
+                    titulo,
+                    fecha,
+                    hora,
+                    detalles
+                )
+            `)
+                .eq('user_id', usuario.value.id)
+
+            if (error) throw error
+
+            // Filtrar reuniones de hoy hacia adelante y ordenar por fecha
+            const ahora = new Date()
+            const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+
+            const reunionesFuturas = convocatorias
+                .map(item => item.convocatorias)
+                .filter(reunion => {
+                    const fechaReunion = new Date(reunion.fecha + ' ' + reunion.hora)
+                    // Incluir reuniones hasta 2 horas después de su inicio
+                    return fechaReunion > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen
+                })
+                .sort((a, b) => {
+                    const fechaA = new Date(a.fecha + ' ' + a.hora)
+                    const fechaB = new Date(b.fecha + ' ' + b.hora)
+                    return fechaA - fechaB
+                })
+                .slice(0, 3) // Mostrar máximo 3 reuniones próximas
+
+            reunionesProximas.value = reunionesFuturas
+
+        } catch (error) {
+            console.error('Error obteniendo reuniones:', error)
+        } finally {
+            cargandoReuniones.value = false
+        }
+    }
+
+    // Utilidades
+    const tieneRol = (rol) => {
+        return roles.value.some(r => r.rol === rol)
+    }
+
+    const formatearFecha = (fecha, hora = null) => {
+        const date = new Date(fecha)
+        const hoy = new Date()
+        const manana = new Date(hoy)
+        manana.setDate(hoy.getDate() + 1)
+
+        // Comparar solo las fechas (sin hora)
+        const fechaSolo = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+        const mananaSolo = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate())
+
+        // Si se proporciona hora, verificar las 12 horas para "Hoy"
+        if (fechaSolo.getTime() === hoySolo.getTime()) {
+            if (hora) {
+                // Calcular si faltan menos de 12 horas
+                const fechaReunion = new Date(fecha + ' ' + hora)
+                const diferencia = fechaReunion - hoy
+                const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
+
+                // Solo mostrar "Hoy" si faltan 12 horas o menos
+                if (totalHoras <= 12 && diferencia > 0) {
+                    return 'Hoy'
+                } else {
+                    // Si faltan más de 12 horas, mostrar fecha completa
+                    return date.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long'
+                    })
+                }
+            } else {
+                return 'Hoy'
+            }
+        } else if (fechaSolo.getTime() === mananaSolo.getTime()) {
+            return 'Mañana'
+        } else {
+            return date.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            })
+        }
+    }
+
+    const calcularTiempoRestante = (fecha, hora) => {
+        const fechaReunion = new Date(fecha + ' ' + hora)
+        const ahora = new Date()
+        const diferencia = fechaReunion - ahora
+
+        // Si la diferencia es menor a -2 horas, considerarla pasada
+        if (diferencia < -2 * 60 * 60 * 1000) return 'Reunión pasada'
+
+        // Si la diferencia está entre -2 horas y 0, está en curso o recién terminada
+        if (diferencia <= 0) {
+            const horasPasadas = Math.abs(Math.floor(diferencia / (1000 * 60 * 60)))
+            if (horasPasadas === 0) {
+                return 'En curso'
+            } else {
+                return `Terminó hace ${horasPasadas} hora${horasPasadas > 1 ? 's' : ''}`
+            }
+        }
+
+        const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
+        const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60))
+        const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
+
+        if (dias > 0) {
+            return `En ${dias} día${dias > 1 ? 's' : ''}`
+        } else if (totalHoras > 12) {
+            // Si faltan más de 12 horas, mostrar horas totales
+            return `En ${totalHoras} horas`
+        } else if (horas > 0) {
+            // Solo mostrar "hoy" cuando falten 12 horas o menos
+            return `Hoy en ${horas} hora${horas > 1 ? 's' : ''}`
+        } else if (minutos > 5) {
+            return `Hoy en ${minutos} minutos`
+        } else if (minutos > 0) {
+            return `¡Muy pronto! (${minutos} min)`
+        } else {
+            return '¡Ahora mismo!'
+        }
+    }    // Acciones de reuniones
+    const irAlChat = (reunionId) => {
+        // Navegar a la página de chat de la reunión
+        router.push(`/chat-reunion/${reunionId}`)
+    }
+
+    const verDetallesReunion = async (reunion) => {
+        try {
+            // Obtener lista de todos los convocados
+            const { data: participantes, error } = await supabase
+                .from('convocatorias_users')
+                .select(`
+                usuarios(email, raw_user_meta_data)
+            `)
+                .eq('convocatoria_id', reunion.id)
+
+            if (error) throw error
+
+            const listaParticipantes = participantes
+                .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
+                .join(', ')
+
+            await Swal.fire({
+                title: reunion.titulo,
+                html: `
+                <div class="text-start">
+                    <p><strong>📅 Fecha:</strong> ${formatearFecha(reunion.fecha)}</p>
+                    <p><strong>🕐 Hora:</strong> ${reunion.hora}</p>
+                    ${reunion.detalles ? `<p><strong>📝 Detalles:</strong> ${reunion.detalles}</p>` : ''}
+                    <p><strong>👥 Otros convocados (${participantes.length - 1}):</strong></p>
+                    <p class="small">${listaParticipantes}</p>
+                </div>
+            `,
+                icon: 'info',
+                showCloseButton: true,
+                confirmButtonText: 'Entendido'
+            })
+        } catch (error) {
+            console.error('Error obteniendo detalles:', error)
+            await Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los detalles de la reunión',
+                icon: 'error'
+            })
+        }
+    }
+
+    // Logout
     const logout = async () => {
         const { error } = await supabase.auth.signOut()
 
@@ -94,26 +441,353 @@
         }
     }
 
+    // Redirección OAuth
     const redirect = () => {
         let originUrl = localStorage.getItem('originUrl')
         let url = window.location.href
-        //si la url actual contiene ?code= significa que es una url de autenticación
+
         if (url.includes('?code=')) {
-            //si la url de origen es diferente a la actual, redirigir a la url de origen
             if (originUrl && originUrl !== url) {
                 window.location.href = originUrl
             } else {
                 router.push('/')
             }
         }
-
-
     }
 
-    redirect()
+    // Watchers
+    watch(usuario, (newUser) => {
+        if (newUser) {
+            getRolesUsuario()
+            getReunionesProximas()
+        }
+    }, { immediate: true })
 
+    // Lifecycle
+    onMounted(() => {
+        redirect()
 
-
+        if (usuario.value) {
+            getRolesUsuario()
+            getReunionesProximas()
+        }
+    })
 </script>
 
-<style></style>
+<style scoped>
+    .welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .welcome-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+
+    .welcome-actions .btn {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .welcome-actions .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .reuniones-section,
+    .quick-links-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        color: #2c3e50;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f8f9fa;
+        padding-bottom: 0.5rem;
+    }
+
+    .reunion-card-home {
+        background: linear-gradient(145deg, #f8f9fa, #ffffff);
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .reunion-card-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+
+    .reunion-card-home:last-child {
+        margin-bottom: 0;
+    }
+
+    .reunion-header {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .reunion-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .reunion-info {
+        flex-grow: 1;
+    }
+
+    .reunion-titulo {
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .reunion-datetime {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .reunion-datetime .fecha,
+    .reunion-datetime .hora {
+        display: flex;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .reunion-status {
+        flex-shrink: 0;
+    }
+
+    .reunion-status .badge {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .reunion-detalles {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .reunion-detalles p {
+        color: #5a6c7d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .reunion-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .tiempo-restante {
+        display: flex;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .reunion-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .reunion-actions .btn {
+        border-radius: 6px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .no-reuniones {
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
+    }
+
+    .quick-link-card {
+        display: block;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .quick-link-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        border-color: #667eea;
+    }
+
+    .quick-link-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .quick-link-content h6 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .quick-link-content p {
+        color: #6c757d;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    /* Estados de carga */
+    .spinner-border {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .welcome-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .welcome-actions {
+            width: 100%;
+        }
+
+        .reunion-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .reunion-icon {
+            margin: 0 auto 1rem auto;
+        }
+
+        .reunion-datetime {
+            justify-content: center;
+        }
+
+        .reunion-footer {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .reunion-actions {
+            justify-content: center;
+        }
+
+        .section-title {
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        .reuniones-section,
+        .quick-links-section {
+            padding: 1rem;
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .welcome-card {
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .reunion-card-home {
+            padding: 1rem;
+        }
+    }
+
+    /* Animaciones */
+    .reunion-card-home,
+    .quick-link-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Badges personalizados */
+    .badge.bg-success {
+        background: linear-gradient(45deg, #28a745, #20c997) !important;
+    }
+
+    .badge.bg-primary {
+        background: linear-gradient(45deg, #007bff, #6f42c1) !important;
+    }
+
+    .badge.bg-info {
+        background: linear-gradient(45deg, #17a2b8, #6f42c1) !important;
+    }
+
+    .badge.bg-warning {
+        background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
+    }
+</style>
