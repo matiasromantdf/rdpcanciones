@@ -31,6 +31,9 @@
                                 <nuxt-link to="/reuniones" class="dropdown-item" v-if="esAdminVoces">
                                     <i class="bi bi-calendar-event me-2"></i>Reuniones
                                 </nuxt-link>
+                                <nuxt-link to="/servicios" class="dropdown-item" v-if="esAdminVoces">
+                                    <i class="bi bi-music-note-list me-2"></i>Servicios
+                                </nuxt-link>
                                 <nuxt-link to="/setup-chat" class="dropdown-item" v-if="esAdminVoces">
                                     <i class="bi bi-gear me-2"></i>Configurar Chat
                                 </nuxt-link>

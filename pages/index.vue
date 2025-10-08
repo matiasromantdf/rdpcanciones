@@ -139,6 +139,88 @@
                 </div>
             </div>
 
+            <!-- Servicios próximos -->
+            <div class="row mb-4" v-if="!cargandoServicios">
+                <div class="col-12">
+                    <div class="servicios-section">
+                        <h4 class="section-title">
+                            <i class="bi bi-music-note-list me-2"></i>
+                            Próximos Servicios
+                        </h4>
+
+                        <!-- Loading servicios -->
+                        <div v-if="cargandoServicios" class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Cargando servicios...</span>
+                            </div>
+                        </div>
+
+                        <!-- Sin servicios -->
+                        <div v-else-if="serviciosProximos.length === 0" class="no-servicios">
+                            <div class="text-center py-4">
+                                <i class="bi bi-music-note text-muted" style="font-size: 2.5rem;"></i>
+                                <h5 class="mt-3 text-muted">No hay servicios próximos</h5>
+                                <p class="text-muted mb-0">Cuando seas asignado a un servicio, aparecerá aquí</p>
+                            </div>
+                        </div>
+
+                        <!-- Lista de servicios -->
+                        <div v-else>
+                            <div v-for="servicio in serviciosProximos" :key="servicio.id" class="servicio-card-home">
+                                <div class="servicio-header">
+                                    <div class="servicio-icon">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <div class="servicio-info">
+                                        <h5 class="servicio-titulo">{{ servicio.titulo }}</h5>
+                                        <div class="servicio-datetime">
+                                            <span class="fecha">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                {{ formatearFecha(servicio.fecha, servicio.hora) }}
+                                            </span>
+                                            <span class="hora">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ servicio.hora }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="servicio-badge">
+                                        <span class="badge bg-success">Servicio</span>
+                                    </div>
+                                </div>
+
+                                <div v-if="servicio.detalles" class="servicio-detalles">
+                                    <p class="mb-0">
+                                        <i class="bi bi-journal-text me-2"></i>
+                                        {{ servicio.detalles }}
+                                    </p>
+                                </div>
+
+                                <div class="servicio-footer">
+                                    <div class="tiempo-restante">
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        <span
+                                            class="text-muted">{{ calcularTiempoRestante(servicio.fecha, servicio.hora) }}</span>
+                                    </div>
+                                    <div class="servicio-actions">
+                                        <button class="btn btn-sm btn-success" @click="irAlChatServicio(servicio.id)"
+                                            title="Chat del servicio">
+                                            <i class="bi bi-chat-dots me-1"></i>
+                                            Chat
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success"
+                                            @click="verDetallesServicio(servicio)" title="Ver más detalles">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Detalles
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Enlaces rápidos -->
             <div class="row">
                 <div class="col-12">
@@ -224,6 +306,8 @@
     const roles = ref([])
     const reunionesProximas = ref([])
     const cargandoReuniones = ref(true)
+    const serviciosProximos = ref([])
+    const cargandoServicios = ref(true)
 
     // Obtener roles del usuario
     const getRolesUsuario = async () => {
@@ -289,6 +373,55 @@
             console.error('Error obteniendo reuniones:', error)
         } finally {
             cargandoReuniones.value = false
+        }
+    }
+
+    // Obtener servicios donde el usuario está asignado
+    const getServiciosProximos = async () => {
+        if (!usuario.value) return
+
+        try {
+            cargandoServicios.value = true
+
+            // Obtener servicios donde el usuario está asignado
+            const { data: serviciosData, error } = await supabase
+                .from('servicios_usuarios')
+                .select(`
+                    servicios (
+                        id,
+                        titulo,
+                        fecha,
+                        hora,
+                        detalles
+                    )
+                `)
+                .eq('user_id', usuario.value.id)
+
+            if (error) throw error
+
+            // Filtrar servicios de hoy hacia adelante y ordenar por fecha
+            const ahora = new Date()
+
+            const serviciosFuturos = serviciosData
+                .map(item => item.servicios)
+                .filter(servicio => {
+                    const fechaServicio = new Date(servicio.fecha + ' ' + servicio.hora)
+                    // Incluir servicios hasta 2 horas después de su inicio
+                    return fechaServicio > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen
+                })
+                .sort((a, b) => {
+                    const fechaA = new Date(a.fecha + ' ' + a.hora)
+                    const fechaB = new Date(b.fecha + ' ' + b.hora)
+                    return fechaA - fechaB
+                })
+                .slice(0, 3) // Mostrar máximo 3 servicios próximos
+
+            serviciosProximos.value = serviciosFuturos
+
+        } catch (error) {
+            console.error('Error obteniendo servicios:', error)
+        } finally {
+            cargandoServicios.value = false
         }
     }
 
@@ -385,6 +518,11 @@
         router.push(`/chat-reunion/${reunionId}`)
     }
 
+    const irAlChatServicio = (servicioId) => {
+        // Navegar a la página de chat del servicio
+        router.push(`/chat-servicio/${servicioId}`)
+    }
+
     const verDetallesReunion = async (reunion) => {
         try {
             // Obtener lista de todos los convocados
@@ -426,6 +564,81 @@
         }
     }
 
+    const verDetallesServicio = async (servicio) => {
+        try {
+            // Obtener lista de todos los participantes del servicio
+            const { data: participantes, error } = await supabase
+                .from('servicios_usuarios')
+                .select(`
+                usuarios(email, raw_user_meta_data)
+            `)
+                .eq('servicio_id', servicio.id)
+
+            if (error) throw error
+
+            // Obtener canciones del servicio con quien las agregó
+            const { data: canciones, error: errorCanciones } = await supabase
+                .from('servicios_canciones')
+                .select(`
+                    *,
+                    canciones (
+                        titulo
+                    ),
+                    usuarios:agregado_por (
+                        email,
+                        raw_user_meta_data
+                    )
+                `)
+                .eq('servicio_id', servicio.id)
+                .order('orden', { ascending: true })
+
+            if (errorCanciones) throw errorCanciones
+
+            const listaParticipantes = participantes
+                .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
+                .join(', ')
+
+            // Crear lista de canciones con quien las agregó
+            let cancionesHtml = ''
+            if (canciones && canciones.length > 0) {
+                cancionesHtml = canciones.map((cancion, index) => {
+                    const nombreUsuario = cancion.usuarios?.raw_user_meta_data?.full_name || cancion.usuarios?.email || 'Usuario desconocido'
+                    const tono = cancion.tono ? ` (${cancion.tono})` : ''
+                    const enlaceCancion = `/ver-cancion/${cancion.cancion_id}`
+                    return `${index + 1}. <a href="${enlaceCancion}" target="_blank" class="text-decoration-none text-primary">${cancion.canciones.titulo} <i class="bi bi-box-arrow-up-right" style="font-size: 0.8em;"></i></a>${tono} - <small class="text-success">${nombreUsuario}</small>`
+                }).join('<br>')
+            }
+
+            await Swal.fire({
+                title: servicio.titulo,
+                html: `
+                <div class="text-start">
+                    <p><strong>📅 Fecha:</strong> ${formatearFecha(servicio.fecha)}</p>
+                    <p><strong>🕐 Hora:</strong> ${servicio.hora}</p>
+                    ${servicio.detalles ? `<p><strong>📝 Detalles:</strong> ${servicio.detalles}</p>` : ''}
+                    <p><strong>🎵 Integrantes (${participantes.length}):</strong></p>
+                    <p class="small">${listaParticipantes}</p>
+                    ${cancionesHtml ? `
+                        <hr>
+                        <p><strong>🎼 Canciones del servicio (${canciones.length}):</strong></p>
+                        <div class="small" style="max-height: 200px; overflow-y: auto;">${cancionesHtml}</div>
+                    ` : ''}
+                </div>
+            `,
+                showCloseButton: true,
+                confirmButtonText: 'Entendido',
+                width: '600px'
+            })
+        } catch (error) {
+            console.error('Error obteniendo detalles del servicio:', error)
+            await Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los detalles del servicio',
+                icon: 'error'
+            })
+        }
+    }
+
     // Logout
     const logout = async () => {
         const { error } = await supabase.auth.signOut()
@@ -457,6 +670,7 @@
         if (newUser) {
             getRolesUsuario()
             getReunionesProximas()
+            getServiciosProximos()
         }
     }, { immediate: true })
 
@@ -467,6 +681,7 @@
         if (usuario.value) {
             getRolesUsuario()
             getReunionesProximas()
+            getServiciosProximos()
         }
     })
 </script>
@@ -646,6 +861,128 @@
         border: 2px dashed #dee2e6;
     }
 
+    /* Estilos para servicios - Diferenciados con paleta verde */
+    .servicios-section {
+        background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .servicio-card-home {
+        background: linear-gradient(145deg, #f8fff8, #ffffff);
+        border: 1px solid #d4edda;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .servicio-card-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+        border-color: #28a745;
+    }
+
+    .servicio-card-home:last-child {
+        margin-bottom: 0;
+    }
+
+    .servicio-header {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .servicio-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .servicio-info {
+        flex-grow: 1;
+    }
+
+    .servicio-titulo {
+        color: #155724;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .servicio-datetime {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .servicio-datetime .fecha,
+    .servicio-datetime .hora {
+        display: flex;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .servicio-badge {
+        flex-shrink: 0;
+    }
+
+    .servicio-badge .badge {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .servicio-detalles {
+        background: #f8fff8;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #28a745;
+    }
+
+    .servicio-detalles p {
+        color: #155724;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .servicio-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #d4edda;
+    }
+
+    .servicio-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .servicio-actions .btn {
+        border-radius: 6px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .no-servicios {
+        background: #f8fff8;
+        border-radius: 12px;
+        border: 2px dashed #d4edda;
+    }
+
     .quick-link-card {
         display: block;
         background: white;
@@ -706,26 +1043,31 @@
             width: 100%;
         }
 
-        .reunion-header {
+        .reunion-header,
+        .servicio-header {
             flex-direction: column;
             text-align: center;
         }
 
-        .reunion-icon {
+        .reunion-icon,
+        .servicio-icon {
             margin: 0 auto 1rem auto;
         }
 
-        .reunion-datetime {
+        .reunion-datetime,
+        .servicio-datetime {
             justify-content: center;
         }
 
-        .reunion-footer {
+        .reunion-footer,
+        .servicio-footer {
             flex-direction: column;
             gap: 1rem;
             text-align: center;
         }
 
-        .reunion-actions {
+        .reunion-actions,
+        .servicio-actions {
             justify-content: center;
         }
 
@@ -737,6 +1079,7 @@
     @media (max-width: 576px) {
 
         .reuniones-section,
+        .servicios-section,
         .quick-links-section {
             padding: 1rem;
             margin-left: 0.5rem;
@@ -748,7 +1091,8 @@
             margin-right: 0.5rem;
         }
 
-        .reunion-card-home {
+        .reunion-card-home,
+        .servicio-card-home {
             padding: 1rem;
         }
     }
