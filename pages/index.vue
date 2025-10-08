@@ -104,10 +104,7 @@
                                         </div>
                                     </div>
                                     <div class="reunion-status">
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>
-                                            Convocado
-                                        </span>
+
                                     </div>
                                 </div>
 

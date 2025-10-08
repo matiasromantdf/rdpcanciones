@@ -18,7 +18,7 @@
         <!-- Botón para nueva reunión -->
         <div class="row mb-4">
             <div class="col-12">
-                <button class="btn btn-primary btn-lg" @click="mostrarFormulario = !mostrarFormulario">
+                <button class="btn btn-primary btn-lg" @click="toggleFormulario">
                     <i class="bi bi-plus-circle me-2"></i>
                     {{ mostrarFormulario ? 'Ocultar Formulario' : 'Nueva Reunión' }}
                 </button>
@@ -29,11 +29,16 @@
         <div class="row mb-4" v-if="mostrarFormulario">
             <div class="col-12">
                 <div class="reunion-form-card">
-                    <div class="card-header">
-                        <h4>
-                            <i class="bi bi-calendar-plus me-2"></i>
-                            Crear Nueva Reunión
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i :class="editandoReunion ? 'bi bi-pencil-square me-2' : 'bi bi-calendar-plus me-2'"></i>
+                            {{ editandoReunion ? 'Editar Reunión' : 'Crear Nueva Reunión' }}
                         </h4>
+                        <button v-if="editandoReunion" class="btn btn-outline-secondary btn-sm"
+                            @click="cancelarEdicion">
+                            <i class="bi bi-x-lg me-2"></i>
+                            Cancelar Edición
+                        </button>
                     </div>
                     <div class="card-body">
                         <!-- Información básica -->
@@ -133,7 +138,7 @@
                                                             <i class="bi bi-people-fill me-1"></i>
                                                             {{ grupo }}
                                                             <span class="ms-1">({{ contarUsuariosPorRol(grupo)
-                                                                }})</span>
+                                                            }})</span>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -266,11 +271,12 @@
                                     <i class="bi bi-arrow-clockwise me-2"></i>
                                     Limpiar
                                 </button>
-                                <button type="button" class="btn btn-success" @click="crearReunion"
+                                <button type="button" :class="editandoReunion ? 'btn btn-warning' : 'btn btn-success'"
+                                    @click="editandoReunion ? actualizarReunion() : crearReunion()"
                                     :disabled="!puedeCrearReunion || creandoReunion">
                                     <span v-if="creandoReunion" class="spinner-border spinner-border-sm me-2"></span>
-                                    <i v-else class="bi bi-send me-2"></i>
-                                    {{ creandoReunion ? 'Creando...' : 'Crear Reunión' }}
+                                    <i v-else :class="editandoReunion ? 'bi bi-check-lg me-2' : 'bi bi-send me-2'"></i>
+                                    {{ creandoReunion ? (editandoReunion ? 'Actualizando...' : 'Creando...') : (editandoReunion ? 'Actualizar Reunión' : 'Crear Reunión') }}
                                 </button>
                             </div>
                         </div>
@@ -294,13 +300,18 @@
                         <p class="text-muted">Crea una nueva reunión para comenzar</p>
                     </div>
 
-                    <div class="reunion-card" v-for="reunion in convocatorias" :key="reunion.id">
+                    <div class="reunion-card" v-for="reunion in convocatorias" :key="reunion.id"
+                        :class="{ 'editando': reunionEditando?.id === reunion.id }">
                         <div class="row align-items-center">
                             <div class="col-md-8">
                                 <div class="reunion-info">
                                     <h5 class="reunion-titulo">
                                         <i class="bi bi-calendar-event me-2"></i>
                                         {{ reunion.titulo }}
+                                        <span v-if="reunionEditando?.id === reunion.id" class="badge bg-warning ms-2">
+                                            <i class="bi bi-pencil me-1"></i>
+                                            Editando
+                                        </span>
                                     </h5>
                                     <div class="reunion-datetime">
                                         <span class="badge bg-primary me-2">
@@ -365,6 +376,8 @@
     const loading = ref(true)
     const creandoReunion = ref(false)
     const mostrarFormulario = ref(false)
+    const editandoReunion = ref(false)
+    const reunionEditando = ref(null)
     const convocatorias = ref([])
     const users = ref([])
     const roles = ref([])
@@ -648,13 +661,153 @@
         }
     }
 
-    const editarReunion = (reunion) => {
-        // Por ahora, mostrar mensaje de funcionalidad futura
-        Swal.fire({
-            title: 'Función en desarrollo',
-            text: 'La edición de reuniones estará disponible próximamente',
-            icon: 'info'
-        })
+    const editarReunion = async (reunion) => {
+        try {
+            // Cargar datos de la reunión en el formulario
+            nuevaReunion.value = {
+                titulo: reunion.titulo,
+                fecha: reunion.fecha,
+                hora: reunion.hora,
+                detalles: reunion.detalles || ''
+            }
+
+            reunionEditando.value = reunion
+            editandoReunion.value = true
+            mostrarFormulario.value = true
+
+            // Cargar participantes actuales de la reunión
+            const { data: participantesActuales, error } = await supabase
+                .from('convocatorias_users')
+                .select(`
+                    usuarios(id, email, raw_user_meta_data)
+                `)
+                .eq('convocatoria_id', reunion.id)
+
+            if (error) throw error
+
+            // Limpiar selecciones actuales
+            gruposSeleccionados.value = []
+            integrantesIndividuales.value = []
+
+            // Cargar participantes individuales
+            integrantesIndividuales.value = participantesActuales.map(p => ({
+                id: p.usuarios.id,
+                email: p.usuarios.email,
+                raw_user_meta_data: p.usuarios.raw_user_meta_data
+            }))
+
+            // Scroll al formulario
+            setTimeout(() => {
+                document.querySelector('.reunion-form-card')?.scrollIntoView({
+                    behavior: 'smooth'
+                })
+            }, 100)
+
+        } catch (error) {
+            console.error('Error cargando reunión para editar:', error)
+            await Swal.fire({
+                title: 'Error',
+                text: 'No se pudo cargar la reunión para editar',
+                icon: 'error'
+            })
+        }
+    }
+
+    const toggleFormulario = () => {
+        if (editandoReunion.value) {
+            cancelarEdicion()
+        } else {
+            mostrarFormulario.value = !mostrarFormulario.value
+            if (!mostrarFormulario.value) {
+                limpiarFormulario()
+            }
+        }
+    }
+
+    const cancelarEdicion = () => {
+        editandoReunion.value = false
+        reunionEditando.value = null
+        limpiarFormulario()
+        mostrarFormulario.value = false
+    }
+
+    const actualizarReunion = async () => {
+        if (!reunionEditando.value) return
+
+        try {
+            creandoReunion.value = true
+
+            // Actualizar datos básicos de la reunión
+            const { error: convocatoriaError } = await supabase
+                .from('convocatorias')
+                .update({
+                    titulo: nuevaReunion.value.titulo,
+                    fecha: nuevaReunion.value.fecha,
+                    hora: nuevaReunion.value.hora,
+                    detalles: nuevaReunion.value.detalles
+                })
+                .eq('id', reunionEditando.value.id)
+
+            if (convocatoriaError) throw convocatoriaError
+
+            // Eliminar participantes actuales
+            const { error: deleteError } = await supabase
+                .from('convocatorias_users')
+                .delete()
+                .eq('convocatoria_id', reunionEditando.value.id)
+
+            if (deleteError) throw deleteError
+
+            // Obtener todos los usuarios a convocar
+            const usuariosAConvocar = new Set()
+
+            // Agregar usuarios de grupos seleccionados
+            gruposSeleccionados.value.forEach(grupo => {
+                const usuariosDelGrupo = rolesUsuarios.value
+                    .filter(ru => ru.rol_id === grupo.id)
+                    .map(ru => ru.user_id)
+                usuariosDelGrupo.forEach(userId => usuariosAConvocar.add(userId))
+            })
+
+            // Agregar usuarios individuales
+            integrantesIndividuales.value.forEach(usuario => {
+                usuariosAConvocar.add(usuario.id)
+            })
+
+            // Insertar nuevos participantes
+            if (usuariosAConvocar.size > 0) {
+                const convocatoriasUsers = Array.from(usuariosAConvocar).map(userId => ({
+                    convocatoria_id: reunionEditando.value.id,
+                    user_id: userId
+                }))
+
+                const { error: usuariosError } = await supabase
+                    .from('convocatorias_users')
+                    .insert(convocatoriasUsers)
+
+                if (usuariosError) throw usuariosError
+            }
+
+            await Swal.fire({
+                title: '¡Reunión actualizada!',
+                text: `Se ha actualizado "${nuevaReunion.value.titulo}" con ${usuariosAConvocar.size} participantes`,
+                icon: 'success'
+            })
+
+            // Limpiar formulario y recargar datos
+            cancelarEdicion()
+            await cargarDatos()
+
+        } catch (error) {
+            console.error('Error actualizando reunión:', error)
+            await Swal.fire({
+                title: 'Error',
+                text: 'No se pudo actualizar la reunión. Intenta nuevamente.',
+                icon: 'error'
+            })
+        } finally {
+            creandoReunion.value = false
+        }
     }
 
     const eliminarReunion = async (reunionId) => {
@@ -1007,6 +1160,14 @@
         .stat-item {
             margin-bottom: 1rem;
         }
+    }
+
+    /* Estado de edición */
+    .reunion-card.editando {
+        border-left: 4px solid #ffc107;
+        background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        transform: translateY(-2px);
     }
 
     /* Animaciones */
