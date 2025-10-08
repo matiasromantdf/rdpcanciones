@@ -523,6 +523,11 @@
         router.push(`/chat-servicio/${servicioId}`)
     }
 
+    // Navegación a canción desde modal
+    const verCancionDesdeModal = (cancionId) => {
+        router.push(`/ver-cancion/${cancionId}`)
+    }
+
     const verDetallesReunion = async (reunion) => {
         try {
             // Obtener lista de todos los convocados
@@ -604,8 +609,7 @@
                 cancionesHtml = canciones.map((cancion, index) => {
                     const nombreUsuario = cancion.usuarios?.raw_user_meta_data?.full_name || cancion.usuarios?.email || 'Usuario desconocido'
                     const tono = cancion.tono ? ` (${cancion.tono})` : ''
-                    const enlaceCancion = `/ver-cancion/${cancion.cancion_id}`
-                    return `${index + 1}. <a href="${enlaceCancion}" target="_blank" class="text-decoration-none text-primary">${cancion.canciones.titulo} <i class="bi bi-box-arrow-up-right" style="font-size: 0.8em;"></i></a>${tono} - <small class="text-success">${nombreUsuario}</small>`
+                    return `${index + 1}. <button onclick="window.verCancionDesdeModal(${cancion.cancion_id})" class="btn-link text-decoration-none text-primary border-0 bg-transparent p-0">${cancion.canciones.titulo} <i class="bi bi-arrow-right" style="font-size: 0.8em;"></i></button>${tono} - <small class="text-success">${nombreUsuario}</small>`
                 }).join('<br>')
             }
 
@@ -677,6 +681,9 @@
     // Lifecycle
     onMounted(() => {
         redirect()
+
+        // Exponer función globalmente para uso en modales
+        window.verCancionDesdeModal = verCancionDesdeModal
 
         if (usuario.value) {
             getRolesUsuario()
@@ -1130,5 +1137,23 @@
 
     .badge.bg-warning {
         background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
+    }
+
+    /* Estilos para botones que actúan como enlaces */
+    .btn-link {
+        font-size: inherit;
+        line-height: inherit;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .btn-link:hover {
+        text-decoration: underline !important;
+    }
+
+    .btn-link:focus {
+        box-shadow: none;
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
     }
 </style>

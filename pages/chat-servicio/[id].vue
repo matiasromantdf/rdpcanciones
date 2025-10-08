@@ -166,12 +166,12 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="cancion-info">
                                                 <h6 class="mb-1">
-                                                    <nuxt-link :to="`/ver-cancion/${cancion.cancion_id}`"
-                                                        class="text-decoration-none cancion-link" target="_blank">
+                                                    <button @click="verCancion(cancion.cancion_id)"
+                                                        class="btn p-0 border-0 bg-transparent text-decoration-none cancion-link text-start">
                                                         {{ cancion.canciones.titulo }}
-                                                        <i class="bi bi-box-arrow-up-right ms-1"
+                                                        <i class="bi bi-arrow-right ms-1"
                                                             style="font-size: 0.8rem;"></i>
-                                                    </nuxt-link>
+                                                    </button>
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="bi bi-music-note me-1"></i>
@@ -228,12 +228,12 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="cancion-info">
                                                 <h6 class="mb-1">
-                                                    <nuxt-link :to="`/ver-cancion/${cancion.cancion_id}`"
-                                                        class="text-decoration-none cancion-link" target="_blank">
+                                                    <button @click="verCancion(cancion.cancion_id)"
+                                                        class="btn p-0 border-0 bg-transparent text-decoration-none cancion-link text-start">
                                                         {{ cancion.canciones.titulo }}
-                                                        <i class="bi bi-box-arrow-up-right ms-1"
+                                                        <i class="bi bi-arrow-right ms-1"
                                                             style="font-size: 0.8rem;"></i>
-                                                    </nuxt-link>
+                                                    </button>
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="bi bi-music-note me-1"></i>
@@ -266,10 +266,11 @@
 
 <script setup>
     import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
-    import { useRoute } from 'vue-router'
+    import { useRoute, useRouter } from 'vue-router'
     import Swal from 'sweetalert2'
 
     const route = useRoute()
+    const router = useRouter()
     const supabase = useSupabaseClient()
     const usuario = useSupabaseUser()
 
@@ -719,6 +720,11 @@
         return mensaje.replace(/\n/g, '<br>')
     }
 
+    // Navegación a canción
+    const verCancion = (cancionId) => {
+        router.push(`/ver-cancion/${cancionId}`)
+    }
+
     // Lifecycle hooks
     onMounted(async () => {
         if (!usuario.value) {
@@ -1040,6 +1046,23 @@
 
     .cancion-link:hover i {
         opacity: 1;
+    }
+
+    /* Estilos para botones que actúan como enlaces */
+    .cancion-link.btn {
+        font-size: inherit;
+        line-height: inherit;
+        cursor: pointer;
+    }
+
+    .cancion-link.btn:hover {
+        text-decoration: underline !important;
+    }
+
+    .cancion-link.btn:focus {
+        box-shadow: none;
+        outline: 2px solid #28a745;
+        outline-offset: 2px;
     }
 
     /* Responsivo */
