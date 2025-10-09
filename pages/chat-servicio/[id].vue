@@ -300,6 +300,7 @@
     // Referencias de typing timeout
     let typingTimeout = null
     let presenceInterval = null
+    let popstateHandler = null
 
     const servicioId = computed(() => parseInt(route.params.id))
 
@@ -722,7 +723,27 @@
 
     // Navegación a canción
     const verCancion = (cancionId) => {
-        router.push(`/ver-cancion/${cancionId}`)
+        // Guardar el estado actual con información del modal
+        const currentState = {
+            modalOpen: true,
+            modalType: 'listado-canciones',
+            servicioId: servicioId.value
+        }
+
+        // Reemplazar el estado actual en el historial
+        console.log('Chat-servicio guardando estado:', currentState) // Debug
+        window.history.replaceState(currentState, '')
+
+        // Cerrar el modal antes de navegar
+        const modal = bootstrap.Modal.getInstance(modalListadoCanciones.value)
+        if (modal) {
+            modal.hide()
+        }
+
+        // Navegar después de un pequeño delay
+        setTimeout(() => {
+            router.push(`/ver-cancion/${cancionId}`)
+        }, 300) // 300ms para que termine la animación de cierre
     }
 
     // Lifecycle hooks
@@ -744,6 +765,20 @@
         // Actualizar presencia cada 30 segundos
         presenceInterval = setInterval(actualizarPresencia, 30000)
         actualizarPresencia()
+
+        // Escuchar el evento popstate para reabrir modal al hacer "volver"
+        popstateHandler = (event) => {
+            console.log('Chat-servicio popstate:', event.state, 'Current servicioId:', servicioId.value) // Debug
+            if (event.state?.modalOpen && event.state?.modalType === 'listado-canciones' && event.state?.servicioId === servicioId.value) {
+                console.log('Reabriendo modal de canciones') // Debug
+                // Reabrir el modal de listado de canciones
+                nextTick(() => {
+                    mostrarListadoCanciones()
+                })
+            }
+        }
+
+        window.addEventListener('popstate', popstateHandler)
     })
 
     onUnmounted(() => {
@@ -764,6 +799,11 @@
         }
         if (typingTimeout) {
             clearTimeout(typingTimeout)
+        }
+
+        // Limpiar listener de popstate
+        if (popstateHandler) {
+            window.removeEventListener('popstate', popstateHandler)
         }
     })
 </script>

@@ -294,7 +294,7 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, watch } from 'vue'
+    import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
     import { useRouter } from 'vue-router'
     import Swal from 'sweetalert2'
 
@@ -308,6 +308,7 @@
     const cargandoReuniones = ref(true)
     const serviciosProximos = ref([])
     const cargandoServicios = ref(true)
+    const servicioModalActual = ref(null)
 
     // Obtener roles del usuario
     const getRolesUsuario = async () => {
@@ -525,7 +526,30 @@
 
     // Navegación a canción desde modal
     const verCancionDesdeModal = (cancionId) => {
-        router.push(`/ver-cancion/${cancionId}`)
+        // Guardar el estado actual con información del modal (solo datos básicos serializables)
+        const currentState = {
+            modalOpen: true,
+            modalType: 'detalles-servicio',
+            servicioData: {
+                id: servicioModalActual.value.id,
+                titulo: servicioModalActual.value.titulo,
+                fecha: servicioModalActual.value.fecha,
+                hora: servicioModalActual.value.hora,
+                detalles: servicioModalActual.value.detalles
+            }
+        }
+
+        // Reemplazar el estado actual en el historial
+        console.log('Guardando estado:', currentState) // Debug
+        window.history.replaceState(currentState, '')
+
+        // Cerrar el modal de SweetAlert2
+        Swal.close()
+
+        // Navegar a la canción después de un pequeño delay
+        setTimeout(() => {
+            router.push(`/ver-cancion/${cancionId}`)
+        }, 100)
     }
 
     const verDetallesReunion = async (reunion) => {
@@ -571,6 +595,9 @@
 
     const verDetallesServicio = async (servicio) => {
         try {
+            // Guardar servicio actual para posible reapertura del modal
+            servicioModalActual.value = servicio
+
             // Obtener lista de todos los participantes del servicio
             const { data: participantes, error } = await supabase
                 .from('servicios_usuarios')
@@ -684,6 +711,25 @@
 
         // Exponer función globalmente para uso en modales
         window.verCancionDesdeModal = verCancionDesdeModal
+
+        // Escuchar el evento popstate para reabrir modal al hacer "volver"
+        const handlePopstate = (event) => {
+            console.log('Popstate event:', event.state) // Debug
+            if (event.state?.modalOpen && event.state?.modalType === 'detalles-servicio' && event.state?.servicioData) {
+                console.log('Reabriendo modal de servicio:', event.state.servicioData) // Debug
+                // Reabrir el modal de detalles del servicio
+                nextTick(() => {
+                    verDetallesServicio(event.state.servicioData)
+                })
+            }
+        }
+
+        window.addEventListener('popstate', handlePopstate)
+
+        // Limpiar listener al desmontar componente
+        onUnmounted(() => {
+            window.removeEventListener('popstate', handlePopstate)
+        })
 
         if (usuario.value) {
             getRolesUsuario()
