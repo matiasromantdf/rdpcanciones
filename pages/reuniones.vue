@@ -369,7 +369,7 @@
     import { useRouter } from 'vue-router'
     import Swal from 'sweetalert2'
 
-    const { supabase, hasRole } = useSupabase()
+    const { supabase, hasRole, usuario } = useSupabase()
     const router = useRouter()
 
     // Estados reactivos
@@ -382,6 +382,7 @@
     const users = ref([])
     const roles = ref([])
     const rolesUsuarios = ref([])
+    const usuarioCasaId = ref(null)
 
     // Formulario de nueva reunión
     const nuevaReunion = ref({
@@ -415,7 +416,7 @@
         const usuariosDeGrupos = new Set()
         gruposSeleccionados.value.forEach(rol => {
             const usuariosDelRol = rolesUsuarios.value
-                .filter(ru => ru.rol === rol)
+                .filter(ru => ru.rol === rol && ru.usuarios.casa_id === usuarioCasaId.value)
                 .map(ru => ru.user_id)
             usuariosDelRol.forEach(userId => usuariosDeGrupos.add(userId))
         })
@@ -441,6 +442,18 @@
     const cargarDatos = async () => {
         try {
             loading.value = true
+
+            // Obtener casa_id del usuario actual
+            if (usuario.value) {
+                const { data: usuarioData, error: usuarioError } = await supabase
+                    .from('usuarios')
+                    .select('casa_id')
+                    .eq('id', usuario.value.id)
+                    .single()
+
+                if (usuarioError) throw usuarioError
+                usuarioCasaId.value = usuarioData.casa_id
+            }
 
             // Cargar convocatorias
             const { data: convocatoriasData, error: convocatoriasError } = await supabase
@@ -471,10 +484,26 @@
 
             if (rolesUsuariosError) throw rolesUsuariosError
 
+            // Cargar información adicional de usuarios para obtener casa_id
+            const { data: usuariosConCasa, error: usuariosConCasaError } = await supabase
+                .from('usuarios')
+                .select('id, casa_id, raw_user_meta_data')
+
+            if (usuariosConCasaError) throw usuariosConCasaError
+
+            // Combinar datos de roles_usuarios con información de casa_id
+            const rolesUsuariosConCasa = rolesUsuariosData.map(ru => {
+                const usuarioInfo = usuariosConCasa.find(u => u.id === ru.user_id)
+                return {
+                    ...ru,
+                    usuarios: usuarioInfo || { casa_id: null, raw_user_meta_data: null }
+                }
+            })
+
             convocatorias.value = convocatoriasData || []
             users.value = usuariosData || []
             roles.value = rolesData || []
-            rolesUsuarios.value = rolesUsuariosData || []
+            rolesUsuarios.value = rolesUsuariosConCasa || []
 
         } catch (error) {
             console.error('Error cargando datos:', error)
@@ -490,7 +519,7 @@
 
     // Métodos de utilidad
     const contarUsuariosPorRol = (rol) => {
-        return rolesUsuarios.value.filter(ru => ru.rol === rol).length
+        return rolesUsuarios.value.filter(ru => ru.rol === rol && ru.usuarios.casa_id === usuarioCasaId.value).length
     }
 
     const obtenerRolesUsuario = (userId) => {
@@ -565,7 +594,7 @@
             // Agregar usuarios de grupos seleccionados
             gruposSeleccionados.value.forEach(rol => {
                 const usuariosDelRol = rolesUsuarios.value
-                    .filter(ru => ru.rol === rol)
+                    .filter(ru => ru.rol === rol && ru.usuarios.casa_id === usuarioCasaId.value)
                     .map(ru => ru.user_id)
                 usuariosDelRol.forEach(userId => usuariosAConvocar.add(userId))
             })
@@ -764,7 +793,7 @@
             // Agregar usuarios de grupos seleccionados
             gruposSeleccionados.value.forEach(grupo => {
                 const usuariosDelGrupo = rolesUsuarios.value
-                    .filter(ru => ru.rol_id === grupo.id)
+                    .filter(ru => ru.rol === grupo.rol && ru.usuarios.casa_id === usuarioCasaId.value)
                     .map(ru => ru.user_id)
                 usuariosDelGrupo.forEach(userId => usuariosAConvocar.add(userId))
             })

@@ -125,6 +125,9 @@
                         <h5 class="modal-title" id="modalListadoCancionesLabel">
                             <i class="bi bi-music-note-list me-2"></i>
                             Listado de Canciones del Servicio
+                            <div v-if="actualizandoOrden" class="spinner-border spinner-border-sm ms-2" role="status">
+                                <span class="visually-hidden">Actualizando orden...</span>
+                            </div>
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -162,9 +165,19 @@
                                         personal</p>
                                 </div>
                                 <div v-else>
-                                    <div v-for="cancion in cancionesServicio" :key="cancion.id" class="cancion-item">
+                                    <div class="alert alert-info alert-sm mb-3" v-if="cancionesServicio.length > 1">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <small>Arrastra las canciones para cambiar el orden del servicio</small>
+                                    </div>
+                                    <div v-for="(cancion, index) in cancionesServicio" :key="cancion.id"
+                                        class="cancion-item" draggable="true" @dragstart="onDragStart($event, index)"
+                                        @dragover="onDragOver($event)" @drop="onDrop($event, index)"
+                                        @dragenter="onDragEnter($event)" @dragleave="onDragLeave($event)">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div class="cancion-info">
+                                            <div class="drag-handle me-2">
+                                                <i class="bi bi-grip-vertical text-muted"></i>
+                                            </div>
+                                            <div class="cancion-info flex-grow-1">
                                                 <h6 class="mb-1">
                                                     <button @click="verCancion(cancion.cancion_id)"
                                                         class="btn p-0 border-0 bg-transparent text-decoration-none cancion-link text-start">
@@ -291,6 +304,10 @@
     const repertorioPersonal = ref([])
     const cargandoCancionesServicio = ref(false)
     const cargandoRepertorio = ref(false)
+
+    // Estados para drag and drop
+    const draggedIndex = ref(null)
+    const actualizandoOrden = ref(false)
 
     // Subscripciones de tiempo real
     let mensajesSubscription = null
@@ -697,6 +714,107 @@
         return esMenor ? `${tono}m` : tono
     }
 
+    // === FUNCIONES DE DRAG AND DROP ===
+
+    const onDragStart = (event, index) => {
+        draggedIndex.value = index
+        event.dataTransfer.effectAllowed = 'move'
+        event.target.style.opacity = '0.5'
+    }
+
+    const onDragOver = (event) => {
+        event.preventDefault()
+        event.dataTransfer.dropEffect = 'move'
+    }
+
+    const onDragEnter = (event) => {
+        event.preventDefault()
+        event.target.classList.add('drag-over')
+    }
+
+    const onDragLeave = (event) => {
+        event.target.classList.remove('drag-over')
+    }
+
+    const onDrop = async (event, dropIndex) => {
+        event.preventDefault()
+        event.target.classList.remove('drag-over')
+
+        const dragIndex = draggedIndex.value
+
+        if (dragIndex === null || dragIndex === dropIndex) {
+            // Restaurar opacidad si no hay cambio
+            document.querySelectorAll('.cancion-item').forEach(item => {
+                item.style.opacity = '1'
+            })
+            return
+        }
+
+        // Actualizar orden visualmente primero
+        const items = [...cancionesServicio.value]
+        const draggedItem = items[dragIndex]
+        items.splice(dragIndex, 1)
+        items.splice(dropIndex, 0, draggedItem)
+
+        // Actualizar array reactivo
+        cancionesServicio.value = items
+
+        // Actualizar en base de datos
+        await actualizarOrdenCanciones(items)
+
+        // Restaurar opacidad
+        document.querySelectorAll('.cancion-item').forEach(item => {
+            item.style.opacity = '1'
+        })
+
+        draggedIndex.value = null
+    }
+
+    const actualizarOrdenCanciones = async (cancionesOrdenadas) => {
+        if (actualizandoOrden.value) return
+
+        actualizandoOrden.value = true
+
+        try {
+            // Actualizar el orden de todas las canciones
+            const updates = cancionesOrdenadas.map((cancion, index) => ({
+                id: cancion.id,
+                orden: index + 1
+            }))
+
+            for (const update of updates) {
+                const { error } = await supabase
+                    .from('servicios_canciones')
+                    .update({ orden: update.orden })
+                    .eq('id', update.id)
+
+                if (error) throw error
+            }
+
+            // Mostrar mensaje de éxito
+            await Swal.fire({
+                title: 'Orden actualizado',
+                text: 'El orden de las canciones se actualizó correctamente',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            })
+
+        } catch (error) {
+            console.error('Error actualizando orden:', error)
+            await Swal.fire({
+                title: 'Error',
+                text: 'No se pudo actualizar el orden de las canciones',
+                icon: 'error'
+            })
+
+            // Recargar canciones para restaurar el orden original
+            cargarCancionesServicio()
+        } finally {
+            actualizandoOrden.value = false
+        }
+    }
+
     // === FUNCIONES DE UTILIDAD ===
 
     const formatearFecha = (fecha) => {
@@ -1052,11 +1170,44 @@
         margin-bottom: 0.75rem;
         background: #f8f9fa;
         transition: all 0.2s ease;
+        cursor: move;
+        user-select: none;
     }
 
     .cancion-item:hover {
         border-color: #28a745;
         box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+    }
+
+    /* Estilos para drag and drop */
+    .cancion-item[draggable="true"]:hover {
+        cursor: grab;
+    }
+
+    .cancion-item[draggable="true"]:active {
+        cursor: grabbing;
+    }
+
+    .cancion-item.drag-over {
+        border-color: #007bff;
+        background-color: #e7f3ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .drag-handle {
+        cursor: grab;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .drag-handle:hover {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .drag-handle:active {
+        cursor: grabbing;
     }
 
     .cancion-info h6 {

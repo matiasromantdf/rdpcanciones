@@ -362,7 +362,7 @@
     import { useRouter } from 'vue-router'
     import Swal from 'sweetalert2'
 
-    const { supabase, hasRole } = useSupabase()
+    const { supabase, hasRole, usuario } = useSupabase()
     const router = useRouter()
 
     // Estados reactivos
@@ -376,6 +376,7 @@
     const roles = ref([])
     const rolesUsuarios = ref([])
     const serviciosUsuarios = ref([])
+    const usuarioCasaId = ref(null)
 
     // Formulario de nuevo servicio
     const nuevoServicio = ref({
@@ -424,6 +425,18 @@
         try {
             loading.value = true
 
+            // Obtener casa_id del usuario actual
+            if (usuario.value) {
+                const { data: usuarioData, error: usuarioError } = await supabase
+                    .from('usuarios')
+                    .select('casa_id')
+                    .eq('id', usuario.value.id)
+                    .single()
+
+                if (usuarioError) throw usuarioError
+                usuarioCasaId.value = usuarioData.casa_id
+            }
+
             // Cargar servicios
             const { data: serviciosData, error: serviciosError } = await supabase
                 .from('servicios')
@@ -455,6 +468,22 @@
 
             if (rolesUsuariosError) throw rolesUsuariosError
 
+            // Cargar información adicional de usuarios para obtener casa_id
+            const { data: usuariosConCasa, error: usuariosConCasaError } = await supabase
+                .from('usuarios')
+                .select('id, casa_id, raw_user_meta_data')
+
+            if (usuariosConCasaError) throw usuariosConCasaError
+
+            // Combinar datos de roles_usuarios con información de casa_id
+            const rolesUsuariosConCasa = rolesUsuariosData.map(ru => {
+                const usuarioInfo = usuariosConCasa.find(u => u.id === ru.user_id)
+                return {
+                    ...ru,
+                    usuarios: usuarioInfo || { casa_id: null, raw_user_meta_data: null }
+                }
+            })
+
             // Cargar servicios_usuarios
             const { data: serviciosUsuariosData, error: serviciosUsuariosError } = await supabase
                 .from('servicios_usuarios')
@@ -465,7 +494,7 @@
             servicios.value = serviciosData || []
             users.value = usuariosData || []
             roles.value = rolesData || []
-            rolesUsuarios.value = rolesUsuariosData || []
+            rolesUsuarios.value = rolesUsuariosConCasa || []
             serviciosUsuarios.value = serviciosUsuariosData || []
 
         } catch (error) {
@@ -486,8 +515,10 @@
         const rol = roles.value.find(r => r.id === rolId)
         if (!rol) return 0
 
-        // Contar usuarios que tienen ese rol
-        return rolesUsuarios.value.filter(ru => ru.rol === rol.rol).length
+        // Contar usuarios que tienen ese rol y pertenecen a la misma casa
+        return rolesUsuarios.value.filter(ru => 
+            ru.rol === rol.rol && ru.usuarios.casa_id === usuarioCasaId.value
+        ).length
     }
 
     const contarParticipantes = (servicioId) => {
@@ -569,7 +600,7 @@
             // Agregar usuarios de grupos seleccionados
             gruposSeleccionados.value.forEach(grupo => {
                 const usuariosDelGrupo = rolesUsuarios.value
-                    .filter(ru => ru.rol === grupo.rol)
+                    .filter(ru => ru.rol === grupo.rol && ru.usuarios.casa_id === usuarioCasaId.value)
                     .map(ru => ru.user_id)
                 usuariosDelGrupo.forEach(userId => usuariosAAgregar.add(userId))
             })
@@ -708,7 +739,7 @@
             // Agregar usuarios de grupos seleccionados
             gruposSeleccionados.value.forEach(grupo => {
                 const usuariosDelGrupo = rolesUsuarios.value
-                    .filter(ru => ru.rol === grupo.rol)
+                    .filter(ru => ru.rol === grupo.rol && ru.usuarios.casa_id === usuarioCasaId.value)
                     .map(ru => ru.user_id)
                 usuariosDelGrupo.forEach(userId => usuariosAAgregar.add(userId))
             })
