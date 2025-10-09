@@ -138,7 +138,7 @@
                                                             <i class="bi bi-people-fill me-1"></i>
                                                             {{ grupo }}
                                                             <span class="ms-1">({{ contarUsuariosPorRol(grupo)
-                                                            }})</span>
+                                                                }})</span>
                                                         </span>
                                                     </div>
                                                 </div>

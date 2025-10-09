@@ -516,7 +516,7 @@
         if (!rol) return 0
 
         // Contar usuarios que tienen ese rol y pertenecen a la misma casa
-        return rolesUsuarios.value.filter(ru => 
+        return rolesUsuarios.value.filter(ru =>
             ru.rol === rol.rol && ru.usuarios.casa_id === usuarioCasaId.value
         ).length
     }
