@@ -34,9 +34,6 @@
                                 <nuxt-link to="/servicios" class="dropdown-item" v-if="esAdminVoces">
                                     <i class="bi bi-music-note-list me-2"></i>Servicios
                                 </nuxt-link>
-                                <nuxt-link to="/setup-chat" class="dropdown-item" v-if="esAdminVoces">
-                                    <i class="bi bi-gear me-2"></i>Configurar Chat
-                                </nuxt-link>
                                 <nuxt-link to="/calendario" class="dropdown-item" v-if="esVoces">Calendario</nuxt-link>
 
                             </ul>
