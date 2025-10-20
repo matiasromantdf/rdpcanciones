@@ -49,7 +49,7 @@
                             </p>
                         </div>
                         <div class="welcome-actions">
-                            <button @click="logout" class="btn btn-outline-light">
+                            <button @click="logout" class="btn btn-outline-primary">
                                 <i class="bi bi-box-arrow-right me-2"></i>
                                 Cerrar Sesión
                             </button>
@@ -97,10 +97,7 @@
                                                 <i class="bi bi-calendar3 me-1"></i>
                                                 {{ formatearFecha(reunion.fecha, reunion.hora) }}
                                             </span>
-                                            <span class="hora">
-                                                <i class="bi bi-clock me-1"></i>
-                                                {{ reunion.hora }}
-                                            </span>
+
                                         </div>
                                     </div>
                                     <div class="reunion-status">
@@ -116,11 +113,11 @@
                                 </div>
 
                                 <div class="reunion-footer">
-                                    <div class="tiempo-restante">
+                                    <!-- <div class="tiempo-restante">
                                         <i class="bi bi-hourglass-split me-1"></i>
                                         <span
                                             class="text-muted">{{ calcularTiempoRestante(reunion.fecha, reunion.hora) }}</span>
-                                    </div>
+                                    </div> -->
                                     <div class="reunion-actions">
                                         <button class="btn btn-sm btn-primary" @click="irAlChat(reunion.id)"
                                             title="Chat de la reunión">
@@ -169,7 +166,7 @@
                             <div v-for="servicio in serviciosProximos" :key="servicio.id" class="servicio-card-home">
                                 <div class="servicio-header">
                                     <div class="servicio-icon">
-                                        <i class="bi bi-music-note-list"></i>
+                                        <i class="bi bi-bookmark-star"></i>
                                     </div>
                                     <div class="servicio-info">
                                         <h5 class="servicio-titulo">{{ servicio.titulo }}</h5>
@@ -178,14 +175,13 @@
                                                 <i class="bi bi-calendar3 me-1"></i>
                                                 {{ formatearFecha(servicio.fecha, servicio.hora) }}
                                             </span>
-                                            <span class="hora">
+                                            <!-- <span class="hora">
                                                 <i class="bi bi-clock me-1"></i>
                                                 {{ servicio.hora }}
-                                            </span>
+                                            </span> -->
                                         </div>
                                     </div>
                                     <div class="servicio-badge">
-                                        <span class="badge bg-success">Servicio</span>
                                     </div>
                                 </div>
 
@@ -197,18 +193,18 @@
                                 </div>
 
                                 <div class="servicio-footer">
-                                    <div class="tiempo-restante">
+                                    <!-- <div class="tiempo-restante">
                                         <i class="bi bi-hourglass-split me-1"></i>
                                         <span
                                             class="text-muted">{{ calcularTiempoRestante(servicio.fecha, servicio.hora) }}</span>
-                                    </div>
+                                    </div> -->
                                     <div class="servicio-actions">
-                                        <button class="btn btn-sm btn-success" @click="irAlChatServicio(servicio.id)"
+                                        <button class="btn btn-sm btn-primary" @click="irAlChatServicio(servicio.id)"
                                             title="Chat del servicio">
                                             <i class="bi bi-chat-dots me-1"></i>
                                             Chat
                                         </button>
-                                        <button class="btn btn-sm btn-outline-success"
+                                        <button class="btn btn-sm btn-outline-primary"
                                             @click="verDetallesServicio(servicio)" title="Ver más detalles">
                                             <i class="bi bi-eye me-1"></i>
                                             Detalles
@@ -432,47 +428,52 @@
     }
 
     const formatearFecha = (fecha, hora = null) => {
-        const date = new Date(fecha)
-        const hoy = new Date()
-        const manana = new Date(hoy)
-        manana.setDate(hoy.getDate() + 1)
 
-        // Comparar solo las fechas (sin hora)
-        const fechaSolo = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-        const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
-        const mananaSolo = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate())
+        const date = new Date(fecha + 'T00:00:00')
+        const opciones = { weekday: 'short', day: 'numeric', month: 'short' }
+        return date.toLocaleDateString('es-ES', opciones) +
+            (hora ? ` a las ${hora}` : '')
 
-        // Si se proporciona hora, verificar las 12 horas para "Hoy"
-        if (fechaSolo.getTime() === hoySolo.getTime()) {
-            if (hora) {
-                // Calcular si faltan menos de 12 horas
-                const fechaReunion = new Date(fecha + ' ' + hora)
-                const diferencia = fechaReunion - hoy
-                const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
+        // const hoy = new Date()
+        // const manana = new Date(hoy)
+        // manana.setDate(hoy.getDate() + 1)
 
-                // Solo mostrar "Hoy" si faltan 12 horas o menos
-                if (totalHoras <= 12 && diferencia > 0) {
-                    return 'Hoy'
-                } else {
-                    // Si faltan más de 12 horas, mostrar fecha completa
-                    return date.toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long'
-                    })
-                }
-            } else {
-                return 'Hoy'
-            }
-        } else if (fechaSolo.getTime() === mananaSolo.getTime()) {
-            return 'Mañana'
-        } else {
-            return date.toLocaleDateString('es-ES', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long'
-            })
-        }
+        // // Comparar solo las fechas (sin hora)
+        // const fechaSolo = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        // const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+        // const mananaSolo = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate())
+
+        // // Si se proporciona hora, verificar las 12 horas para "Hoy"
+        // if (fechaSolo.getTime() === hoySolo.getTime()) {
+        //     if (hora) {
+        //         // Calcular si faltan menos de 12 horas
+        //         const fechaReunion = new Date(fecha + ' ' + hora)
+        //         const diferencia = fechaReunion - hoy
+        //         const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
+
+        //         // Solo mostrar "Hoy" si faltan 12 horas o menos
+        //         if (totalHoras <= 12 && diferencia > 0) {
+        //             return 'Hoy'
+        //         } else {
+        //             // Si faltan más de 12 horas, mostrar fecha completa
+        //             return date.toLocaleDateString('es-ES', {
+        //                 weekday: 'long',
+        //                 day: 'numeric',
+        //                 month: 'long'
+        //             })
+        //         }
+        //     } else {
+        //         return 'Hoy'
+        //     }
+        // } else if (fechaSolo.getTime() === mananaSolo.getTime()) {
+        //     return 'Mañana'
+        // } else {
+        //     return date.toLocaleDateString('es-ES', {
+        //         weekday: 'long',
+        //         day: 'numeric',
+        //         month: 'long'
+        //     })
+        // }
     }
 
     const calcularTiempoRestante = (fecha, hora) => {
@@ -741,8 +742,7 @@
 
 <style scoped>
     .welcome-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        color: rgb(7, 7, 7);
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
@@ -776,10 +776,8 @@
 
     .reuniones-section,
     .quick-links-section {
-        background: white;
         border-radius: 15px;
         padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 1.5rem;
     }
 
@@ -788,7 +786,7 @@
         font-size: 1.25rem;
         font-weight: 600;
         margin-bottom: 1.5rem;
-        border-bottom: 2px solid #f8f9fa;
+        border-bottom: 2px solid #343b42;
         padding-bottom: 0.5rem;
     }
 
@@ -821,8 +819,8 @@
     .reunion-icon {
         width: 50px;
         height: 50px;
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
+        background-color: #dcdde4;
+        color: rgb(44, 43, 43);
         border-radius: 12px;
         display: flex;
         align-items: center;
@@ -869,7 +867,7 @@
 
     .reunion-detalles {
         background: #f8f9fa;
-        border-radius: 8px;
+        border-radius: 0px 8px 8px 0px;
         padding: 1rem;
         margin-bottom: 1rem;
         border-left: 4px solid #667eea;
@@ -916,15 +914,14 @@
 
     /* Estilos para servicios - Diferenciados con paleta verde */
     .servicios-section {
-        background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
         border-radius: 15px;
         padding: 1.5rem;
         margin-bottom: 1rem;
     }
 
     .servicio-card-home {
-        background: linear-gradient(145deg, #f8fff8, #ffffff);
-        border: 1px solid #d4edda;
+        background: linear-gradient(145deg, #8997df49, #a582af5e);
+        border: 1px solid #180d49;
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 1rem;
@@ -935,7 +932,7 @@
     .servicio-card-home:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
-        border-color: #28a745;
+        border-color: #2850a7;
     }
 
     .servicio-card-home:last-child {
@@ -951,7 +948,7 @@
     .servicio-icon {
         width: 50px;
         height: 50px;
-        background: linear-gradient(45deg, #28a745, #20c997);
+        background: linear-gradient(45deg, #7828a7, #3f33ac);
         color: white;
         border-radius: 12px;
         display: flex;
@@ -967,7 +964,7 @@
     }
 
     .servicio-titulo {
-        color: #155724;
+        color: #292c2a;
         font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
@@ -998,15 +995,17 @@
     }
 
     .servicio-detalles {
-        background: #f8fff8;
-        border-radius: 8px;
+
+        background: #fdfdfd54;
+
+        border-radius: 0px 8px 8px 0px;
         padding: 1rem;
         margin-bottom: 1rem;
-        border-left: 4px solid #28a745;
+        border-left: 4px solid #6328a7;
     }
 
     .servicio-detalles p {
-        color: #155724;
+        color: #070635;
         font-size: 0.9rem;
         line-height: 1.5;
     }

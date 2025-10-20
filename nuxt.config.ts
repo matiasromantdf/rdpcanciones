@@ -9,12 +9,7 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'],
-  
-  devServer: {
-    port: 3000
-  },
- 
+  modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'], 
   supabase: {
     redirectOptions:{
       login: '/login',
