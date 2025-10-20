@@ -138,7 +138,7 @@
                                                             <i class="bi bi-people-fill me-1"></i>
                                                             {{ grupo }}
                                                             <span class="ms-1">({{ contarUsuariosPorRol(grupo)
-                                                                }})</span>
+                                                            }})</span>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -891,7 +891,7 @@
     }
 
     const formatearFecha = (fecha) => {
-        const date = new Date(fecha)
+        const date = new Date(fecha + 'T00:00:00')
         return date.toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',

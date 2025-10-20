@@ -888,7 +888,7 @@
 
     // Utilidades
     const formatearFecha = (fecha) => {
-        const date = new Date(fecha)
+        const date = new Date(fecha + 'T00:00:00')
         const hoy = new Date()
         const manana = new Date(hoy)
         manana.setDate(hoy.getDate() + 1)
