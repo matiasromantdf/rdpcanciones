@@ -155,9 +155,8 @@
                         <!-- Sin servicios -->
                         <div v-else-if="serviciosProximos.length === 0" class="no-servicios">
                             <div class="text-center py-4">
-                                <i class="bi bi-music-note text-muted" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-3 text-muted">No hay servicios próximos</h5>
-                                <p class="text-muted mb-0">Cuando seas asignado a un servicio, aparecerá aquí</p>
+                                <h5 class="mt-3 text-muted">Nada por ahora</h5>
+                                <p class="text-muted mb-0">Cuando seas asignado a un servicio, estará acá</p>
                             </div>
                         </div>
 
@@ -354,8 +353,8 @@
                 .map(item => item.convocatorias)
                 .filter(reunion => {
                     const fechaReunion = new Date(reunion.fecha + ' ' + reunion.hora)
-                    // Incluir reuniones hasta 2 horas después de su inicio
-                    return fechaReunion > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen
+                    // Incluir reuniones desde hoy o futuras, más reuniones que empezaron hace menos de 2 horas
+                    return fechaReunion.getTime() > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen hacia atrás
                 })
                 .sort((a, b) => {
                     const fechaA = new Date(a.fecha + ' ' + a.hora)
@@ -403,8 +402,8 @@
                 .map(item => item.servicios)
                 .filter(servicio => {
                     const fechaServicio = new Date(servicio.fecha + ' ' + servicio.hora)
-                    // Incluir servicios hasta 2 horas después de su inicio
-                    return fechaServicio > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen
+                    // Incluir servicios desde hoy o futuros, más servicios que empezaron hace menos de 2 horas
+                    return fechaServicio.getTime() > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen hacia atrás
                 })
                 .sort((a, b) => {
                     const fechaA = new Date(a.fecha + ' ' + a.hora)
@@ -476,45 +475,7 @@
         // }
     }
 
-    const calcularTiempoRestante = (fecha, hora) => {
-        const fechaReunion = new Date(fecha + ' ' + hora)
-        const ahora = new Date()
-        const diferencia = fechaReunion - ahora
-
-        // Si la diferencia es menor a -2 horas, considerarla pasada
-        if (diferencia < -2 * 60 * 60 * 1000) return 'Reunión pasada'
-
-        // Si la diferencia está entre -2 horas y 0, está en curso o recién terminada
-        if (diferencia <= 0) {
-            const horasPasadas = Math.abs(Math.floor(diferencia / (1000 * 60 * 60)))
-            if (horasPasadas === 0) {
-                return 'En curso'
-            } else {
-                return `Terminó hace ${horasPasadas} hora${horasPasadas > 1 ? 's' : ''}`
-            }
-        }
-
-        const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
-        const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60))
-        const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
-
-        if (dias > 0) {
-            return `En ${dias} día${dias > 1 ? 's' : ''}`
-        } else if (totalHoras > 12) {
-            // Si faltan más de 12 horas, mostrar horas totales
-            return `En ${totalHoras} horas`
-        } else if (horas > 0) {
-            // Solo mostrar "hoy" cuando falten 12 horas o menos
-            return `Hoy en ${horas} hora${horas > 1 ? 's' : ''}`
-        } else if (minutos > 5) {
-            return `Hoy en ${minutos} minutos`
-        } else if (minutos > 0) {
-            return `¡Muy pronto! (${minutos} min)`
-        } else {
-            return '¡Ahora mismo!'
-        }
-    }    // Acciones de reuniones
+    // Acciones de reuniones
     const irAlChat = (reunionId) => {
         // Navegar a la página de chat de la reunión
         router.push(`/chat-reunion/${reunionId}`)
