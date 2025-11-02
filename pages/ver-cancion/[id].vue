@@ -3,6 +3,15 @@
         <div v-if="loading">Cargando...</div>
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song && !guardando">
+            <div class="row mb-2 compartir">
+                <div class="col text-end">
+                    <button class="btn btn-outline-primary"
+                        @click="compartir('https://rdpcanciones.com/ver-cancion/' + song.id)">
+                        <i class="bi bi-share-fill me-1"></i>
+                        Compartir
+                    </button>
+                </div>
+            </div>
             <div class="row">
                 <div class="control col border p-2 text-center">
                     <p>Tono acordes</p>
@@ -611,7 +620,23 @@
         window.open(url, '_blank')
     }
 
-
+    const compartir = (url) => {
+        // Usar la API de Web Share si está disponible
+        if (navigator.share) {
+            navigator.share({
+                title: 'Mirá esta canción en RDP Canciones',
+                url: url
+            }).then(() => {
+                console.log('Gracias por compartir!');
+            })
+                .catch((error) => {
+                    console.error('Error al compartir:', error);
+                });
+        } else {
+            // Si no está disponible, abrir en una nueva pestaña
+            window.open(url, '_blank');
+        }
+    }
 
     onMounted(() => {
         fetchSong();
