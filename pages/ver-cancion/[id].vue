@@ -6,7 +6,7 @@
             <div class="row mb-2 compartir">
                 <div class="col text-end">
                     <button class="btn btn-outline-primary"
-                        @click="compartir('https://rdpcanciones.com/ver-cancion/' + song.id)">
+                        @click="compartir('https://rocadepaz.vercel.app/ver-cancion/' + song.id)">
                         <i class="bi bi-share-fill me-1"></i>
                         Compartir
                     </button>
