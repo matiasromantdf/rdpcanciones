@@ -6,11 +6,8 @@
                 <div class="header-section">
                     <h1 class="display-5 text-white mb-2">
                         <i class="bi bi-calendar-event me-3"></i>
-                        Gestión de Reuniones
+                        Gestión de Encuentros y Meetings
                     </h1>
-                    <p class="lead text-white-50">
-                        Organiza y convoca reuniones para los diferentes grupos del ministerio
-                    </p>
                 </div>
             </div>
         </div>
@@ -20,7 +17,7 @@
             <div class="col-12">
                 <button class="btn btn-primary btn-lg" @click="toggleFormulario">
                     <i class="bi bi-plus-circle me-2"></i>
-                    {{ mostrarFormulario ? 'Ocultar Formulario' : 'Nueva Reunión' }}
+                    {{ mostrarFormulario ? 'Ocultar Formulario' : 'Crear Meeting' }}
                 </button>
             </div>
         </div>

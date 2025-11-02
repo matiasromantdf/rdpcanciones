@@ -64,7 +64,7 @@
                     <div class="reuniones-section">
                         <h4 class="section-title">
                             <i class="bi bi-calendar-event me-2"></i>
-                            Próximas Reuniones
+                            Meetings
                         </h4>
 
                         <!-- Loading reuniones -->
@@ -78,12 +78,12 @@
                         <div v-else-if="reunionesProximas.length === 0" class="no-reuniones">
                             <div class="text-center py-4">
                                 <i class="bi bi-calendar-x text-muted" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-3 text-muted">No hay reuniones próximas</h5>
-                                <p class="text-muted mb-0">Cuando seas convocado a una reunión, aparecerá aquí</p>
+                                <h5 class="mt-3 text-muted">Sin Meetings</h5>
+                                <p class="text-muted mb-0">Cuando seas convocado a un encuentro, aparecerá aquí</p>
                             </div>
                         </div>
 
-                        <!-- Lista de reuniones -->
+                        <!-- Lista de encuentros -->
                         <div v-else>
                             <div v-for="reunion in reunionesProximas" :key="reunion.id" class="reunion-card-home">
                                 <div class="reunion-header">

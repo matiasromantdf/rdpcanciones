@@ -29,7 +29,7 @@
                                 <nuxt-link to="/admgrupos" class="dropdown-item" v-if="esAdminVoces">Administrar
                                     grupos</nuxt-link>
                                 <nuxt-link to="/reuniones" class="dropdown-item" v-if="esAdminVoces">
-                                    <i class="bi bi-calendar-event me-2"></i>Reuniones
+                                    <i class="bi bi-calendar-event me-2"></i>Meetings
                                 </nuxt-link>
                                 <nuxt-link to="/servicios" class="dropdown-item" v-if="esAdminVoces">
                                     <i class="bi bi-music-note-list me-2"></i>Servicios
