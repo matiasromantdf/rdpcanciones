@@ -756,6 +756,11 @@
         items.splice(dragIndex, 1)
         items.splice(dropIndex, 0, draggedItem)
 
+        // Actualizar orden local de cada canción ANTES de actualizar la base de datos
+        items.forEach((cancion, index) => {
+            cancion.orden = index + 1
+        })
+
         // Actualizar array reactivo
         cancionesServicio.value = items
 
