@@ -402,8 +402,8 @@
                 .map(item => item.servicios)
                 .filter(servicio => {
                     const fechaServicio = new Date(servicio.fecha + ' ' + servicio.hora)
-                    // Incluir servicios desde hoy o futuros, más servicios que empezaron hace menos de 2 horas
-                    return fechaServicio.getTime() > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen hacia atrás
+                    // Incluir servicios desde hoy o futuros, más servicios que empezaron hace menos de 4 horas
+                    return fechaServicio.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
                 })
                 .sort((a, b) => {
                     const fechaA = new Date(a.fecha + ' ' + a.hora)
