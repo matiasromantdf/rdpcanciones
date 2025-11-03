@@ -353,8 +353,8 @@
                 .map(item => item.convocatorias)
                 .filter(reunion => {
                     const fechaReunion = new Date(reunion.fecha + ' ' + reunion.hora)
-                    // Incluir reuniones desde hoy o futuras, más reuniones que empezaron hace menos de 2 horas
-                    return fechaReunion.getTime() > ahora.getTime() - (2 * 60 * 60 * 1000) // 2 horas de margen hacia atrás
+                    // Incluir reuniones desde hoy o futuras, más reuniones que empezaron hace menos de 4 horas
+                    return fechaReunion.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
                 })
                 .sort((a, b) => {
                     const fechaA = new Date(a.fecha + ' ' + a.hora)
