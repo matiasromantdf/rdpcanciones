@@ -1,155 +1,117 @@
 <template>
-    <div class="p-6">
-      <h1 class="text-2xl font-bold mb-4">Pistas del Bucket</h1>
+    <div class="p-6 max-w-4xl mx-auto">
+      <h1 class="text-2xl font-bold mb-4">Listar archivos - Bucket "{{ bucketName }}"</h1>
   
-      <table class="min-w-full border">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="p-2 border">Nombre</th>
-            <th class="p-2 border">Tamaño</th>
-            <th class="p-2 border">Bitrate</th>
-            <th class="p-2 border">Acciones</th>
+      <div class="mb-4 flex gap-2">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="cargarArchivos">
+          🔄 Cargar archivos
+        </button>
+  
+        <span v-if="loading" class="text-sm text-gray-600 self-center">{{ loading }}</span>
+      </div>
+  
+      <table v-if="files.length" class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2 text-left border">Nombre</th>
+            <th class="p-2 text-right border">Tamaño</th>
           </tr>
         </thead>
-  
         <tbody>
-          <tr
-            v-for="f in files"
-            :key="f.name"
-            class="border-b"
-          >
-            <td class="p-2 border">{{ f.name }}</td>
-            <td class="p-2 border">
-              {{ formatBytes(f.metadata?.size || 0) }}
-            </td>
-            <td class="p-2 border">
-              <span v-if="f.bitrate">{{ f.bitrate }} kbps</span>
-              <span v-else class="text-gray-400">—</span>
-            </td>
-            <td class="p-2 border space-x-2">
-              <button
-                class="px-3 py-1 bg-blue-600 text-white rounded"
-                @click="analyzeFile(f)"
-              >
-                Analizar
-              </button>
-  
-              <button
-                class="px-3 py-1 bg-green-600 text-white rounded"
-                @click="compressFile(f)"
-              >
-                Comprimir (96 kbps)
-              </button>
-            </td>
+          <tr v-for="f in files" :key="f.name" class="border-b">
+            <td class="p-2">{{ f.name }}</td>
+            <td class="p-2 text-right">{{ formatBytes(f.sizeBytes) }}</td>
           </tr>
         </tbody>
       </table>
   
-      <div v-if="loading" class="mt-4 text-blue-600 font-semibold">
-        {{ loading }}
+      <div v-else class="mt-6 text-gray-600">
+        No hay archivos o aún no cargaste la lista.
       </div>
     </div>
   </template>
   
   <script setup>
-  import { ref, onMounted } from "vue";
-  import { createClient } from "@supabase/supabase-js";
-  import { parseBuffer } from "music-metadata/browser";
-  import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+  import { ref } from 'vue'
+  import { useSupabaseClient } from '#imports'
   
-  const files = ref([]);
-  const loading = ref("");
+  const supabase = useSupabaseClient()
   
-  /* ------------------------------
-     Supabase client
-  --------------------------------*/
-  const supabase = createClient(
-    "https://YOUR_PROJECT.supabase.co",
-    "YOUR_ANON_KEY"
-  );
+  // Cambiá el nombre del bucket si corresponde
+  const bucketName = 'pistas'
   
-  /* ------------------------------
-     Load files from bucket
-  --------------------------------*/
-  onMounted(async () => {
-    const { data, error } = await supabase.storage
-      .from("pistas")
-      .list("", { limit: 500 });
+  const files = ref([])
+  const loading = ref('')
   
-    if (!error) {
-      files.value = data;
-    }
-  });
-  
+  // Formatea bytes a KB/MB/GB legible
   function formatBytes(bytes) {
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    if (bytes === 0) return "0 Byte";
-    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-    return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
+    if (!bytes && bytes !== 0) return '—'
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
   
-  /* ------------------------------
-     ANALYZE: read bitrate only
-  --------------------------------*/
-  async function analyzeFile(file) {
-    loading.value = `Analizando ${file.name}...`;
+  // Carga listado del bucket y extrae size (en bytes) en cada item
+  async function cargarArchivos() {
+    loading.value = 'Cargando...'
+    files.value = []
   
-    const { data } = await supabase.storage
-      .from("pistas")
-      .download(file.name);
+    try {
+      // Listar objetos del bucket (ajustá limit si necesitás más)
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .list('', { limit: 1000 })
   
-    const buffer = await data.arrayBuffer();
-    const metadata = await parseBuffer(new Uint8Array(buffer));
+      if (error) {
+        console.error('Error listando bucket:', error)
+        loading.value = 'Error al listar archivos'
+        return
+      }
   
-    file.bitrate = Math.round((metadata.format.bitrate || 0) / 1000);
+      // Supabase devuelve objetos con metadata, pero no siempre incluye size en metadata.
+      // Aquí intentamos usar file.metadata.size si existe; si no, hacemos HEAD para obtener tamaño.
+      const mapped = await Promise.all(
+        data.map(async (f) => {
+          let sizeBytes = null
   
-    loading.value = "";
-  }
+          // caso 1: la respuesta tiene metadata.size (algunas SDKs lo proveen)
+          if (f?.metadata?.size) {
+            sizeBytes = Number(f.metadata.size)
+          } else {
+            // caso 2: intentamos usar getPublicUrl y hacer HEAD para obtener content-length (rápido)
+            try {
+              const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(f.name)
+              const url = urlData.publicUrl
+              // Hacemos una HEAD request para obtener tamaño sin descargar
+              const headResp = await fetch(url, { method: 'HEAD' })
+              const cl = headResp.headers.get('content-length')
+              if (cl) sizeBytes = Number(cl)
+            } catch (e) {
+              // si falla, lo dejamos null y se mostrará —
+              console.warn('No se pudo obtener tamaño por HEAD para', f.name, e)
+              sizeBytes = null
+            }
+          }
   
-  /* ------------------------------
-     COMPRESS: convert to 96 kbps
-  --------------------------------*/
-  async function compressFile(file) {
-    loading.value = `Comprimiendo ${file.name} a 96 kbps...`;
+          return {
+            name: f.name,
+            sizeBytes
+          }
+        })
+      )
   
-    // descargar archivo original
-    const { data } = await supabase.storage
-      .from("pistas")
-      .download(file.name);
-  
-    const ffmpeg = createFFmpeg({ log: true });
-    await ffmpeg.load();
-  
-    ffmpeg.FS("writeFile", "input.mp3", await fetchFile(data));
-  
-    await ffmpeg.run(
-      "-i",
-      "input.mp3",
-      "-b:a",
-      "96k",
-      "output.mp3"
-    );
-  
-    const output = ffmpeg.FS("readFile", "output.mp3");
-  
-    // subir comprimido
-    await supabase.storage
-      .from("pistas")
-      .upload(
-        `compressed/${file.name}`,
-        new Blob([output.buffer], { type: "audio/mpeg" }),
-        { upsert: true }
-      );
-  
-    loading.value = `Listo: archivo convertido y subido a /compressed/${file.name}`;
-    setTimeout(() => (loading.value = ""), 3000);
+      files.value = mapped
+      loading.value = ''
+    } catch (e) {
+      console.error(e)
+      loading.value = 'Error inesperado'
+    }
   }
   </script>
   
-  <style>
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
+  <style scoped>
+  table th, table td { border: 1px solid #e5e7eb; }
   </style>
   
