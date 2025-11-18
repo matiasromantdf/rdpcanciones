@@ -1,36 +1,30 @@
 <script setup>
-definePageMeta({ ssr: false })
-
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useSupabaseClient } from '#imports'
 
+// IMPORTS CORRECTOS
+import * as mm from "music-metadata-browser"
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg"
+
+// Supabase
 const supabase = useSupabaseClient()
 
-let mm = null
-let createFFmpeg = null
-let fetchFile = null
+// FFmpeg
+const ffmpeg = createFFmpeg({
+  log: true,
+  corePath: "/ffmpeg-core.js",
+})
 
-const ffmpeg = ref(null)
 const ffmpegLoaded = ref(false)
-
 const files = ref([])
 const loading = ref(false)
 
 const bucketName = 'pistas'
 
-// ⬇️ Se cargan las librerías SOLO en el navegador (evita errores en build)
-onMounted(async () => {
-    mm = await import("https://unpkg.com/music-metadata-browser@2.6.1/dist/music-metadata-browser.esm.min.js")
-  const ff = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm")
-  createFFmpeg = ff.createFFmpeg
-  fetchFile = ff.fetchFile
-
-  ffmpeg.value = createFFmpeg({ log: true })
-})
-
+// Cargar FFmpeg
 const loadFFmpeg = async () => {
   if (!ffmpegLoaded.value) {
-    await ffmpeg.value.load()
+    await ffmpeg.load()
     ffmpegLoaded.value = true
   }
 }
@@ -71,11 +65,12 @@ const cargarArchivos = async () => {
   loading.value = false
 }
 
+// Leer metadata del audio
 const obtenerMetadata = async (url) => {
   try {
     const resp = await fetch(url)
     const buf = await resp.arrayBuffer()
-    const meta = await mm.parseBuffer(new Uint8Array(buf))
+    const meta = await mm.parseBuffer(Buffer.from(buf))
 
     return {
       duration: meta.format.duration,
@@ -92,25 +87,27 @@ const obtenerMetadata = async (url) => {
   }
 }
 
+// Comprimir a 96 kbps
 const comprimir = async (file) => {
   await loadFFmpeg()
 
   const resp = await fetch(file.url)
   const arrayBuf = await resp.arrayBuffer()
 
-  ffmpeg.value.FS('writeFile', 'input.mp3', new Uint8Array(arrayBuf))
+  ffmpeg.FS('writeFile', 'input.mp3', new Uint8Array(arrayBuf))
 
-  await ffmpeg.value.run(
+  await ffmpeg.run(
     '-i', 'input.mp3',
     '-b:a', '96k',
     '-ar', '44100',
     'output.mp3'
   )
 
-  const data = ffmpeg.value.FS('readFile', 'output.mp3')
+  const data = ffmpeg.FS('readFile', 'output.mp3')
   return new Blob([data.buffer], { type: 'audio/mpeg' })
 }
 
+// Subir archivo comprimido
 const subirArchivo = async (file, blob, replace = false) => {
   const fileName = replace
     ? file.name
