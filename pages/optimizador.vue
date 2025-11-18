@@ -1,117 +1,187 @@
 <template>
     <div class="p-6 max-w-4xl mx-auto">
-      <h1 class="text-2xl font-bold mb-4">Listar archivos - Bucket "{{ bucketName }}"</h1>
+      <h1 class="text-2xl font-bold mb-4">Optimizador de pistas (Supabase)</h1>
   
-      <div class="mb-4 flex gap-2">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="cargarArchivos">
-          🔄 Cargar archivos
-        </button>
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded"
+        @click="cargarArchivos"
+      >
+        Cargar archivos
+      </button>
   
-        <span v-if="loading" class="text-sm text-gray-600 self-center">{{ loading }}</span>
-      </div>
+      <div v-if="loading" class="mt-4">{{ loading }}</div>
   
-      <table v-if="files.length" class="w-full border-collapse">
+      <table v-if="files.length" class="w-full mt-6 border-collapse">
         <thead>
           <tr class="bg-gray-100">
-            <th class="p-2 text-left border">Nombre</th>
-            <th class="p-2 text-right border">Tamaño</th>
+            <th class="p-2 border">Nombre</th>
+            <th class="p-2 border text-right">Tamaño</th>
+            <th class="p-2 border text-center">Acción</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="f in files" :key="f.name" class="border-b">
             <td class="p-2">{{ f.name }}</td>
             <td class="p-2 text-right">{{ formatBytes(f.sizeBytes) }}</td>
+            <td class="p-2 text-center">
+              <button
+                class="px-3 py-1 bg-green-600 text-white rounded"
+                @click="procesarArchivo(f)"
+                :disabled="procesando === f.name"
+              >
+                <span v-if="procesando === f.name">Procesando...</span>
+                <span v-else>Comprimir</span>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
   
-      <div v-else class="mt-6 text-gray-600">
-        No hay archivos o aún no cargaste la lista.
-      </div>
+      <p v-else class="text-gray-600 mt-6">No hay archivos.</p>
     </div>
   </template>
   
   <script setup>
-  import { ref } from 'vue'
-  import { useSupabaseClient } from '#imports'
+  import { ref } from "vue"
+  import { useSupabaseClient } from "#imports"
   
+  // FFmpeg imports
+  import { FFmpeg } from "@ffmpeg/ffmpeg"
+  import { fetchFile } from "@ffmpeg/util"
+  
+  // Supabase client
   const supabase = useSupabaseClient()
+  const bucketName = "pistas"
   
-  // Cambiá el nombre del bucket si corresponde
-  const bucketName = 'pistas'
-  
+  // UI state
   const files = ref([])
-  const loading = ref('')
+  const loading = ref("")
+  const procesando = ref(null)
   
-  // Formatea bytes a KB/MB/GB legible
-  function formatBytes(bytes) {
-    if (!bytes && bytes !== 0) return '—'
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  // FFmpeg init
+  const ffmpeg = new FFmpeg()
+  let ffmpegLoaded = false
+  
+  async function loadFFmpeg() {
+    if (!ffmpegLoaded) {
+      loading.value = "Cargando FFmpeg..."
+      await ffmpeg.load({
+        coreURL: "https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js"
+      })
+      ffmpegLoaded = true
+    }
   }
   
-  // Carga listado del bucket y extrae size (en bytes) en cada item
+  // ---------- UTIL ----------
+  function formatBytes(bytes) {
+    if (!bytes && bytes !== 0) return "—"
+    if (bytes === 0) return "0 B"
+    const sizes = ["B", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i]
+  }
+  
+  // ---------- LISTAR ----------
   async function cargarArchivos() {
-    loading.value = 'Cargando...'
-    files.value = []
+    loading.value = "Cargando archivos..."
   
-    try {
-      // Listar objetos del bucket (ajustá limit si necesitás más)
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .list('', { limit: 1000 })
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list("", { limit: 200 })
   
-      if (error) {
-        console.error('Error listando bucket:', error)
-        loading.value = 'Error al listar archivos'
-        return
-      }
-  
-      // Supabase devuelve objetos con metadata, pero no siempre incluye size en metadata.
-      // Aquí intentamos usar file.metadata.size si existe; si no, hacemos HEAD para obtener tamaño.
-      const mapped = await Promise.all(
-        data.map(async (f) => {
-          let sizeBytes = null
-  
-          // caso 1: la respuesta tiene metadata.size (algunas SDKs lo proveen)
-          if (f?.metadata?.size) {
-            sizeBytes = Number(f.metadata.size)
-          } else {
-            // caso 2: intentamos usar getPublicUrl y hacer HEAD para obtener content-length (rápido)
-            try {
-              const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(f.name)
-              const url = urlData.publicUrl
-              // Hacemos una HEAD request para obtener tamaño sin descargar
-              const headResp = await fetch(url, { method: 'HEAD' })
-              const cl = headResp.headers.get('content-length')
-              if (cl) sizeBytes = Number(cl)
-            } catch (e) {
-              // si falla, lo dejamos null y se mostrará —
-              console.warn('No se pudo obtener tamaño por HEAD para', f.name, e)
-              sizeBytes = null
-            }
-          }
-  
-          return {
-            name: f.name,
-            sizeBytes
-          }
-        })
-      )
-  
-      files.value = mapped
-      loading.value = ''
-    } catch (e) {
-      console.error(e)
-      loading.value = 'Error inesperado'
+    if (error) {
+      loading.value = "Error al listar"
+      return
     }
+  
+    // Obtener tamaño por HEAD request
+    const listado = await Promise.all(
+      data.map(async (f) => {
+        let sizeBytes = null
+        try {
+          const { data: urlData } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(f.name)
+  
+          const head = await fetch(urlData.publicUrl, { method: "HEAD" })
+          sizeBytes = Number(head.headers.get("content-length"))
+        } catch (e) {
+          console.warn("No se pudo obtener tamaño de", f.name)
+        }
+  
+        return {
+          name: f.name,
+          sizeBytes
+        }
+      })
+    )
+  
+    files.value = listado
+    loading.value = ""
+  }
+  
+  // ---------- PROCESAR UN ARCHIVO ----------
+  async function procesarArchivo(file) {
+    procesando.value = file.name
+  
+    await loadFFmpeg()
+  
+    // 1. Descargar archivo original
+    loading.value = "Descargando..."
+  
+    const { data: dl, error: dlErr } = await supabase.storage
+      .from(bucketName)
+      .download(file.name)
+  
+    if (dlErr) {
+      alert("Error al descargar: " + dlErr.message)
+      procesando.value = null
+      return
+    }
+  
+    // 2. Guardar en FFmpeg FS
+    const inputName = "input.mp3"
+    const outputName = "output.mp3"
+  
+    ffmpeg.writeFile(inputName, await fetchFile(dl))
+  
+    // 3. Ejecutar compresión
+    loading.value = "Comprimiendo..."
+  
+    await ffmpeg.exec([
+      "-i", inputName,
+      "-b:a", "96k",
+      "-ar", "44100",
+      outputName
+    ])
+  
+    // 4. Leer archivo comprimido
+    const data = await ffmpeg.readFile(outputName)
+    const blob = new Blob([data], { type: "audio/mpeg" })
+  
+    // 5. Subir y reemplazar
+    loading.value = "Subiendo..."
+  
+    const { error: upErr } = await supabase.storage
+      .from(bucketName)
+      .upload(file.name, blob, { upsert: true })
+  
+    if (upErr) {
+      alert("Error al subir: " + upErr.message)
+    } else {
+      alert("Archivo reemplazado correctamente")
+      cargarArchivos()
+    }
+  
+    procesando.value = null
+    loading.value = ""
   }
   </script>
   
   <style scoped>
-  table th, table td { border: 1px solid #e5e7eb; }
+  table th,
+  table td {
+    border: 1px solid #ddd;
+  }
   </style>
   
