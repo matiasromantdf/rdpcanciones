@@ -4,7 +4,11 @@ import { useSupabaseClient } from '#imports'
 
 // IMPORTS CORRECTOS
 import * as mm from "music-metadata-browser"
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg"
+
+import ffmpegModule from "@ffmpeg/ffmpeg"
+
+const { createFFmpeg, fetchFile } = ffmpegModule
+
 
 // Supabase
 const supabase = useSupabaseClient()
