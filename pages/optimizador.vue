@@ -1,198 +1,155 @@
 <template>
-    <div class="p-6 max-w-3xl mx-auto">
-      <h1 class="text-2xl font-bold mb-4">Optimizador de Pistas</h1>
+    <div class="p-6">
+      <h1 class="text-2xl font-bold mb-4">Pistas del Bucket</h1>
   
-      <button
-        @click="cargarArchivos"
-        class="px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Cargar archivos
-      </button>
+      <table class="min-w-full border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="p-2 border">Nombre</th>
+            <th class="p-2 border">Tamaño</th>
+            <th class="p-2 border">Bitrate</th>
+            <th class="p-2 border">Acciones</th>
+          </tr>
+        </thead>
   
-      <div v-if="loading" class="mt-4">Cargando...</div>
+        <tbody>
+          <tr
+            v-for="f in files"
+            :key="f.name"
+            class="border-b"
+          >
+            <td class="p-2 border">{{ f.name }}</td>
+            <td class="p-2 border">
+              {{ formatBytes(f.metadata?.size || 0) }}
+            </td>
+            <td class="p-2 border">
+              <span v-if="f.bitrate">{{ f.bitrate }} kbps</span>
+              <span v-else class="text-gray-400">—</span>
+            </td>
+            <td class="p-2 border space-x-2">
+              <button
+                class="px-3 py-1 bg-blue-600 text-white rounded"
+                @click="analyzeFile(f)"
+              >
+                Analizar
+              </button>
   
-      <div v-if="files.length" class="mt-6 space-y-4">
-        <div
-          v-for="file in files"
-          :key="file.name"
-          class="p-4 border rounded shadow-sm bg-white"
-        >
-          <h2 class="font-semibold">{{ file.name }}</h2>
+              <button
+                class="px-3 py-1 bg-green-600 text-white rounded"
+                @click="compressFile(f)"
+              >
+                Comprimir (96 kbps)
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
   
-          <p class="text-sm text-gray-600">
-            Tamaño: {{ file.size.toFixed(2) }} MB
-          </p>
-  
-          <p class="text-sm text-gray-600">
-            Duración: {{ file.duration ? file.duration.toFixed(1) + 's' : '—' }}
-          </p>
-  
-          <p class="text-sm text-gray-600">
-            Bitrate: <strong>{{ file.bitrate ? file.bitrate + ' kbps' : '—' }}</strong>
-          </p>
-  
-          <div class="mt-3 flex gap-3">
-            <button
-              @click="optimizar(file)"
-              class="px-3 py-1 bg-green-600 text-white rounded"
-            >
-              Comprimir a 96 kbps
-            </button>
-  
-            <button
-              @click="optimizar(file, true)"
-              class="px-3 py-1 bg-red-600 text-white rounded"
-            >
-              Reemplazar archivo
-            </button>
-          </div>
-        </div>
+      <div v-if="loading" class="mt-4 text-blue-600 font-semibold">
+        {{ loading }}
       </div>
     </div>
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue'
-  import { useSupabaseClient } from '#imports'
-  import * as mm from "music-metadata-browser"
+  import { ref, onMounted } from "vue";
+  import { createClient } from "@supabase/supabase-js";
+  import { parseBuffer } from "music-metadata/browser";
+  import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
   
-  // Supabase
-  const supabase = useSupabaseClient()
-  const bucketName = 'pistas'
+  const files = ref([]);
+  const loading = ref("");
   
-  // Estados
-  const ffmpeg = ref(null)
-  const ffmpegLoaded = ref(false)
-  const files = ref([])
-  const loading = ref(false)
+  /* ------------------------------
+     Supabase client
+  --------------------------------*/
+  const supabase = createClient(
+    "https://YOUR_PROJECT.supabase.co",
+    "YOUR_ANON_KEY"
+  );
   
-  // ===========================
-  // 1. Cargar FFmpeg (solo cliente)
-  // ===========================
-  const loadFFmpeg = async () => {
-    if (ffmpegLoaded.value) return
-  
-    // IMPORT dinámico → evita errores SSR
-    const ffmpegModule = await import("@ffmpeg/ffmpeg")
-    const { createFFmpeg, fetchFile } = ffmpegModule
-  
-    ffmpeg.value = createFFmpeg({
-      log: true,
-      corePath: "/ffmpeg-core.js", // lo sirve el navegador automáticamente
-    })
-  
-    await ffmpeg.value.load()
-    ffmpegLoaded.value = true
-  }
-  
+  /* ------------------------------
+     Load files from bucket
+  --------------------------------*/
   onMounted(async () => {
-    await loadFFmpeg()
-  })
-  
-  // ===========================
-  // 2. Cargar archivos del bucket
-  // ===========================
-  const cargarArchivos = async () => {
-    loading.value = true
-  
     const { data, error } = await supabase.storage
-      .from(bucketName)
-      .list('', { limit: 100 })
+      .from("pistas")
+      .list("", { limit: 500 });
   
-    if (error) {
-      console.error(error)
-      loading.value = false
-      return
+    if (!error) {
+      files.value = data;
     }
+  });
   
-    files.value = await Promise.all(
-      data.map(async (file) => {
-        const { data: url } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(file.name)
-  
-        const metadata = await obtenerMetadata(url.publicUrl)
-  
-        return {
-          name: file.name,
-          size: file.metadata?.size ? file.metadata.size / 1024 / 1024 : 0,
-          url: url.publicUrl,
-          ...metadata,
-        }
-      })
-    )
-  
-    loading.value = false
+  function formatBytes(bytes) {
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 Byte";
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+    return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
   }
   
-  // ===========================
-  // 3. Leer metadata (bitrate, duracion…)
-  // ===========================
-  const obtenerMetadata = async (url) => {
-    try {
-      const resp = await fetch(url)
-      const buf = await resp.arrayBuffer()
-      const meta = await mm.parseBuffer(Buffer.from(buf))
+  /* ------------------------------
+     ANALYZE: read bitrate only
+  --------------------------------*/
+  async function analyzeFile(file) {
+    loading.value = `Analizando ${file.name}...`;
   
-      return {
-        duration: meta.format.duration,
-        bitrate: meta.format.bitrate ? meta.format.bitrate / 1000 : null,
-        sampleRate: meta.format.sampleRate
-      }
-    } catch (e) {
-      console.warn("No se pudo leer metadata", e)
-      return { duration: null, bitrate: null, sampleRate: null }
-    }
+    const { data } = await supabase.storage
+      .from("pistas")
+      .download(file.name);
+  
+    const buffer = await data.arrayBuffer();
+    const metadata = await parseBuffer(new Uint8Array(buffer));
+  
+    file.bitrate = Math.round((metadata.format.bitrate || 0) / 1000);
+  
+    loading.value = "";
   }
   
-  // ===========================
-  // 4. Comprimir a 96 kbps
-  // ===========================
-  const comprimir = async (file) => {
-    await loadFFmpeg()
+  /* ------------------------------
+     COMPRESS: convert to 96 kbps
+  --------------------------------*/
+  async function compressFile(file) {
+    loading.value = `Comprimiendo ${file.name} a 96 kbps...`;
   
-    const resp = await fetch(file.url)
-    const arrayBuf = await resp.arrayBuffer()
+    // descargar archivo original
+    const { data } = await supabase.storage
+      .from("pistas")
+      .download(file.name);
   
-    ffmpeg.value.FS('writeFile', 'input.mp3', new Uint8Array(arrayBuf))
+    const ffmpeg = createFFmpeg({ log: true });
+    await ffmpeg.load();
   
-    await ffmpeg.value.run(
-      '-i', 'input.mp3',
-      '-b:a', '96k',
-      '-ar', '44100',
-      'output.mp3'
-    )
+    ffmpeg.FS("writeFile", "input.mp3", await fetchFile(data));
   
-    const data = ffmpeg.value.FS('readFile', 'output.mp3')
-    return new Blob([data.buffer], { type: 'audio/mpeg' })
-  }
+    await ffmpeg.run(
+      "-i",
+      "input.mp3",
+      "-b:a",
+      "96k",
+      "output.mp3"
+    );
   
-  // ===========================
-  // 5. Ejecuta proceso + sube archivo
-  // ===========================
-  const optimizar = async (file, replace = false) => {
-    const blob = await comprimir(file)
-    await subirArchivo(file, blob, replace)
-  }
+    const output = ffmpeg.FS("readFile", "output.mp3");
   
-  // ===========================
-  // 6. Subir a Supabase
-  // ===========================
-  const subirArchivo = async (file, blob, replace = false) => {
-    const fileName = replace
-      ? file.name
-      : file.name.replace('.mp3', '_96.mp3')
+    // subir comprimido
+    await supabase.storage
+      .from("pistas")
+      .upload(
+        `compressed/${file.name}`,
+        new Blob([output.buffer], { type: "audio/mpeg" }),
+        { upsert: true }
+      );
   
-    const { error } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, blob, { upsert: replace })
-  
-    if (error) {
-      alert('Error al subir: ' + error.message)
-    } else {
-      alert('Archivo subido con éxito')
-      cargarArchivos()
-    }
+    loading.value = `Listo: archivo convertido y subido a /compressed/${file.name}`;
+    setTimeout(() => (loading.value = ""), 3000);
   }
   </script>
+  
+  <style>
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  </style>
   
