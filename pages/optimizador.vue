@@ -1,26 +1,36 @@
 <script setup>
+definePageMeta({ ssr: false })
+
 import { ref, onMounted } from 'vue'
 import { useSupabaseClient } from '#imports'
-import * as mm from "https://cdn.jsdelivr.net/npm/music-metadata-browser@2.6.1/+esm";
-
-
-// ✔ FFmpeg desde CDN (sin instalar nada)
-import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm"
 
 const supabase = useSupabaseClient()
 
-const ffmpeg = createFFmpeg({ log: true })
+let mm = null
+let createFFmpeg = null
+let fetchFile = null
+
+const ffmpeg = ref(null)
 const ffmpegLoaded = ref(false)
 
 const files = ref([])
 const loading = ref(false)
 
-const bucketName = 'pistas' /// <-- CAMBIAR
+const bucketName = 'pistas'
 
-// Cargar FFmpeg vía CDN
+// ⬇️ Se cargan las librerías SOLO en el navegador (evita errores en build)
+onMounted(async () => {
+  mm = await import("https://cdn.jsdelivr.net/npm/music-metadata-browser@2.6.1/+esm")
+  const ff = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm")
+  createFFmpeg = ff.createFFmpeg
+  fetchFile = ff.fetchFile
+
+  ffmpeg.value = createFFmpeg({ log: true })
+})
+
 const loadFFmpeg = async () => {
   if (!ffmpegLoaded.value) {
-    await ffmpeg.load()
+    await ffmpeg.value.load()
     ffmpegLoaded.value = true
   }
 }
@@ -61,12 +71,11 @@ const cargarArchivos = async () => {
   loading.value = false
 }
 
-// Obtener metadata de audio
 const obtenerMetadata = async (url) => {
   try {
     const resp = await fetch(url)
     const buf = await resp.arrayBuffer()
-    const meta = await mm.parseBuffer(Buffer.from(buf))
+    const meta = await mm.parseBuffer(new Uint8Array(buf))
 
     return {
       duration: meta.format.duration,
@@ -83,27 +92,25 @@ const obtenerMetadata = async (url) => {
   }
 }
 
-// Comprimir a 96 kbps
 const comprimir = async (file) => {
   await loadFFmpeg()
 
   const resp = await fetch(file.url)
   const arrayBuf = await resp.arrayBuffer()
 
-  ffmpeg.FS('writeFile', 'input.mp3', new Uint8Array(arrayBuf))
+  ffmpeg.value.FS('writeFile', 'input.mp3', new Uint8Array(arrayBuf))
 
-  await ffmpeg.run(
+  await ffmpeg.value.run(
     '-i', 'input.mp3',
     '-b:a', '96k',
     '-ar', '44100',
     'output.mp3'
   )
 
-  const data = ffmpeg.FS('readFile', 'output.mp3')
+  const data = ffmpeg.value.FS('readFile', 'output.mp3')
   return new Blob([data.buffer], { type: 'audio/mpeg' })
 }
 
-// Subir el archivo comprimido
 const subirArchivo = async (file, blob, replace = false) => {
   const fileName = replace
     ? file.name
@@ -121,68 +128,3 @@ const subirArchivo = async (file, blob, replace = false) => {
   }
 }
 </script>
-
-<template>
-  <div class="container py-4">
-    <h2>Optimizador de Audio</h2>
-
-    <button class="btn btn-primary my-3" @click="cargarArchivos">
-      🔄 Cargar archivos del bucket
-    </button>
-
-    <div v-if="loading">Cargando...</div>
-
-    <table class="table" v-if="files.length">
-      <thead>
-        <tr>
-          <th>Archivo</th>
-          <th>Tamaño</th>
-          <th>Bitrate</th>
-          <th>Duración</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr v-for="file in files" :key="file.name">
-          <td>{{ file.name }}</td>
-          <td>{{ file.size.toFixed(2) }} MB</td>
-          <td>{{ file.bitrate ? file.bitrate + ' kbps' : '---' }}</td>
-          <td>{{ file.duration ? file.duration.toFixed(1) + ' s' : '---' }}</td>
-
-          <td>
-            <span
-              class="badge"
-              :class="file.bitrate > 128 ? 'bg-danger' : 'bg-success'"
-            >
-              {{ file.bitrate > 128 ? 'Pesado' : 'OK' }}
-            </span>
-          </td>
-
-          <td>
-            <button
-              class="btn btn-sm btn-warning me-2"
-              @click="async () => {
-                const b = await comprimir(file)
-                subirArchivo(file, b, false)
-              }"
-            >
-              Copia 96 kbps
-            </button>
-
-            <button
-              class="btn btn-sm btn-danger"
-              @click="async () => {
-                const b = await comprimir(file)
-                subirArchivo(file, b, true)
-              }"
-            >
-              Reemplazar
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</template>
