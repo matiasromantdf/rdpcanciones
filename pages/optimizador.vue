@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useSupabaseClient } from '#imports'
-import * as mm from 'music-metadata-browser'
+import * as mm from "https://cdn.jsdelivr.net/npm/music-metadata-browser@2.6.1/+esm";
+
 
 // ✔ FFmpeg desde CDN (sin instalar nada)
 import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm"
