@@ -20,7 +20,7 @@ const bucketName = 'pistas'
 
 // ⬇️ Se cargan las librerías SOLO en el navegador (evita errores en build)
 onMounted(async () => {
-  mm = await import("https://cdn.jsdelivr.net/npm/music-metadata-browser@2.6.1/+esm")
+    mm = await import("https://unpkg.com/music-metadata-browser@2.6.1/dist/music-metadata-browser.esm.min.js")
   const ff = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.2/+esm")
   createFFmpeg = ff.createFFmpeg
   fetchFile = ff.fetchFile
