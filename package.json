@@ -10,8 +10,6 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@ffmpeg/ffmpeg": "^0.12.15",
-    "@ffmpeg/util": "^0.12.2",
     "@nuxtjs/supabase": "^1.4.0",
     "meyda": "^5.6.3",
     "music-metadata-browser": "^2.5.11",

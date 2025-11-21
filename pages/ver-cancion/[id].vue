@@ -428,7 +428,7 @@
 
     const puedeAddToFavorite = computed(() => {
         //si en el array de roles del usuario esta el rol de admin
-        return roles.value.some((rol) => rol.rol === 'voces')
+        return roles.value.some((rol) => rol.rol === 'voces' || rol.rol === 'vastagos')
     })
 
     const openModal = (charIndex) => {

@@ -1,4 +1,7 @@
 export default defineNuxtConfig({
+  devServer: {
+    port: 3007
+  },
   runtimeConfig: {
     public:{
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY

@@ -90,11 +90,11 @@
         router.push('/')
     }
 
-    esVoces.value = await hasRole('voces')
+    esVoces.value = await hasRole('voces') || await hasRole('vastagos')
     esAdminVoces.value = await hasRole('admin_voces')
 
     watch(usuario, async (value) => {
-        esVoces.value = await hasRole('voces')
+        esVoces.value = await hasRole('voces') || await hasRole('vastagos')
     })
 
     // Función para cerrar el navbar cuando se hace clic fuera de él
