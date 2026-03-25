@@ -4,7 +4,11 @@
         <div v-if="error">Error: {{ error.message }}</div>
         <div v-if="song && !guardando">
             <div class="row mb-2 compartir">
-                <div class="col text-end">
+                <div class="col text-end d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" @click="copiarLetra()">
+                        <i class="bi bi-clipboard me-1"></i>
+                        Copiar letra
+                    </button>
                     <button class="btn btn-outline-primary"
                         @click="compartir('https://rocadepaz.vercel.app/ver-cancion/' + song.id)">
                         <i class="bi bi-share-fill me-1"></i>
@@ -635,6 +639,43 @@
         } else {
             // Si no está disponible, abrir en una nueva pestaña
             window.open(url, '_blank');
+        }
+    }
+
+    const copiarLetra = async () => {
+        if (!song.value?.letra) {
+            return
+        }
+
+        const contenidoACopiar = `${song.value.titulo || ''}\n${song.value.autor || ''}\n\n${song.value.letra}`
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(contenidoACopiar)
+            } else {
+                const textArea = document.createElement('textarea')
+                textArea.value = contenidoACopiar
+                textArea.style.position = 'fixed'
+                textArea.style.opacity = '0'
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+                document.execCommand('copy')
+                document.body.removeChild(textArea)
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Letra copiada',
+                showConfirmButton: false,
+                timer: 1200
+            })
+        } catch (err) {
+            console.error('Error al copiar la letra:', err)
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo copiar la letra'
+            })
         }
     }
 
