@@ -240,9 +240,17 @@
     const router = useRouter()
 
     onMounted(async () => {
-        if (!hasRole('voces')) {
-            router.push('/')
+        // Esperar a que el usuario esté cargado antes de verificar roles
+        const checkRoles = () => {
+            if (!usuario.value) {
+                setTimeout(checkRoles, 100)
+                return
+            }
+            if (!hasRole('voces')) {
+                router.push('/')
+            }
         }
+        checkRoles()
         await getRepertorio()
     })
 

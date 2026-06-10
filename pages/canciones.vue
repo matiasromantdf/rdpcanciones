@@ -50,8 +50,7 @@
                                             smart_display
                                         </span>
                                     </div>
-                                    <div class="col d-flex justify-content-center"
-                                        v-if="song.pista_url && esVoces">
+                                    <div class="col d-flex justify-content-center" v-if="song.pista_url && esVoces">
                                         <i class="bi bi-file-music ms-2" style="font-size: 1.5rem;"></i>
                                     </div>
 
@@ -121,23 +120,35 @@
 
     const fetchSongs = async () => {
         loading.value = true
-        //agregar los % para que busque en cualquier parte del titulo o autor
-        const { data, error } = await supabase
-            .from('canciones')
-            .select('*')
-            // .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
-            .order('titulo', { ascending: true })
+        const { usePWACache } = await import('~/composables/usePWACache')
+        const { getCachedCancionesAll } = usePWACache()
 
-        if (error) {
-            console.error('Error al obtener las canciones:', error.message)
-            loading.value = false
-            error.value = error
-        } else {
+        try {
+            const { data, error } = await supabase
+                .from('canciones')
+                .select('*')
+                // .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
+                .order('titulo', { ascending: true })
+
+            if (error) throw error
+
             songs.value = data
-            loading.value = false
             songsForShow.value = songs.value
-        }
+        } catch (err) {
+            console.error('Error al obtener las canciones:', err.message)
 
+            // Intentar usar cache como fallback
+            const cachedSongs = getCachedCancionesAll()
+            if (cachedSongs.length > 0) {
+                console.warn('Usando canciones desde cache (modo offline)')
+                songs.value = cachedSongs
+                songsForShow.value = songs.value
+            } else {
+                error.value = err
+            }
+        } finally {
+            loading.value = false
+        }
     }
 
     const roles = ref([])
@@ -162,7 +173,7 @@
         return roles.value.some((rol) => rol.rol === 'letras_editor')
     })
 
-    const esVoces = computed(()=>{
+    const esVoces = computed(() => {
         return roles.value.some((rol) => rol.rol === 'voces')
 
     })
