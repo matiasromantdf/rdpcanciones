@@ -146,6 +146,12 @@
     const esVoces = ref(false)
     const repertorio = ref([])
     const getRepertorio = async () => {
+        // Verificar que usuario existe
+        if (!usuario.value) {
+            cargando.value = false
+            return
+        }
+
         // Intentar cargar desde cache si está offline
         if (!isOnline.value) {
             const cachedRepertoire = getCachedRepertorio(usuario.value.id)

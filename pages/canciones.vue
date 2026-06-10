@@ -153,7 +153,9 @@
 
     const roles = ref([])
     const getRolesUsuario = async () => {
-        if (usuario.value) {
+        if (!usuario.value) return
+
+        try {
             const { data, error } = await supabase
                 .from('roles_usuarios')
                 .select('rol')
@@ -165,6 +167,8 @@
                 console.log('Roles:', data)
                 roles.value = data
             }
+        } catch (err) {
+            console.error('Error al cargar roles:', err)
         }
     }
 

@@ -9,3 +9,9 @@
         <slot />
     </div>
 </template>
+
+<script setup>
+    definePageMeta({
+        middleware: 'offline'
+    })
+</script>
