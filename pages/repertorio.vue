@@ -154,6 +154,7 @@
 
         // Intentar cargar desde cache si está offline
         if (!isOnline.value) {
+            console.log('Offline: Cargando repertorio desde cache')
             const cachedRepertoire = getCachedRepertorio(usuario.value.id)
             if (cachedRepertoire.length > 0) {
                 // Convertir formato de cache a formato esperado
@@ -167,9 +168,11 @@
                         pista_url: song.pista_url
                     }
                 }))
-                cargando.value = false
-                return
+            } else {
+                console.warn('No hay repertorio disponible sin conexión')
             }
+            cargando.value = false
+            return
         }
 
         try {
@@ -186,26 +189,7 @@
                 }
             }
         } catch (err) {
-            // Si hay error y estamos offline, intentar cache
-            if (!isOnline.value) {
-                const cachedRepertoire = getCachedRepertorio(usuario.value.id)
-                if (cachedRepertoire.length > 0) {
-                    repertorio.value = cachedRepertoire.map(song => ({
-                        tono_numero: song.numero_tono,
-                        tono_esmenor: song.tono_esmenor,
-                        canciones: {
-                            id: song.id,
-                            titulo: song.titulo,
-                            letra: song.letra,
-                            pista_url: song.pista_url
-                        }
-                    }))
-                } else {
-                    console.error('No hay repertorio disponible sin conexión')
-                }
-            } else {
-                console.error('Error al cargar repertorio:', err)
-            }
+            console.error('Error al cargar repertorio:', err)
         } finally {
             cargando.value = false
         }
@@ -246,6 +230,9 @@
     const router = useRouter()
 
     onMounted(async () => {
+        // Pequeño delay para asegurar que el plugin ya configuró los listeners
+        await new Promise(resolve => setTimeout(resolve, 50))
+
         // Esperar a que el usuario esté cargado antes de verificar roles
         const checkRoles = () => {
             if (!usuario.value) {

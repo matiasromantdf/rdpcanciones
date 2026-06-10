@@ -2,10 +2,13 @@ import { usePWACache } from '~/composables/usePWACache'
 
 export default defineNuxtPlugin(() => {
   if (process.client) {
-    const { setupConnectivityListeners, checkIfInstalled, cleanOldCache } = usePWACache()
+    const { setupConnectivityListeners, checkIfInstalled, cleanOldCache, isOnline } = usePWACache()
     
-    // Configurar listeners de conectividad
+    // Configurar listeners de conectividad INMEDIATAMENTE
     setupConnectivityListeners()
+    
+    // Log del estado inicial
+    console.log('🌐 PWA Plugin: Estado inicial de conexión:', isOnline.value ? 'Online' : 'Offline')
     
     // Verificar si la app está instalada
     checkIfInstalled()
@@ -24,9 +27,9 @@ export default defineNuxtPlugin(() => {
 })
 
 function checkPWARequirements() {
+  const { isOnline } = usePWACache()
   console.log('=== PWA Requirements Check ===')
-  console.log('HTTPS:', location.protocol === 'https:' || location.hostname === 'localhost')
-  console.log('Service Worker supported:', 'serviceWorker' in navigator)
+  console.log('Online status:', isOnline.value ? 'Online' : 'Offline')
   
   // Verificar service worker de manera más robusta
   if ('serviceWorker' in navigator) {

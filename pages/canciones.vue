@@ -120,14 +120,28 @@
 
     const fetchSongs = async () => {
         loading.value = true
-        const { usePWACache } = await import('~/composables/usePWACache')
-        const { getCachedCancionesAll } = usePWACache()
 
         try {
+            // Si estamos offline, intentar cargar desde cache
+            if (!navigator.onLine) {
+                console.log('Offline: Cargando canciones desde cache')
+                const { getCachedCancionesAll } = usePWACache()
+                const cachedSongs = getCachedCancionesAll()
+
+                if (cachedSongs.length > 0) {
+                    songs.value = cachedSongs
+                    songsForShow.value = songs.value
+                } else {
+                    console.warn('No hay canciones en cache')
+                    songs.value = []
+                    songsForShow.value = []
+                }
+                return
+            }
+
             const { data, error } = await supabase
                 .from('canciones')
                 .select('*')
-                // .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
                 .order('titulo', { ascending: true })
 
             if (error) throw error
@@ -138,17 +152,16 @@
             console.error('Error al obtener las canciones:', err.message)
 
             // Intentar usar cache como fallback
-            const cachedSongs = getCachedCancionesAll()
-            if (cachedSongs.length > 0) {
-                console.warn('Usando canciones desde cache (modo offline)')
-                songs.value = cachedSongs
-                songsForShow.value = songs.value
-            } else {
-                error.value = err
-            }
-        } finally {
-            loading.value = false
+            const { getCachedCancionesAll } = usePWACache()
+            console.warn('Usando canciones desde cache (modo offline)')
+            songs.value = cachedSongs
+            songsForShow.value = songs.value
+        } else {
+            error.value = err
         }
+    } finally {
+        loading.value = false
+    }
     }
 
     const roles = ref([])
@@ -217,10 +230,12 @@
 
 
 
-    onMounted(() => {
-        fetchSongs();
-        getRolesUsuario()
+    onMounted(async () => {
+        // Pequeño delay para asegurar que el plugin ya configuró los listeners
+        await new Promise(resolve => setTimeout(resolve, 50))
 
+        fetchSongs()
+        getRolesUsuario()
     })
 </script>
 
