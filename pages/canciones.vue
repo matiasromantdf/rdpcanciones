@@ -153,15 +153,14 @@
 
             // Intentar usar cache como fallback
             const { getCachedCancionesAll } = usePWACache()
+            const cachedSongs = getCachedCancionesAll()
             console.warn('Usando canciones desde cache (modo offline)')
             songs.value = cachedSongs
             songsForShow.value = songs.value
-        } else {
             error.value = err
+        } finally {
+            loading.value = false
         }
-    } finally {
-        loading.value = false
-    }
     }
 
     const roles = ref([])
