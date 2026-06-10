@@ -18,9 +18,11 @@ export default defineNuxtConfig({
       login: '/login',
       callback: '/',
       exclude: [
+        '/',
         '/login',
         '/ver-cancion/**',
         '/canciones',
+        '/repertorio',
         '/asistencia',
       ]
     }
