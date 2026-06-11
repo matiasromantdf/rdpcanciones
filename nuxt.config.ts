@@ -91,10 +91,38 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,html,png,svg,ico}']
     },
     workbox: {
+      // Fallback a la home cuando no se pueda servir una ruta
       navigateFallback: '/',
+      navigateFallbackAllowlist: [/^\/(?!api\/|__nuxt|\.)/],
       globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
       skipWaiting: true,
-      clientsClaim: true
+      clientsClaim: true,
+      maximumFileSizeToCacheInBytes: 5000000,
+      // Estrategia de runtime caching
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/.*\.(js|css|woff|woff2|ttf|otf|eot|svg|png|jpg|jpeg)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'static-assets',
+            expiration: {
+              maxEntries: 60,
+              maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+            }
+          }
+        },
+        {
+          urlPattern: /^https:\/\/cdn\.|^https:\/\/fonts\./,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'external-cdn',
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+            }
+          }
+        }
+      ]
     },
     client: {
       installPrompt: true,

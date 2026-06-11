@@ -14,5 +14,18 @@ export default defineNuxtPlugin(() => {
     cleanOldCache()
     
     console.log('🌐 PWA Plugin initialized successfully')
+    
+    // En desarrollo, permitir desabilitar el service worker si hay problemas
+    if (process.dev) {
+      // Si el usuario presiona una tecla específica (Ctrl+Alt+S), desabilita el SW temporalmente
+      window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.altKey && e.key === 's') {
+          console.log('⚠️ Service Worker unregistering for debugging...')
+          navigator.serviceWorker?.getRegistrations().then(registrations => {
+            registrations.forEach(reg => reg.unregister())
+          })
+        }
+      })
+    }
   }
 })
