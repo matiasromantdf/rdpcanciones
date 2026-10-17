@@ -16,7 +16,8 @@
                                     <i class="bi" :class="isInstalled ? 'bi-check-circle' : 'bi-info-circle'"></i>
                                     <strong>{{ isInstalled ? 'PWA Instalada' : 'PWA No Instalada' }}</strong>
                                     <p class="mb-0">
-                                        {{ isInstalled ? 'La aplicación ya está instalada en tu dispositivo.' : 'Puedes instalar esta aplicación para una mejor experiencia.' }}
+                                        {{ isInstalled ? 'La aplicación ya está instalada en tu dispositivo.' : "Puedes
+                                        instalar esta aplicación para una mejor experiencia." }}
                                     </p>
                                 </div>
                             </div>
@@ -51,7 +52,17 @@
                                             {{ iconCount }} iconos
                                         </span>
                                     </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-download"></i> Evento de instalación (Chrome)</span>
+                                        <span class="badge" :class="installEventFired ? 'bg-success' : 'bg-secondary'">
+                                            {{ installEventFired ? 'Disponible' : 'No disponible' }}
+                                        </span>
+                                    </li>
                                 </ul>
+                                <small v-if="!installEventFired" class="text-muted d-block mt-2">
+                                    Si este punto no aparece como disponible, Chrome no considera esta sesión
+                                    instalable o el navegador del dispositivo no soporta el prompt automático.
+                                </small>
                             </div>
                         </div>
 
@@ -164,118 +175,122 @@
 </template>
 
 <script setup>
-    import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
-    const isInstalled = ref(false)
-    const isHTTPS = ref(false)
-    const hasServiceWorker = ref(false)
-    const hasManifest = ref(false)
-    const iconCount = ref(0)
-    const canInstall = ref(false)
-    const showDebug = ref(true) // Para debugging
-    const debugInfo = ref({})
+const isInstalled = ref(false)
+const isHTTPS = ref(false)
+const hasServiceWorker = ref(false)
+const hasManifest = ref(false)
+const iconCount = ref(0)
+const canInstall = ref(false)
+const installEventFired = ref(false)
+const showDebug = ref(true) // Para debugging
+const debugInfo = ref({})
 
-    let deferredPrompt = null
+let deferredPrompt = null
 
-    onMounted(() => {
-        checkPWAStatus()
-        setupInstallListeners()
-    })
+onMounted(() => {
+    checkPWAStatus()
+    setupInstallListeners()
+})
 
-    const checkPWAStatus = async () => {
-        // Verificar HTTPS
-        isHTTPS.value = location.protocol === 'https:' || location.hostname === 'localhost'
+const checkPWAStatus = async () => {
+    // Verificar HTTPS
+    isHTTPS.value = location.protocol === 'https:' || location.hostname === 'localhost'
 
-        // Verificar si está instalada
-        isInstalled.value = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+    // Verificar si está instalada
+    isInstalled.value = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
 
-        // Verificar Service Worker
-        hasServiceWorker.value = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller
+    // Verificar Service Worker
+    hasServiceWorker.value = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller
 
-        // Verificar Manifest
-        try {
-            const response = await fetch('/manifest.webmanifest')
-            if (response.ok) {
-                const manifest = await response.json()
-                hasManifest.value = true
-                iconCount.value = manifest.icons?.length || 0
-
-                debugInfo.value = {
-                    ...debugInfo.value,
-                    manifest: manifest,
-                    manifestUrl: '/manifest.webmanifest'
-                }
-            }
-        } catch (error) {
-            console.error('Error loading manifest:', error)
-            hasManifest.value = false
-        }
-
-        // Debug info
-        debugInfo.value = {
-            ...debugInfo.value,
-            userAgent: navigator.userAgent,
-            protocol: location.protocol,
-            hostname: location.hostname,
-            isStandalone: window.matchMedia('(display-mode: standalone)').matches,
-            serviceWorkerSupported: 'serviceWorker' in navigator,
-            serviceWorkerController: !!navigator.serviceWorker.controller,
-            deferredPromptAvailable: !!deferredPrompt
-        }
-    }
-
-    const setupInstallListeners = () => {
-        // Listener para beforeinstallprompt
-        window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('beforeinstallprompt fired')
-            e.preventDefault()
-            deferredPrompt = e
-            canInstall.value = true
+    // Verificar Manifest
+    try {
+        const response = await fetch('/manifest.webmanifest')
+        if (response.ok) {
+            const manifest = await response.json()
+            hasManifest.value = true
+            iconCount.value = manifest.icons?.length || 0
 
             debugInfo.value = {
                 ...debugInfo.value,
-                beforeinstallpromptFired: true,
-                deferredPromptAvailable: true
+                manifest: manifest,
+                manifestUrl: '/manifest.webmanifest'
             }
-        })
-
-        // Listener para cuando se instala
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA installed')
-            isInstalled.value = true
-            canInstall.value = false
-            deferredPrompt = null
-        })
+        }
+    } catch (error) {
+        console.error('Error loading manifest:', error)
+        hasManifest.value = false
     }
 
-    const installApp = async () => {
-        if (!deferredPrompt) {
-            alert('La instalación automática no está disponible. Por favor, usa las instrucciones manuales según tu navegador.')
-            return
-        }
-
-        try {
-            deferredPrompt.prompt()
-            const { outcome } = await deferredPrompt.userChoice
-
-            console.log('Install prompt outcome:', outcome)
-
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt')
-            }
-
-            deferredPrompt = null
-            canInstall.value = false
-        } catch (error) {
-            console.error('Error during installation:', error)
-        }
+    // Debug info
+    debugInfo.value = {
+        ...debugInfo.value,
+        userAgent: navigator.userAgent,
+        protocol: location.protocol,
+        hostname: location.hostname,
+        isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+        serviceWorkerSupported: 'serviceWorker' in navigator,
+        serviceWorkerController: !!navigator.serviceWorker.controller,
+        deferredPromptAvailable: !!deferredPrompt,
+        installEventFired: installEventFired.value,
+        beforeInstallPromptSupported: 'onbeforeinstallprompt' in window
     }
+}
 
-    // Meta tags para la página
-    useHead({
-        title: 'Instalar PWA - Alabanza RDP',
-        meta: [
-            { name: 'description', content: 'Instrucciones para instalar Alabanza RDP como aplicación web progresiva' }
-        ]
+const setupInstallListeners = () => {
+    // Listener para beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt fired')
+        e.preventDefault()
+        deferredPrompt = e
+        installEventFired.value = true
+        canInstall.value = true
+
+        debugInfo.value = {
+            ...debugInfo.value,
+            beforeinstallpromptFired: true,
+            deferredPromptAvailable: true
+        }
     })
+
+    // Listener para cuando se instala
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA installed')
+        isInstalled.value = true
+        canInstall.value = false
+        deferredPrompt = null
+    })
+}
+
+const installApp = async () => {
+    if (!deferredPrompt) {
+        alert('La instalación automática no está disponible. Por favor, usa las instrucciones manuales según tu navegador.')
+        return
+    }
+
+    try {
+        deferredPrompt.prompt()
+        const { outcome } = await deferredPrompt.userChoice
+
+        console.log('Install prompt outcome:', outcome)
+
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt')
+        }
+
+        deferredPrompt = null
+        canInstall.value = false
+    } catch (error) {
+        console.error('Error during installation:', error)
+    }
+}
+
+// Meta tags para la página
+useHead({
+    title: 'Instalar PWA - Alabanza RDP',
+    meta: [
+        { name: 'description', content: 'Instrucciones para instalar Alabanza RDP como aplicación web progresiva' }
+    ]
+})
 </script>
