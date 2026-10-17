@@ -94,6 +94,21 @@ export const usePWACache = () => {
     }
   }
 
+  // Obtener todas las canciones desde cache
+  const getCachedCancionesAll = (): CachedSong[] => {
+    if (!process.client) return []
+
+    try {
+      const existingCache = localStorage.getItem('rdp_cached_songs')
+      if (!existingCache) return []
+
+      return JSON.parse(existingCache)
+    } catch (error) {
+      console.error('Error obteniendo canciones desde cache:', error)
+      return []
+    }
+  }
+
   // Cache del repertorio del usuario
   const cacheRepertorio = async (userId: string, repertorio: any[]) => {
     if (!process.client) return
@@ -228,6 +243,7 @@ export const usePWACache = () => {
     setupConnectivityListeners,
     cacheCancion,
     getCachedCancion,
+    getCachedCancionesAll,
     cacheRepertorio,
     getCachedRepertorio,
     cleanOldCache,

@@ -50,8 +50,7 @@
                                             smart_display
                                         </span>
                                     </div>
-                                    <div class="col d-flex justify-content-center"
-                                        v-if="song.pista_url && esVoces">
+                                    <div class="col d-flex justify-content-center" v-if="song.pista_url && esVoces">
                                         <i class="bi bi-file-music ms-2" style="font-size: 1.5rem;"></i>
                                     </div>
 
@@ -121,28 +120,54 @@
 
     const fetchSongs = async () => {
         loading.value = true
-        //agregar los % para que busque en cualquier parte del titulo o autor
-        const { data, error } = await supabase
-            .from('canciones')
-            .select('*')
-            // .or(`titulo.ilike.%${search.value}%,autor.ilike.%${search.value}%,letra.ilike.%${search.value}%`)
-            .order('titulo', { ascending: true })
 
-        if (error) {
-            console.error('Error al obtener las canciones:', error.message)
-            loading.value = false
-            error.value = error
-        } else {
+        try {
+            // Si estamos offline, intentar cargar desde cache
+            if (!navigator.onLine) {
+                console.log('Offline: Cargando canciones desde cache')
+                const { getCachedCancionesAll } = usePWACache()
+                const cachedSongs = getCachedCancionesAll()
+
+                if (cachedSongs.length > 0) {
+                    songs.value = cachedSongs
+                    songsForShow.value = songs.value
+                } else {
+                    console.warn('No hay canciones en cache')
+                    songs.value = []
+                    songsForShow.value = []
+                }
+                return
+            }
+
+            const { data, error } = await supabase
+                .from('canciones')
+                .select('*')
+                .order('titulo', { ascending: true })
+
+            if (error) throw error
+
             songs.value = data
-            loading.value = false
             songsForShow.value = songs.value
-        }
+        } catch (err) {
+            console.error('Error al obtener las canciones:', err.message)
 
+            // Intentar usar cache como fallback
+            const { getCachedCancionesAll } = usePWACache()
+            const cachedSongs = getCachedCancionesAll()
+            console.warn('Usando canciones desde cache (modo offline)')
+            songs.value = cachedSongs
+            songsForShow.value = songs.value
+            error.value = err
+        } finally {
+            loading.value = false
+        }
     }
 
     const roles = ref([])
     const getRolesUsuario = async () => {
-        if (usuario.value) {
+        if (!usuario.value) return
+
+        try {
             const { data, error } = await supabase
                 .from('roles_usuarios')
                 .select('rol')
@@ -154,6 +179,8 @@
                 console.log('Roles:', data)
                 roles.value = data
             }
+        } catch (err) {
+            console.error('Error al cargar roles:', err)
         }
     }
 
@@ -162,7 +189,7 @@
         return roles.value.some((rol) => rol.rol === 'letras_editor')
     })
 
-    const esVoces = computed(()=>{
+    const esVoces = computed(() => {
         return roles.value.some((rol) => rol.rol === 'voces')
 
     })
@@ -202,10 +229,12 @@
 
 
 
-    onMounted(() => {
-        fetchSongs();
-        getRolesUsuario()
+    onMounted(async () => {
+        // Pequeño delay para asegurar que el plugin ya configuró los listeners
+        await new Promise(resolve => setTimeout(resolve, 50))
 
+        fetchSongs()
+        getRolesUsuario()
     })
 </script>
 
