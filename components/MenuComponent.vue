@@ -46,9 +46,6 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsuario">
                                 <li><a class="dropdown-item" href="#">Perfil</a></li>
-                                <nuxt-link to="/install-pwa" class="dropdown-item">
-                                    <i class="bi bi-download me-2"></i>Instalar App
-                                </nuxt-link>
                                 <li><a class="dropdown-item" @click="logout">Cerrar Sesión</a></li>
                                 <!-- <nuxt-link to="/gruposAsistencia" class="dropdown-item" v-if="esAdminVoces">Grupos y
                                     asistencias</nuxt-link> -->

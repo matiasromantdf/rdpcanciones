@@ -122,23 +122,6 @@
         loading.value = true
 
         try {
-            // Si estamos offline, intentar cargar desde cache
-            if (!navigator.onLine) {
-                console.log('Offline: Cargando canciones desde cache')
-                const { getCachedCancionesAll } = usePWACache()
-                const cachedSongs = getCachedCancionesAll()
-
-                if (cachedSongs.length > 0) {
-                    songs.value = cachedSongs
-                    songsForShow.value = songs.value
-                } else {
-                    console.warn('No hay canciones en cache')
-                    songs.value = []
-                    songsForShow.value = []
-                }
-                return
-            }
-
             const { data, error } = await supabase
                 .from('canciones')
                 .select('*')
@@ -150,13 +133,6 @@
             songsForShow.value = songs.value
         } catch (err) {
             console.error('Error al obtener las canciones:', err.message)
-
-            // Intentar usar cache como fallback
-            const { getCachedCancionesAll } = usePWACache()
-            const cachedSongs = getCachedCancionesAll()
-            console.warn('Usando canciones desde cache (modo offline)')
-            songs.value = cachedSongs
-            songsForShow.value = songs.value
             error.value = err
         } finally {
             loading.value = false

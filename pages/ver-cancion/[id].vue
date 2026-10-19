@@ -91,7 +91,8 @@
                                 @click="openModal(calcularIndice(charIndex, lineIndex))"
                                 :id="calcularIndice(charIndex, lineIndex)">
                                 <div class="acorde" @click.stop="eliminarAcorde(calcularIndice(charIndex, lineIndex))">
-                                    {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex, charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
+                                    {{ devolverAcorde(lineIndex, charIndex) }}{{ devolverModificador(lineIndex,
+                                    charIndex) }}{{ devolverInvertida(lineIndex, charIndex) }}
                                 </div>
                                 <p :class="char == ' ' ? 'espacio' : ''">{{ char }}</p>
 
@@ -162,645 +163,615 @@
 </template>
 
 <script setup>
-    import { ref, onMounted } from 'vue'
-    import { useRoute } from 'vue-router'
-    import Swal from 'sweetalert2'
-    import { usePWACache } from '~/composables/usePWACache'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import Swal from 'sweetalert2'
 
-    const route = useRoute()
-    const supabase = useSupabaseClient()
-    const { isOnline, cacheCancion, getCachedCancion } = usePWACache()
-    const song = ref(null)
-    const loading = ref(true)
-    const error = ref(null)
-    const showModal = ref(false)
-    const showModalToRepertorio = ref(false)
-    const acorde = ref('')
-    const modificador = ref('M')
-    const invertida = ref(null)
-    const selectedChar = ref(null)
-    const acordes = ref([
-        {
-            numero: 1,
-            acorde: 'C'
-        },
-        {
-            numero: 2,
-            acorde: 'C#'
-        },
-        {
-            numero: 3,
-            acorde: 'D'
-        },
-        {
-            numero: 4,
-            acorde: 'D#'
-        },
-        {
-            numero: 5,
-            acorde: 'E'
-        },
-        {
-            numero: 6,
-            acorde: 'F'
-        },
-        {
-            numero: 7,
-            acorde: 'F#'
-        },
-        {
-            numero: 8,
-            acorde: 'G'
-        },
-        {
-            numero: 9,
-            acorde: 'G#'
-        },
-        {
-            numero: 10,
-            acorde: 'A'
-        },
-        {
-            numero: 11,
-            acorde: 'A#'
-        },
-        {
-            numero: 12,
-            acorde: 'B'
+const route = useRoute()
+const supabase = useSupabaseClient()
+const song = ref(null)
+const loading = ref(true)
+const error = ref(null)
+const showModal = ref(false)
+const showModalToRepertorio = ref(false)
+const acorde = ref('')
+const modificador = ref('M')
+const invertida = ref(null)
+const selectedChar = ref(null)
+const acordes = ref([
+    {
+        numero: 1,
+        acorde: 'C'
+    },
+    {
+        numero: 2,
+        acorde: 'C#'
+    },
+    {
+        numero: 3,
+        acorde: 'D'
+    },
+    {
+        numero: 4,
+        acorde: 'D#'
+    },
+    {
+        numero: 5,
+        acorde: 'E'
+    },
+    {
+        numero: 6,
+        acorde: 'F'
+    },
+    {
+        numero: 7,
+        acorde: 'F#'
+    },
+    {
+        numero: 8,
+        acorde: 'G'
+    },
+    {
+        numero: 9,
+        acorde: 'G#'
+    },
+    {
+        numero: 10,
+        acorde: 'A'
+    },
+    {
+        numero: 11,
+        acorde: 'A#'
+    },
+    {
+        numero: 12,
+        acorde: 'B'
+    }
+])
+const guardando = ref(false)
+const acordesCancion = ref([])
+const modificadores = ref([])
+const usuario = ref(useSupabaseUser())
+const cargardoRepertorio = ref(true)
+const tonoEnRepertorio = ref(1)
+const tonoRepertorioEsMenor = ref(false)
+
+const estaEnRepertorio = ref(false)
+
+const getIsInRepertorio = async () => {
+    if (usuario.value) {
+        const { data, error } = await supabase
+            .from('repertorio_voces')
+            .select('*')
+            .eq('cancion_id', song.value.id)
+            .eq('user_id', usuario.value.id)
+        if (error) {
+            console.error('Error al obtener el repertorio:', error.message)
+        } else {
+            console.log('Repertorio:', data)
+            estaEnRepertorio.value = data.length > 0
+            if (data.length > 0) {
+                tonoEnRepertorio.value = data[0].tono_numero
+                tonoRepertorioEsMenor.value = data[0].tono_esmenor
+            }
         }
-    ])
-    const guardando = ref(false)
-    const acordesCancion = ref([])
-    const modificadores = ref([])
-    const usuario = ref(useSupabaseUser())
-    const cargardoRepertorio = ref(true)
-    const tonoEnRepertorio = ref(1)
-    const tonoRepertorioEsMenor = ref(false)
+    }
+    cargardoRepertorio.value = false
+}
 
-    const estaEnRepertorio = ref(false)
+const classIcono = computed(() => {
+    return estaEnRepertorio.value ? 'in' : 'out'
+})
 
-    const getIsInRepertorio = async () => {
-        if (usuario.value) {
-            const { data, error } = await supabase
-                .from('repertorio_voces')
-                .select('*')
+const addToRepertorio = async () => {
+    //confirmar
+    if (estaEnRepertorio.value) {
+        const { value: confirmado } = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se eliminará la canción de tu repertorio.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, eliminarla!'
+        })
+        console.log("confirm", confirmado);
+
+        if (confirmado) {
+            //quitar de repertorio
+            supabase.from('repertorio_voces')
+                .delete()
                 .eq('cancion_id', song.value.id)
                 .eq('user_id', usuario.value.id)
-            if (error) {
-                console.error('Error al obtener el repertorio:', error.message)
-            } else {
-                console.log('Repertorio:', data)
-                estaEnRepertorio.value = data.length > 0
-                if (data.length > 0) {
-                    tonoEnRepertorio.value = data[0].tono_numero
-                    tonoRepertorioEsMenor.value = data[0].tono_esmenor
-                }
-            }
-        }
-        cargardoRepertorio.value = false
-    }
-
-    const classIcono = computed(() => {
-        return estaEnRepertorio.value ? 'in' : 'out'
-    })
-
-    const addToRepertorio = async () => {
-        //confirmar
-        if (estaEnRepertorio.value) {
-            const { value: confirmado } = await Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Se eliminará la canción de tu repertorio.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                cancelButtonText: 'Cancelar',
-                confirmButtonText: 'Sí, eliminarla!'
-            })
-            console.log("confirm", confirmado);
-
-            if (confirmado) {
-                //quitar de repertorio
-                supabase.from('repertorio_voces')
-                    .delete()
-                    .eq('cancion_id', song.value.id)
-                    .eq('user_id', usuario.value.id)
-                    .then(({ error }) => {
-                        if (error) {
-                            console.error(error)
-                        } else {
-                            estaEnRepertorio.value = false
-                        }
-                    })
-
-            }
-        } else {
-            //agregar a repertorio
-            //abrir el modal para seleccionar la el tono
-            showModalToRepertorio.value = true
-        }
-    }
-
-    const guardarEnRepertorio = () => {
-        //guardar en la tabla repertorio_voces, cancion_id, user_id, tono
-        const cancion_id = song.value.id
-        const user_id = usuario.value.id
-        const tono = acorde.value
-        const modo = tonoRepertorioEsMenor.value
-        supabase.from('repertorio_voces').insert([
-            { cancion_id, user_id, tono_numero: tono, tono_esmenor: modo }
-        ]).then(({ error }) => {
-            if (error) {
-                console.error(error)
-                alert('Ocurrió un error al guardar la canción en el repertorio')
-            } else {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Canción guardada en repertorio',
-                    showConfirmButton: false,
-                    timer: 1500
+                .then(({ error }) => {
+                    if (error) {
+                        console.error(error)
+                    } else {
+                        estaEnRepertorio.value = false
+                    }
                 })
-                estaEnRepertorio.value = true
-                showModalToRepertorio.value = false
-                tonoEnRepertorio.value = tono
-            }
-        })
-    }
 
-    const fetchSong = async () => {
-        const songId = route.params.id
-
-        // Intentar cargar desde cache si está offline
-        if (!isOnline.value) {
-            const cachedSong = getCachedCancion(songId)
-            if (cachedSong) {
-                song.value = cachedSong
-                fetchAcordes()
-                // No intentar cargar repertorio si está offline
-                loading.value = false
-                return
-            }
         }
-
-        try {
-            const { data, error: fetchError } = await supabase
-                .from('canciones')
-                .select('*')
-                .eq('id', songId)
-                .single()
-            if (fetchError) {
-                throw fetchError
-            }
-            song.value = data
-
-            // Cachear la canción para uso offline
-            await cacheCancion(data)
-
-            fetchAcordes()
-            if (isOnline.value) {
-                getIsInRepertorio()
-            }
-
-        } catch (err) {
-            // Si hay error y estamos offline, intentar cache
-            if (!isOnline.value) {
-                const cachedSong = getCachedCancion(songId)
-                if (cachedSong) {
-                    song.value = cachedSong
-                    fetchAcordes()
-                } else {
-                    error.value = new Error('Canción no disponible sin conexión')
-                }
-            } else {
-                error.value = err
-            }
-        } finally {
-            loading.value = false
-        }
+    } else {
+        //agregar a repertorio
+        //abrir el modal para seleccionar la el tono
+        showModalToRepertorio.value = true
     }
+}
 
-    const calcularIndice = (charIndex, line) => {
-        //calcular el indice de la letra en el total de la cancion
-        let index = 0
-        let cantidadLineas = song.value.letra.split('\n').length
-        let lineas = song.value.letra.split('\n')
-        for (let i = 0; i < cantidadLineas; i++) {
-            for (let j = 0; j < lineas[i].length; j++) {
-                index++
-                if (i == line && j == charIndex) {
-                    return index
-                }
-            }
-        }
-
-
-    }
-
-    const fetchAcordes = async () => {
-        try {
-            const { data, error: fetchError } = await supabase
-                .from('acordes')
-                .select('*')
-                .eq('cancion_id', song.value.id)
-
-            if (fetchError) {
-                throw fetchError
-            }
-
-            acordesCancion.value = data
-            console.log(data)
-        } catch (err) {
-            error.value = err
-        } finally {
-            loading.value = false
-        }
-    }
-
-    const getModificadores = async () => {
-        const { data, error } = await supabase.from('modificadores').select('*')
+const guardarEnRepertorio = () => {
+    //guardar en la tabla repertorio_voces, cancion_id, user_id, tono
+    const cancion_id = song.value.id
+    const user_id = usuario.value.id
+    const tono = acorde.value
+    const modo = tonoRepertorioEsMenor.value
+    supabase.from('repertorio_voces').insert([
+        { cancion_id, user_id, tono_numero: tono, tono_esmenor: modo }
+    ]).then(({ error }) => {
         if (error) {
             console.error(error)
+            alert('Ocurrió un error al guardar la canción en el repertorio')
         } else {
-            modificadores.value = data
+            Swal.fire({
+                icon: 'success',
+                title: 'Canción guardada en repertorio',
+                showConfirmButton: false,
+                timer: 1500
+            })
+            estaEnRepertorio.value = true
+            showModalToRepertorio.value = false
+            tonoEnRepertorio.value = tono
+        }
+    })
+}
+
+const fetchSong = async () => {
+    const songId = route.params.id
+
+    try {
+        const { data, error: fetchError } = await supabase
+            .from('canciones')
+            .select('*')
+            .eq('id', songId)
+            .single()
+        if (fetchError) {
+            throw fetchError
+        }
+        song.value = data
+
+        fetchAcordes()
+        getIsInRepertorio()
+
+    } catch (err) {
+        error.value = err
+    } finally {
+        loading.value = false
+    }
+}
+
+const calcularIndice = (charIndex, line) => {
+    //calcular el indice de la letra en el total de la cancion
+    let index = 0
+    let cantidadLineas = song.value.letra.split('\n').length
+    let lineas = song.value.letra.split('\n')
+    for (let i = 0; i < cantidadLineas; i++) {
+        for (let j = 0; j < lineas[i].length; j++) {
+            index++
+            if (i == line && j == charIndex) {
+                return index
+            }
         }
     }
 
-    const puedeEditar = computed(() => {
-        //si en el array de roles del usuario esta el rol de admin
-        return roles.value.some((rol) => rol.rol === 'acordes_editor')
-    })
 
-    const puedeAddToFavorite = computed(() => {
-        //si en el array de roles del usuario esta el rol de admin
-        return roles.value.some((rol) => rol.rol === 'voces' || rol.rol === 'vastagos')
-    })
+}
 
-    const openModal = (charIndex) => {
-        if (!puedeEditar.value) {
-            return
+const fetchAcordes = async () => {
+    try {
+        const { data, error: fetchError } = await supabase
+            .from('acordes')
+            .select('*')
+            .eq('cancion_id', song.value.id)
+
+        if (fetchError) {
+            throw fetchError
         }
-        selectedChar.value = charIndex
-        showModal.value = true
-        modificador.value = 'M'
+
+        acordesCancion.value = data
+        console.log(data)
+    } catch (err) {
+        error.value = err
+    } finally {
+        loading.value = false
     }
+}
 
-    const closeModal = () => {
-        showModal.value = false
+const getModificadores = async () => {
+    const { data, error } = await supabase.from('modificadores').select('*')
+    if (error) {
+        console.error(error)
+    } else {
+        modificadores.value = data
     }
+}
 
-    const saveChord = () => {
-        //guardar en la tabla acordes, cancion_id, numero_acorde, modificador, posicion
-        guardando.value = true
-        const cancion_id = song.value.id
-        const numero_nota = acorde.value
-        const invert = invertida.value
-        const mod = modificador.value
-        const posicion = selectedChar.value
+const puedeEditar = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol === 'acordes_editor')
+})
 
-        supabase.from('acordes').insert([
-            { cancion_id, numero_nota, modificador: mod, posicion, invertida: invert }
-        ]).then(({ error }) => {
+const puedeAddToFavorite = computed(() => {
+    //si en el array de roles del usuario esta el rol de admin
+    return roles.value.some((rol) => rol.rol === 'voces' || rol.rol === 'vastagos')
+})
+
+const openModal = (charIndex) => {
+    if (!puedeEditar.value) {
+        return
+    }
+    selectedChar.value = charIndex
+    showModal.value = true
+    modificador.value = 'M'
+}
+
+const closeModal = () => {
+    showModal.value = false
+}
+
+const saveChord = () => {
+    //guardar en la tabla acordes, cancion_id, numero_acorde, modificador, posicion
+    guardando.value = true
+    const cancion_id = song.value.id
+    const numero_nota = acorde.value
+    const invert = invertida.value
+    const mod = modificador.value
+    const posicion = selectedChar.value
+
+    supabase.from('acordes').insert([
+        { cancion_id, numero_nota, modificador: mod, posicion, invertida: invert }
+    ]).then(({ error }) => {
+        if (error) {
+            console.error(error)
+            alert('Ocurrió un error al guardar el acorde')
+            guardando.value = false
+        } else {
+            acorde.value = ''
+            modificador.value = ''
+            closeModal()
+            fetchSong()
+            guardando.value = false
+
+        }
+    })
+}
+
+const eliminarAcorde = (index) => {
+    let confirmar = confirm('¿Estás seguro de eliminar este acorde?')
+    if (confirmar) {
+        let pos = index
+        let cancion = song.value.id
+        supabase.from('acordes').delete().eq('posicion', pos).eq('cancion_id', cancion).then(({ error }) => {
             if (error) {
                 console.error(error)
-                alert('Ocurrió un error al guardar el acorde')
-                guardando.value = false
+                alert('Ocurrió un error al eliminar el acorde')
             } else {
-                acorde.value = ''
-                modificador.value = ''
-                closeModal()
                 fetchSong()
-                guardando.value = false
-
             }
         })
     }
+}
 
-    const eliminarAcorde = (index) => {
-        let confirmar = confirm('¿Estás seguro de eliminar este acorde?')
-        if (confirmar) {
-            let pos = index
-            let cancion = song.value.id
-            supabase.from('acordes').delete().eq('posicion', pos).eq('cancion_id', cancion).then(({ error }) => {
-                if (error) {
-                    console.error(error)
-                    alert('Ocurrió un error al eliminar el acorde')
-                } else {
-                    fetchSong()
+const devolverAcorde = (lineIndex, charIndex) => {
+    let acorde = ''
+    acordesCancion.value.forEach(acordeCancion => {
+        if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
+            //buscar el acorde en la lista de acordes
+            acordes.value.forEach(acordeLista => {
+                if (acordeLista.numero == acordeCancion.numero_nota) {
+                    acorde = acordeLista.acorde
+                }
+            })
+
+        }
+    })
+    return acorde
+
+}
+
+const devolverModificador = (lineIndex, charIndex) => {
+    let modificador = ''
+    acordesCancion.value.forEach(acordeCancion => {
+        if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
+            modificador = acordeCancion.modificador
+
+        }
+    }
+    )
+    return modificador
+}
+
+const devolverInvertida = (lineIndex, charIndex) => {
+    let invertida = ''
+    acordesCancion.value.forEach(acordeCancion => {
+        if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
+            //buscar el acorde en la lista de acordes
+            acordes.value.forEach(acordeLista => {
+                if (acordeLista.numero == acordeCancion.invertida) {
+                    invertida = '/' + acordeLista.acorde
+
                 }
             })
         }
     }
+    )
+    return invertida
 
-    const devolverAcorde = (lineIndex, charIndex) => {
-        let acorde = ''
-        acordesCancion.value.forEach(acordeCancion => {
-            if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
-                //buscar el acorde en la lista de acordes
-                acordes.value.forEach(acordeLista => {
-                    if (acordeLista.numero == acordeCancion.numero_nota) {
-                        acorde = acordeLista.acorde
-                    }
-                })
+}
 
-            }
-        })
-        return acorde
-
+const transportar = (numero) => {
+    //transportar la cancion
+    let tonoCancion = song.value.numero_tono
+    tonoCancion += numero
+    if (tonoCancion > 12) {
+        tonoCancion = 1
     }
-
-    const devolverModificador = (lineIndex, charIndex) => {
-        let modificador = ''
-        acordesCancion.value.forEach(acordeCancion => {
-            if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
-                modificador = acordeCancion.modificador
-
-            }
-        }
-        )
-        return modificador
+    if (tonoCancion < 1) {
+        tonoCancion = 12
     }
-
-    const devolverInvertida = (lineIndex, charIndex) => {
-        let invertida = ''
-        acordesCancion.value.forEach(acordeCancion => {
-            if (acordeCancion.posicion == calcularIndice(charIndex, lineIndex)) {
-                //buscar el acorde en la lista de acordes
-                acordes.value.forEach(acordeLista => {
-                    if (acordeLista.numero == acordeCancion.invertida) {
-                        invertida = '/' + acordeLista.acorde
-
-                    }
-                })
-            }
+    song.value.numero_tono = tonoCancion
+    //actualizar los acordes de la letra
+    acordesCancion.value.forEach(acorde => {
+        let nuevoAcorde = acorde.numero_nota + numero
+        let nuevoInvertida = acorde.invertida + numero
+        if (nuevoAcorde > 12) {
+            nuevoAcorde = 1
         }
-        )
-        return invertida
+        if (nuevoAcorde < 1) {
+            nuevoAcorde = 12
+        }
+        if (nuevoInvertida > 12) {
+            nuevoInvertida = 1
+        }
+        if (nuevoInvertida < 1) {
+            nuevoInvertida = 12
+        }
 
+        acorde.numero_nota = nuevoAcorde
+        acorde.invertida = nuevoInvertida
     }
+    )
 
-    const transportar = (numero) => {
-        //transportar la cancion
-        let tonoCancion = song.value.numero_tono
-        tonoCancion += numero
-        if (tonoCancion > 12) {
-            tonoCancion = 1
+}
+
+const tonoCancion = computed(() => {
+    let tono = ''
+    let tonoCancion = song.value.numero_tono
+    acordes.value.forEach(acorde => {
+        if (acorde.numero == tonoCancion) {
+            tono = acorde.acorde
         }
-        if (tonoCancion < 1) {
-            tonoCancion = 12
-        }
-        song.value.numero_tono = tonoCancion
-        //actualizar los acordes de la letra
-        acordesCancion.value.forEach(acorde => {
-            let nuevoAcorde = acorde.numero_nota + numero
-            let nuevoInvertida = acorde.invertida + numero
-            if (nuevoAcorde > 12) {
-                nuevoAcorde = 1
-            }
-            if (nuevoAcorde < 1) {
-                nuevoAcorde = 12
-            }
-            if (nuevoInvertida > 12) {
-                nuevoInvertida = 1
-            }
-            if (nuevoInvertida < 1) {
-                nuevoInvertida = 12
-            }
+    })
+    return tono
+})
 
-            acorde.numero_nota = nuevoAcorde
-            acorde.invertida = nuevoInvertida
-        }
-        )
-
-    }
-
-    const tonoCancion = computed(() => {
-        let tono = ''
-        let tonoCancion = song.value.numero_tono
-        acordes.value.forEach(acorde => {
-            if (acorde.numero == tonoCancion) {
-                tono = acorde.acorde
-            }
-        })
-        return tono
+const cambiarTamanio = (numero) => {
+    document.querySelectorAll('.char').forEach(char => {
+        let fontSize = parseInt(window.getComputedStyle(char).fontSize)
+        fontSize += numero
+        char.style.fontSize = fontSize + 'px'
+        char.style.maxWidth = fontSize + 'px'
+    })
+    document.querySelectorAll('.acorde').forEach(acorde => {
+        let fontSize = parseInt(window.getComputedStyle(acorde).fontSize)
+        fontSize += numero
+        acorde.style.fontSize = fontSize + 'px'
     })
 
-    const cambiarTamanio = (numero) => {
-        document.querySelectorAll('.char').forEach(char => {
-            let fontSize = parseInt(window.getComputedStyle(char).fontSize)
-            fontSize += numero
-            char.style.fontSize = fontSize + 'px'
-            char.style.maxWidth = fontSize + 'px'
-        })
-        document.querySelectorAll('.acorde').forEach(acorde => {
-            let fontSize = parseInt(window.getComputedStyle(acorde).fontSize)
-            fontSize += numero
-            acorde.style.fontSize = fontSize + 'px'
-        })
+}
 
-    }
+const roles = ref([])
+const getRolesUsuario = async () => {
+    if (usuario.value != null) {
+        const { data, error } = await supabase
+            .from('roles_usuarios')
+            .select('rol')
+            .eq('user_id', usuario.value.id)
 
-    const roles = ref([])
-    const getRolesUsuario = async () => {
-        if (usuario.value != null) {
-            const { data, error } = await supabase
-                .from('roles_usuarios')
-                .select('rol')
-                .eq('user_id', usuario.value.id)
-
-            if (error) {
-                console.error('Error al obtener el rol:', error.message)
-            } else {
-                console.log('Roles:', data)
-                roles.value = data
-            }
-        }
-        else {
-            console.log('No hay usuario')
-            roles.value = []
-        }
-    }
-
-    const openUrl = (url) => {
-        window.open(url, '_blank')
-    }
-
-    const compartir = (url) => {
-        // Usar la API de Web Share si está disponible
-        if (navigator.share) {
-            navigator.share({
-                title: 'Mirá esta canción en RDP Canciones',
-                url: url
-            }).then(() => {
-                console.log('Gracias por compartir!');
-            })
-                .catch((error) => {
-                    console.error('Error al compartir:', error);
-                });
+        if (error) {
+            console.error('Error al obtener el rol:', error.message)
         } else {
-            // Si no está disponible, abrir en una nueva pestaña
-            window.open(url, '_blank');
+            console.log('Roles:', data)
+            roles.value = data
         }
     }
+    else {
+        console.log('No hay usuario')
+        roles.value = []
+    }
+}
 
-    const copiarLetra = async () => {
-        if (!song.value?.letra) {
-            return
-        }
+const openUrl = (url) => {
+    window.open(url, '_blank')
+}
 
-        const contenidoACopiar = `${song.value.titulo || ''}\n${song.value.autor || ''}\n\n${song.value.letra}`
+const compartir = (url) => {
+    // Usar la API de Web Share si está disponible
+    if (navigator.share) {
+        navigator.share({
+            title: 'Mirá esta canción en RDP Canciones',
+            url: url
+        }).then(() => {
+            console.log('Gracias por compartir!');
+        })
+            .catch((error) => {
+                console.error('Error al compartir:', error);
+            });
+    } else {
+        // Si no está disponible, abrir en una nueva pestaña
+        window.open(url, '_blank');
+    }
+}
 
-        try {
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(contenidoACopiar)
-            } else {
-                const textArea = document.createElement('textarea')
-                textArea.value = contenidoACopiar
-                textArea.style.position = 'fixed'
-                textArea.style.opacity = '0'
-                document.body.appendChild(textArea)
-                textArea.focus()
-                textArea.select()
-                document.execCommand('copy')
-                document.body.removeChild(textArea)
-            }
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Letra copiada',
-                showConfirmButton: false,
-                timer: 1200
-            })
-        } catch (err) {
-            console.error('Error al copiar la letra:', err)
-            Swal.fire({
-                icon: 'error',
-                title: 'No se pudo copiar la letra'
-            })
-        }
+const copiarLetra = async () => {
+    if (!song.value?.letra) {
+        return
     }
 
-    onMounted(() => {
-        fetchSong();
-        getModificadores();
-        getRolesUsuario();
-    })
+    const contenidoACopiar = `${song.value.titulo || ''}\n${song.value.autor || ''}\n\n${song.value.letra}`
+
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(contenidoACopiar)
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = contenidoACopiar
+            textArea.style.position = 'fixed'
+            textArea.style.opacity = '0'
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(textArea)
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Letra copiada',
+            showConfirmButton: false,
+            timer: 1200
+        })
+    } catch (err) {
+        console.error('Error al copiar la letra:', err)
+        Swal.fire({
+            icon: 'error',
+            title: 'No se pudo copiar la letra'
+        })
+    }
+}
+
+onMounted(() => {
+    fetchSong();
+    getModificadores();
+    getRolesUsuario();
+})
 </script>
 
 <style scoped>
-    .icono {
-        font-size: 20px;
-        border: 1px solid #941c4e;
-        padding: 10px;
-        border-radius: 50%;
-        margin-right: 10px;
-        cursor: pointer;
-    }
+.icono {
+    font-size: 20px;
+    border: 1px solid #941c4e;
+    padding: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    cursor: pointer;
+}
 
-    .icono.in {
-        color: #941c4e;
-    }
+.icono.in {
+    color: #941c4e;
+}
 
-    .icono.out {
-        color: #ccc;
-    }
+.icono.out {
+    color: #ccc;
+}
 
-    .icono:hover {
-        background-color: #941c4e;
-        color: white;
-    }
+.icono:hover {
+    background-color: #941c4e;
+    color: white;
+}
 
-    .h1 {
-        text-align: center;
-    }
+.h1 {
+    text-align: center;
+}
 
-    .char {
-        display: inline-block;
-        cursor: pointer;
-        max-width: 11px;
-        font-size: 20px;
-    }
+.char {
+    display: inline-block;
+    cursor: pointer;
+    max-width: 11px;
+    font-size: 20px;
+}
 
-    .char:hover {
-        background-color: #5561a3;
-    }
+.char:hover {
+    background-color: #5561a3;
+}
 
-    .poco-espacio {
-        margin-right: 1px;
-    }
+.poco-espacio {
+    margin-right: 1px;
+}
 
-    .mucho-espacio {
-        margin-right: 6px;
-    }
+.mucho-espacio {
+    margin-right: 6px;
+}
 
-    .espacio {
-        width: 10px;
-        display: inline-block;
-    }
+.espacio {
+    width: 10px;
+    display: inline-block;
+}
 
-    .linea-letra {
-        margin-bottom: 15px;
-    }
+.linea-letra {
+    margin-bottom: 15px;
+}
 
-    .linea-letra .char {
-        cursor: pointer;
-    }
+.linea-letra .char {
+    cursor: pointer;
+}
 
-    .acorde {
-        color: #941c4e;
-        font-size: 15px;
-    }
+.acorde {
+    color: #941c4e;
+    font-size: 15px;
+}
 
-    /* Modal Styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
-    .modal-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 400px;
-        width: 100%;
-    }
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
 
-    .close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        font-size: 24px;
-    }
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+}
 
-    .texto-cancion {
-        margin-top: 20px;
-        padding: 20px;
-        background-color: #f5f5f5;
-        border-radius: 5px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-
-
-    .control {
-        border-radius: 5px;
-    }
+.texto-cancion {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
 
-    .icono-link {
-        font-size: 24px;
-        cursor: pointer;
-        border: 1px solid #941c4e;
-        padding: 10px;
-        border-radius: 50%;
-    }
+
+.control {
+    border-radius: 5px;
+}
+
+
+.icono-link {
+    font-size: 24px;
+    cursor: pointer;
+    border: 1px solid #941c4e;
+    padding: 10px;
+    border-radius: 50%;
+}
 </style>

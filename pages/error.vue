@@ -11,12 +11,6 @@
             <div class="error-body">
                 <p class="error-message">{{ error?.message || 'Error desconocido' }}</p>
 
-                <div v-if="isOffline" class="offline-info">
-                    <i class="bi bi-wifi-off"></i>
-                    <p>Parece que no tienes conexión a Internet.</p>
-                    <p class="text-small">Intenta conectarte a Internet y recarga la página.</p>
-                </div>
-
                 <div class="error-actions">
                     <button @click="handleError" class="btn btn-primary">
                         <i class="bi bi-arrow-clockwise me-2"></i>
@@ -40,32 +34,15 @@
 </template>
 
 <script setup>
-    import { ref, computed, onMounted } from 'vue'
-
     defineProps({
         error: Object
     })
 
     const isDev = process.dev
-    const isOnline = ref(navigator.onLine)
-
-    const isOffline = computed(() => !isOnline.value)
 
     const handleError = () => {
         clearError()
     }
-
-    onMounted(() => {
-        window.addEventListener('online', () => {
-            isOnline.value = true
-            setTimeout(() => {
-                location.reload()
-            }, 1000)
-        })
-        window.addEventListener('offline', () => {
-            isOnline.value = false
-        })
-    })
 </script>
 
 <style scoped>
@@ -115,32 +92,6 @@
         font-size: 1rem;
         margin-bottom: 1rem;
         text-align: center;
-    }
-
-    .offline-info {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    .offline-info i {
-        font-size: 2rem;
-        color: #ff9800;
-        margin-bottom: 0.5rem;
-    }
-
-    .offline-info p {
-        margin: 0.5rem 0;
-        color: #856404;
-        font-size: 0.95rem;
-    }
-
-    .text-small {
-        font-size: 0.85rem;
-        opacity: 0.8;
     }
 
     .error-actions {

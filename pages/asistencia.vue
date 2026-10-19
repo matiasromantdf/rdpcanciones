@@ -175,11 +175,6 @@
             }
 
             const getReunionName = async () => {
-                if (!navigator.onLine) {
-                    console.log('Offline: No se puede obtener el nombre de la reunión')
-                    reunion.value = 'Offline - Nombre no disponible'
-                    return
-                }
                 const { data, error } = await supabase.from('reuniones').select('nombre').eq('id', route.query.id)
                 if (error) {
                     console.error('Error al obtener el nombre de la reunión:', error.message)

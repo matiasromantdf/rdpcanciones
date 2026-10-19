@@ -12,6 +12,9 @@ export const useSupabase = () => {
     localStorage.setItem('originUrl', url)
     const { user, session, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+            redirectTo: import.meta.dev ? 'http://localhost:3007' : window.location.origin,
+        },
     })
 
     if (error) {

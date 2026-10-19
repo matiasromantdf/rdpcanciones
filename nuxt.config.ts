@@ -1,9 +1,47 @@
 export default defineNuxtConfig({
+  modules: ['@nuxtjs/supabase', '@vite-pwa/nuxt'],
+
+  pwa: {
+    manifest: {
+      name: 'Alabanza RDP',
+      short_name: 'Alabanza RDP',
+      description: 'Repertorio de Alabanza RDP',
+      theme_color: '#f6d365',
+      background_color: '#e9f0f7',
+      display: 'standalone',
+      start_url: '/',
+      icons: [
+        {
+          src: '/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ]
+    },
+    registerType: 'autoUpdate',
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module',
+      navigateFallback: '/',
+    },
+    workbox: {
+      navigateFallback: '/offline',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+    },
+  },
   devServer: {
     port: 3007
   },
   runtimeConfig: {
-    public:{
+    public: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
     }
   },
@@ -12,14 +50,14 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  modules:['@nuxtjs/supabase', '@vite-pwa/nuxt'], 
   supabase: {
-    redirectOptions:{
+    redirectOptions: {
       login: '/login',
       callback: '/',
       exclude: [
         '/',
         '/login',
+        '/offline',
         '/ver-cancion/**',
         '/canciones',
         '/repertorio',
@@ -34,11 +72,6 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'lang', content: 'es' },
-        { name: 'theme-color', content: '#f6d365' },
-        { name: 'apple-mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-        { name: 'apple-mobile-web-app-title', content: 'Alabanza RDP' },
-        { name: 'msapplication-TileColor', content: '#f6d365' }
       ],
       link: [
         {
@@ -53,14 +86,6 @@ export default defineNuxtConfig({
           //bootstrap icons
           rel: 'stylesheet',
           href: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css',
-        },
-        {
-          rel: 'manifest',
-          href: '/manifest.webmanifest'
-        },
-        {
-          rel: 'apple-touch-icon',
-          href: '/apple-icon-180.png'
         },
         {
           rel: 'icon',
@@ -81,59 +106,7 @@ export default defineNuxtConfig({
         }
       ]
     },
-   
+
   },
-  
-  pwa: {
-    registerType: 'autoUpdate',
-    // Usar el manifest manual en lugar de generado automáticamente
-    injectManifest: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}']
-    },
-    workbox: {
-      // Fallback a la home cuando no se pueda servir una ruta
-      navigateFallback: '/',
-      navigateFallbackAllowlist: [/^\/(?!api\/|__nuxt|\.)/],
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-      skipWaiting: true,
-      clientsClaim: true,
-      maximumFileSizeToCacheInBytes: 5000000,
-      // Estrategia de runtime caching
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/.*\.(js|css|woff|woff2|ttf|otf|eot|svg|png|jpg|jpeg)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'static-assets',
-            expiration: {
-              maxEntries: 60,
-              maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-            }
-          }
-        },
-        {
-          urlPattern: /^https:\/\/cdn\.|^https:\/\/fonts\./,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'external-cdn',
-            expiration: {
-              maxEntries: 30,
-              maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-            }
-          }
-        }
-      ]
-    },
-    client: {
-      installPrompt: true,
-      periodicSyncForUpdates: 20
-    },
-    devOptions: {
-      enabled: true,
-      suppressWarnings: true,
-      type: 'module'
-    }
-  }
 
 });
-  

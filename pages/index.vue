@@ -7,6 +7,7 @@
                         <i class="bi bi-music-note-beamed me-2"></i>
                         Alabanza RDP
                     </h1>
+                    <span class="text-muted" style="font-size: 0.8rem;">v2.0</span>
                 </div>
             </div>
         </div>
@@ -289,50 +290,50 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-    import { useRouter } from 'vue-router'
-    import Swal from 'sweetalert2'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 
-    const supabase = useSupabaseClient()
-    const router = useRouter()
+const supabase = useSupabaseClient()
+const router = useRouter()
 
-    // Estados reactivos
-    const usuario = ref(useSupabaseUser())
-    const roles = ref([])
-    const reunionesProximas = ref([])
-    const cargandoReuniones = ref(true)
-    const serviciosProximos = ref([])
-    const cargandoServicios = ref(true)
-    const servicioModalActual = ref(null)
+// Estados reactivos
+const usuario = ref(useSupabaseUser())
+const roles = ref([])
+const reunionesProximas = ref([])
+const cargandoReuniones = ref(true)
+const serviciosProximos = ref([])
+const cargandoServicios = ref(true)
+const servicioModalActual = ref(null)
 
-    // Obtener roles del usuario
-    const getRolesUsuario = async () => {
-        if (usuario.value) {
-            const { data, error } = await supabase
-                .from('roles_usuarios')
-                .select('rol')
-                .eq('user_id', usuario.value.id)
+// Obtener roles del usuario
+const getRolesUsuario = async () => {
+    if (usuario.value) {
+        const { data, error } = await supabase
+            .from('roles_usuarios')
+            .select('rol')
+            .eq('user_id', usuario.value.id)
 
-            if (error) {
-                console.error('Error al obtener el rol:', error.message)
-            } else {
-                console.log('Roles:', data)
-                roles.value = data
-            }
+        if (error) {
+            console.error('Error al obtener el rol:', error.message)
+        } else {
+            console.log('Roles:', data)
+            roles.value = data
         }
     }
+}
 
-    // Obtener reuniones donde el usuario está convocado
-    const getReunionesProximas = async () => {
-        if (!usuario.value) return
+// Obtener reuniones donde el usuario está convocado
+const getReunionesProximas = async () => {
+    if (!usuario.value) return
 
-        try {
-            cargandoReuniones.value = true
+    try {
+        cargandoReuniones.value = true
 
-            // Obtener reuniones donde el usuario está convocado
-            const { data: convocatorias, error } = await supabase
-                .from('convocatorias_users')
-                .select(`
+        // Obtener reuniones donde el usuario está convocado
+        const { data: convocatorias, error } = await supabase
+            .from('convocatorias_users')
+            .select(`
                 convocatorias (
                     id,
                     titulo,
@@ -341,48 +342,48 @@
                     detalles
                 )
             `)
-                .eq('user_id', usuario.value.id)
+            .eq('user_id', usuario.value.id)
 
-            if (error) throw error
+        if (error) throw error
 
-            // Filtrar reuniones de hoy hacia adelante y ordenar por fecha
-            const ahora = new Date()
-            const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+        // Filtrar reuniones de hoy hacia adelante y ordenar por fecha
+        const ahora = new Date()
+        const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
 
-            const reunionesFuturas = convocatorias
-                .map(item => item.convocatorias)
-                .filter(reunion => {
-                    const fechaReunion = new Date(reunion.fecha + ' ' + reunion.hora)
-                    // Incluir reuniones desde hoy o futuras, más reuniones que empezaron hace menos de 4 horas
-                    return fechaReunion.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
-                })
-                .sort((a, b) => {
-                    const fechaA = new Date(a.fecha + ' ' + a.hora)
-                    const fechaB = new Date(b.fecha + ' ' + b.hora)
-                    return fechaA - fechaB
-                })
-                .slice(0, 3) // Mostrar máximo 3 reuniones próximas
+        const reunionesFuturas = convocatorias
+            .map(item => item.convocatorias)
+            .filter(reunion => {
+                const fechaReunion = new Date(reunion.fecha + ' ' + reunion.hora)
+                // Incluir reuniones desde hoy o futuras, más reuniones que empezaron hace menos de 4 horas
+                return fechaReunion.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
+            })
+            .sort((a, b) => {
+                const fechaA = new Date(a.fecha + ' ' + a.hora)
+                const fechaB = new Date(b.fecha + ' ' + b.hora)
+                return fechaA - fechaB
+            })
+            .slice(0, 3) // Mostrar máximo 3 reuniones próximas
 
-            reunionesProximas.value = reunionesFuturas
+        reunionesProximas.value = reunionesFuturas
 
-        } catch (error) {
-            console.error('Error obteniendo reuniones:', error)
-        } finally {
-            cargandoReuniones.value = false
-        }
+    } catch (error) {
+        console.error('Error obteniendo reuniones:', error)
+    } finally {
+        cargandoReuniones.value = false
     }
+}
 
-    // Obtener servicios donde el usuario está asignado
-    const getServiciosProximos = async () => {
-        if (!usuario.value) return
+// Obtener servicios donde el usuario está asignado
+const getServiciosProximos = async () => {
+    if (!usuario.value) return
 
-        try {
-            cargandoServicios.value = true
+    try {
+        cargandoServicios.value = true
 
-            // Obtener servicios donde el usuario está asignado
-            const { data: serviciosData, error } = await supabase
-                .from('servicios_usuarios')
-                .select(`
+        // Obtener servicios donde el usuario está asignado
+        const { data: serviciosData, error } = await supabase
+            .from('servicios_usuarios')
+            .select(`
                     servicios (
                         id,
                         titulo,
@@ -391,148 +392,148 @@
                         detalles
                     )
                 `)
-                .eq('user_id', usuario.value.id)
+            .eq('user_id', usuario.value.id)
 
-            if (error) throw error
+        if (error) throw error
 
-            // Filtrar servicios de hoy hacia adelante y ordenar por fecha
-            const ahora = new Date()
+        // Filtrar servicios de hoy hacia adelante y ordenar por fecha
+        const ahora = new Date()
 
-            const serviciosFuturos = serviciosData
-                .map(item => item.servicios)
-                .filter(servicio => {
-                    const fechaServicio = new Date(servicio.fecha + ' ' + servicio.hora)
-                    // Incluir servicios desde hoy o futuros, más servicios que empezaron hace menos de 4 horas
-                    return fechaServicio.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
-                })
-                .sort((a, b) => {
-                    const fechaA = new Date(a.fecha + ' ' + a.hora)
-                    const fechaB = new Date(b.fecha + ' ' + b.hora)
-                    return fechaA - fechaB
-                })
-                .slice(0, 3) // Mostrar máximo 3 servicios próximos
+        const serviciosFuturos = serviciosData
+            .map(item => item.servicios)
+            .filter(servicio => {
+                const fechaServicio = new Date(servicio.fecha + ' ' + servicio.hora)
+                // Incluir servicios desde hoy o futuros, más servicios que empezaron hace menos de 4 horas
+                return fechaServicio.getTime() > ahora.getTime() - (4 * 60 * 60 * 1000) // 4 horas de margen hacia atrás
+            })
+            .sort((a, b) => {
+                const fechaA = new Date(a.fecha + ' ' + a.hora)
+                const fechaB = new Date(b.fecha + ' ' + b.hora)
+                return fechaA - fechaB
+            })
+            .slice(0, 3) // Mostrar máximo 3 servicios próximos
 
-            serviciosProximos.value = serviciosFuturos
+        serviciosProximos.value = serviciosFuturos
 
-        } catch (error) {
-            console.error('Error obteniendo servicios:', error)
-        } finally {
-            cargandoServicios.value = false
+    } catch (error) {
+        console.error('Error obteniendo servicios:', error)
+    } finally {
+        cargandoServicios.value = false
+    }
+}
+
+// Utilidades
+const tieneRol = (rol) => {
+    return roles.value.some(r => r.rol === rol)
+}
+
+const formatearFecha = (fecha, hora = null) => {
+
+    const date = new Date(fecha + 'T00:00:00')
+    const opciones = { weekday: 'short', day: 'numeric', month: 'short' }
+    return date.toLocaleDateString('es-ES', opciones) +
+        (hora ? ` a las ${hora}` : '')
+
+    // const hoy = new Date()
+    // const manana = new Date(hoy)
+    // manana.setDate(hoy.getDate() + 1)
+
+    // // Comparar solo las fechas (sin hora)
+    // const fechaSolo = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    // const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+    // const mananaSolo = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate())
+
+    // // Si se proporciona hora, verificar las 12 horas para "Hoy"
+    // if (fechaSolo.getTime() === hoySolo.getTime()) {
+    //     if (hora) {
+    //         // Calcular si faltan menos de 12 horas
+    //         const fechaReunion = new Date(fecha + ' ' + hora)
+    //         const diferencia = fechaReunion - hoy
+    //         const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
+
+    //         // Solo mostrar "Hoy" si faltan 12 horas o menos
+    //         if (totalHoras <= 12 && diferencia > 0) {
+    //             return 'Hoy'
+    //         } else {
+    //             // Si faltan más de 12 horas, mostrar fecha completa
+    //             return date.toLocaleDateString('es-ES', {
+    //                 weekday: 'long',
+    //                 day: 'numeric',
+    //                 month: 'long'
+    //             })
+    //         }
+    //     } else {
+    //         return 'Hoy'
+    //     }
+    // } else if (fechaSolo.getTime() === mananaSolo.getTime()) {
+    //     return 'Mañana'
+    // } else {
+    //     return date.toLocaleDateString('es-ES', {
+    //         weekday: 'long',
+    //         day: 'numeric',
+    //         month: 'long'
+    //     })
+    // }
+}
+
+// Acciones de reuniones
+const irAlChat = (reunionId) => {
+    // Navegar a la página de chat de la reunión
+    router.push(`/chat-reunion/${reunionId}`)
+}
+
+const irAlChatServicio = (servicioId) => {
+    // Navegar a la página de chat del servicio
+    router.push(`/chat-servicio/${servicioId}`)
+}
+
+// Navegación a canción desde modal
+const verCancionDesdeModal = (cancionId) => {
+    // Guardar el estado actual con información del modal (solo datos básicos serializables)
+    const currentState = {
+        modalOpen: true,
+        modalType: 'detalles-servicio',
+        servicioData: {
+            id: servicioModalActual.value.id,
+            titulo: servicioModalActual.value.titulo,
+            fecha: servicioModalActual.value.fecha,
+            hora: servicioModalActual.value.hora,
+            detalles: servicioModalActual.value.detalles
         }
     }
 
-    // Utilidades
-    const tieneRol = (rol) => {
-        return roles.value.some(r => r.rol === rol)
-    }
+    // Reemplazar el estado actual en el historial
+    console.log('Guardando estado:', currentState) // Debug
+    window.history.replaceState(currentState, '')
 
-    const formatearFecha = (fecha, hora = null) => {
+    // Cerrar el modal de SweetAlert2
+    Swal.close()
 
-        const date = new Date(fecha + 'T00:00:00')
-        const opciones = { weekday: 'short', day: 'numeric', month: 'short' }
-        return date.toLocaleDateString('es-ES', opciones) +
-            (hora ? ` a las ${hora}` : '')
+    // Navegar a la canción después de un pequeño delay
+    setTimeout(() => {
+        router.push(`/ver-cancion/${cancionId}`)
+    }, 100)
+}
 
-        // const hoy = new Date()
-        // const manana = new Date(hoy)
-        // manana.setDate(hoy.getDate() + 1)
-
-        // // Comparar solo las fechas (sin hora)
-        // const fechaSolo = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-        // const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
-        // const mananaSolo = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate())
-
-        // // Si se proporciona hora, verificar las 12 horas para "Hoy"
-        // if (fechaSolo.getTime() === hoySolo.getTime()) {
-        //     if (hora) {
-        //         // Calcular si faltan menos de 12 horas
-        //         const fechaReunion = new Date(fecha + ' ' + hora)
-        //         const diferencia = fechaReunion - hoy
-        //         const totalHoras = Math.floor(diferencia / (1000 * 60 * 60))
-
-        //         // Solo mostrar "Hoy" si faltan 12 horas o menos
-        //         if (totalHoras <= 12 && diferencia > 0) {
-        //             return 'Hoy'
-        //         } else {
-        //             // Si faltan más de 12 horas, mostrar fecha completa
-        //             return date.toLocaleDateString('es-ES', {
-        //                 weekday: 'long',
-        //                 day: 'numeric',
-        //                 month: 'long'
-        //             })
-        //         }
-        //     } else {
-        //         return 'Hoy'
-        //     }
-        // } else if (fechaSolo.getTime() === mananaSolo.getTime()) {
-        //     return 'Mañana'
-        // } else {
-        //     return date.toLocaleDateString('es-ES', {
-        //         weekday: 'long',
-        //         day: 'numeric',
-        //         month: 'long'
-        //     })
-        // }
-    }
-
-    // Acciones de reuniones
-    const irAlChat = (reunionId) => {
-        // Navegar a la página de chat de la reunión
-        router.push(`/chat-reunion/${reunionId}`)
-    }
-
-    const irAlChatServicio = (servicioId) => {
-        // Navegar a la página de chat del servicio
-        router.push(`/chat-servicio/${servicioId}`)
-    }
-
-    // Navegación a canción desde modal
-    const verCancionDesdeModal = (cancionId) => {
-        // Guardar el estado actual con información del modal (solo datos básicos serializables)
-        const currentState = {
-            modalOpen: true,
-            modalType: 'detalles-servicio',
-            servicioData: {
-                id: servicioModalActual.value.id,
-                titulo: servicioModalActual.value.titulo,
-                fecha: servicioModalActual.value.fecha,
-                hora: servicioModalActual.value.hora,
-                detalles: servicioModalActual.value.detalles
-            }
-        }
-
-        // Reemplazar el estado actual en el historial
-        console.log('Guardando estado:', currentState) // Debug
-        window.history.replaceState(currentState, '')
-
-        // Cerrar el modal de SweetAlert2
-        Swal.close()
-
-        // Navegar a la canción después de un pequeño delay
-        setTimeout(() => {
-            router.push(`/ver-cancion/${cancionId}`)
-        }, 100)
-    }
-
-    const verDetallesReunion = async (reunion) => {
-        try {
-            // Obtener lista de todos los convocados
-            const { data: participantes, error } = await supabase
-                .from('convocatorias_users')
-                .select(`
+const verDetallesReunion = async (reunion) => {
+    try {
+        // Obtener lista de todos los convocados
+        const { data: participantes, error } = await supabase
+            .from('convocatorias_users')
+            .select(`
                 usuarios(email, raw_user_meta_data)
             `)
-                .eq('convocatoria_id', reunion.id)
+            .eq('convocatoria_id', reunion.id)
 
-            if (error) throw error
+        if (error) throw error
 
-            const listaParticipantes = participantes
-                .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
-                .join(', ')
+        const listaParticipantes = participantes
+            .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
+            .join(', ')
 
-            await Swal.fire({
-                title: reunion.titulo,
-                html: `
+        await Swal.fire({
+            title: reunion.titulo,
+            html: `
                 <div class="text-start">
                     <p><strong>📅 Fecha:</strong> ${formatearFecha(reunion.fecha)}</p>
                     <p><strong>🕐 Hora:</strong> ${reunion.hora}</p>
@@ -541,39 +542,39 @@
                     <p class="small">${listaParticipantes}</p>
                 </div>
             `,
-                icon: 'info',
-                showCloseButton: true,
-                confirmButtonText: 'Entendido'
-            })
-        } catch (error) {
-            console.error('Error obteniendo detalles:', error)
-            await Swal.fire({
-                title: 'Error',
-                text: 'No se pudieron cargar los detalles de la reunión',
-                icon: 'error'
-            })
-        }
+            icon: 'info',
+            showCloseButton: true,
+            confirmButtonText: 'Entendido'
+        })
+    } catch (error) {
+        console.error('Error obteniendo detalles:', error)
+        await Swal.fire({
+            title: 'Error',
+            text: 'No se pudieron cargar los detalles de la reunión',
+            icon: 'error'
+        })
     }
+}
 
-    const verDetallesServicio = async (servicio) => {
-        try {
-            // Guardar servicio actual para posible reapertura del modal
-            servicioModalActual.value = servicio
+const verDetallesServicio = async (servicio) => {
+    try {
+        // Guardar servicio actual para posible reapertura del modal
+        servicioModalActual.value = servicio
 
-            // Obtener lista de todos los participantes del servicio
-            const { data: participantes, error } = await supabase
-                .from('servicios_usuarios')
-                .select(`
+        // Obtener lista de todos los participantes del servicio
+        const { data: participantes, error } = await supabase
+            .from('servicios_usuarios')
+            .select(`
                 usuarios(email, raw_user_meta_data)
             `)
-                .eq('servicio_id', servicio.id)
+            .eq('servicio_id', servicio.id)
 
-            if (error) throw error
+        if (error) throw error
 
-            // Obtener canciones del servicio con quien las agregó
-            const { data: canciones, error: errorCanciones } = await supabase
-                .from('servicios_canciones')
-                .select(`
+        // Obtener canciones del servicio con quien las agregó
+        const { data: canciones, error: errorCanciones } = await supabase
+            .from('servicios_canciones')
+            .select(`
                     *,
                     canciones (
                         titulo
@@ -583,28 +584,28 @@
                         raw_user_meta_data
                     )
                 `)
-                .eq('servicio_id', servicio.id)
-                .order('orden', { ascending: true })
+            .eq('servicio_id', servicio.id)
+            .order('orden', { ascending: true })
 
-            if (errorCanciones) throw errorCanciones
+        if (errorCanciones) throw errorCanciones
 
-            const listaParticipantes = participantes
-                .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
-                .join(', ')
+        const listaParticipantes = participantes
+            .map(p => p.usuarios.raw_user_meta_data?.full_name || p.usuarios.email)
+            .join(', ')
 
-            // Crear lista de canciones con quien las agregó
-            let cancionesHtml = ''
-            if (canciones && canciones.length > 0) {
-                cancionesHtml = canciones.map((cancion, index) => {
-                    const nombreUsuario = cancion.usuarios?.raw_user_meta_data?.full_name || cancion.usuarios?.email || 'Usuario desconocido'
-                    const tono = cancion.tono ? ` (${cancion.tono})` : ''
-                    return `${index + 1}. <button onclick="window.verCancionDesdeModal(${cancion.cancion_id})" class="btn-link text-decoration-none text-primary border-0 bg-transparent p-0">${cancion.canciones.titulo} <i class="bi bi-arrow-right" style="font-size: 0.8em;"></i></button>${tono} - <small class="text-success">${nombreUsuario}</small>`
-                }).join('<br>')
-            }
+        // Crear lista de canciones con quien las agregó
+        let cancionesHtml = ''
+        if (canciones && canciones.length > 0) {
+            cancionesHtml = canciones.map((cancion, index) => {
+                const nombreUsuario = cancion.usuarios?.raw_user_meta_data?.full_name || cancion.usuarios?.email || 'Usuario desconocido'
+                const tono = cancion.tono ? ` (${cancion.tono})` : ''
+                return `${index + 1}. <button onclick="window.verCancionDesdeModal(${cancion.cancion_id})" class="btn-link text-decoration-none text-primary border-0 bg-transparent p-0">${cancion.canciones.titulo} <i class="bi bi-arrow-right" style="font-size: 0.8em;"></i></button>${tono} - <small class="text-success">${nombreUsuario}</small>`
+            }).join('<br>')
+        }
 
-            await Swal.fire({
-                title: servicio.titulo,
-                html: `
+        await Swal.fire({
+            title: servicio.titulo,
+            html: `
                 <div class="text-start">
                     <p><strong>📅 Fecha:</strong> ${formatearFecha(servicio.fecha)}</p>
                     <p><strong>🕐 Hora:</strong> ${servicio.hora}</p>
@@ -618,548 +619,548 @@
                     ` : ''}
                 </div>
             `,
-                showCloseButton: true,
-                confirmButtonText: 'Entendido',
-                width: '600px'
-            })
-        } catch (error) {
-            console.error('Error obteniendo detalles del servicio:', error)
-            await Swal.fire({
-                title: 'Error',
-                text: 'No se pudieron cargar los detalles del servicio',
-                icon: 'error'
-            })
-        }
-    }
-
-    // Logout
-    const logout = async () => {
-        const { error } = await supabase.auth.signOut()
-
-        if (error) {
-            console.error('Error al cerrar sesión:', error.message)
-        } else {
-            console.log('Sesión cerrada')
-            router.push('/login')
-        }
-    }
-
-    // Redirección OAuth
-    const redirect = () => {
-        let originUrl = localStorage.getItem('originUrl')
-        let url = window.location.href
-
-        if (url.includes('?code=')) {
-            if (originUrl && originUrl !== url) {
-                window.location.href = originUrl
-            } else {
-                router.push('/')
-            }
-        }
-    }
-
-    // Watchers
-    watch(usuario, (newUser) => {
-        if (newUser) {
-            getRolesUsuario()
-            getReunionesProximas()
-            getServiciosProximos()
-        }
-    }, { immediate: true })
-
-    // Lifecycle
-    onMounted(() => {
-        redirect()
-
-        // Exponer función globalmente para uso en modales
-        window.verCancionDesdeModal = verCancionDesdeModal
-
-        // Escuchar el evento popstate para reabrir modal al hacer "volver"
-        const handlePopstate = (event) => {
-            console.log('Popstate event:', event.state) // Debug
-            if (event.state?.modalOpen && event.state?.modalType === 'detalles-servicio' && event.state?.servicioData) {
-                console.log('Reabriendo modal de servicio:', event.state.servicioData) // Debug
-                // Reabrir el modal de detalles del servicio
-                nextTick(() => {
-                    verDetallesServicio(event.state.servicioData)
-                })
-            }
-        }
-
-        window.addEventListener('popstate', handlePopstate)
-
-        // Limpiar listener al desmontar componente
-        onUnmounted(() => {
-            window.removeEventListener('popstate', handlePopstate)
+            showCloseButton: true,
+            confirmButtonText: 'Entendido',
+            width: '600px'
         })
+    } catch (error) {
+        console.error('Error obteniendo detalles del servicio:', error)
+        await Swal.fire({
+            title: 'Error',
+            text: 'No se pudieron cargar los detalles del servicio',
+            icon: 'error'
+        })
+    }
+}
 
-        if (usuario.value) {
-            getRolesUsuario()
-            getReunionesProximas()
-            getServiciosProximos()
+// Logout
+const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+        console.error('Error al cerrar sesión:', error.message)
+    } else {
+        console.log('Sesión cerrada')
+        router.push('/login')
+    }
+}
+
+// Redirección OAuth
+const redirect = () => {
+    let originUrl = localStorage.getItem('originUrl')
+    let url = window.location.href
+
+    if (url.includes('?code=')) {
+        if (originUrl && originUrl !== url) {
+            window.location.href = originUrl
+        } else {
+            router.push('/')
         }
+    }
+}
+
+// Watchers
+watch(usuario, (newUser) => {
+    if (newUser) {
+        getRolesUsuario()
+        getReunionesProximas()
+        getServiciosProximos()
+    }
+}, { immediate: true })
+
+// Lifecycle
+onMounted(() => {
+    redirect()
+
+    // Exponer función globalmente para uso en modales
+    window.verCancionDesdeModal = verCancionDesdeModal
+
+    // Escuchar el evento popstate para reabrir modal al hacer "volver"
+    const handlePopstate = (event) => {
+        console.log('Popstate event:', event.state) // Debug
+        if (event.state?.modalOpen && event.state?.modalType === 'detalles-servicio' && event.state?.servicioData) {
+            console.log('Reabriendo modal de servicio:', event.state.servicioData) // Debug
+            // Reabrir el modal de detalles del servicio
+            nextTick(() => {
+                verDetallesServicio(event.state.servicioData)
+            })
+        }
+    }
+
+    window.addEventListener('popstate', handlePopstate)
+
+    // Limpiar listener al desmontar componente
+    onUnmounted(() => {
+        window.removeEventListener('popstate', handlePopstate)
     })
+
+    if (usuario.value) {
+        getRolesUsuario()
+        getReunionesProximas()
+        getServiciosProximos()
+    }
+})
 </script>
 
 <style scoped>
+.welcome-card {
+    color: rgb(7, 7, 7);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.welcome-actions .btn {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.welcome-actions .btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.reuniones-section,
+.quick-links-section {
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #343b42;
+    padding-bottom: 0.5rem;
+}
+
+.reunion-card-home {
+    background: linear-gradient(145deg, #f8f9fa, #ffffff);
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.reunion-card-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.reunion-card-home:last-child {
+    margin-bottom: 0;
+}
+
+.reunion-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.reunion-icon {
+    width: 50px;
+    height: 50px;
+    background-color: #dcdde4;
+    color: rgb(44, 43, 43);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.reunion-info {
+    flex-grow: 1;
+}
+
+.reunion-titulo {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.reunion-datetime {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.reunion-datetime .fecha,
+.reunion-datetime .hora {
+    display: flex;
+    align-items: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.reunion-status {
+    flex-shrink: 0;
+}
+
+.reunion-status .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.reunion-detalles {
+    background: #f8f9fa;
+    border-radius: 0px 8px 8px 0px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #667eea;
+}
+
+.reunion-detalles p {
+    color: #5a6c7d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.reunion-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.tiempo-restante {
+    display: flex;
+    align-items: center;
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.reunion-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.reunion-actions .btn {
+    border-radius: 6px;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.no-reuniones {
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+}
+
+/* Estilos para servicios - Diferenciados con paleta verde */
+.servicios-section {
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.servicio-card-home {
+    background: linear-gradient(145deg, #8997df49, #a582af5e);
+    border: 1px solid #180d49;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.servicio-card-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+    border-color: #2850a7;
+}
+
+.servicio-card-home:last-child {
+    margin-bottom: 0;
+}
+
+.servicio-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.servicio-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(45deg, #7828a7, #3f33ac);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.servicio-info {
+    flex-grow: 1;
+}
+
+.servicio-titulo {
+    color: #292c2a;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.servicio-datetime {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.servicio-datetime .fecha,
+.servicio-datetime .hora {
+    display: flex;
+    align-items: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.servicio-badge {
+    flex-shrink: 0;
+}
+
+.servicio-badge .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.servicio-detalles {
+
+    background: #fdfdfd54;
+
+    border-radius: 0px 8px 8px 0px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #6328a7;
+}
+
+.servicio-detalles p {
+    color: #070635;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.servicio-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #d4edda;
+}
+
+.servicio-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.servicio-actions .btn {
+    border-radius: 6px;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.no-servicios {
+    background: #f8fff8;
+    border-radius: 12px;
+    border: 2px dashed #d4edda;
+}
+
+.quick-link-card {
+    display: block;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.quick-link-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    border-color: #667eea;
+}
+
+.quick-link-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.quick-link-content h6 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.quick-link-content p {
+    color: #6c757d;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Estados de carga */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .welcome-card {
-        color: rgb(7, 7, 7);
-        border-radius: 15px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
     }
 
-    .welcome-title {
-        font-size: 1.75rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+    .welcome-actions {
+        width: 100%;
     }
 
-    .welcome-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 0;
+    .reunion-header,
+    .servicio-header {
+        flex-direction: column;
+        text-align: center;
     }
 
-    .welcome-actions .btn {
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
+    .reunion-icon,
+    .servicio-icon {
+        margin: 0 auto 1rem auto;
     }
 
-    .welcome-actions .btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
+    .reunion-datetime,
+    .servicio-datetime {
+        justify-content: center;
     }
 
-    .reuniones-section,
-    .quick-links-section {
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+    .reunion-footer,
+    .servicio-footer {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .reunion-actions,
+    .servicio-actions {
+        justify-content: center;
     }
 
     .section-title {
-        color: #2c3e50;
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid #343b42;
-        padding-bottom: 0.5rem;
+        text-align: center;
     }
+}
 
-    .reunion-card-home {
-        background: linear-gradient(145deg, #f8f9fa, #ffffff);
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-        position: relative;
-    }
+@media (max-width: 576px) {
 
-    .reunion-card-home:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        border-color: #667eea;
-    }
-
-    .reunion-card-home:last-child {
-        margin-bottom: 0;
-    }
-
-    .reunion-header {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .reunion-icon {
-        width: 50px;
-        height: 50px;
-        background-color: #dcdde4;
-        color: rgb(44, 43, 43);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-
-    .reunion-info {
-        flex-grow: 1;
-    }
-
-    .reunion-titulo {
-        color: #2c3e50;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .reunion-datetime {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .reunion-datetime .fecha,
-    .reunion-datetime .hora {
-        display: flex;
-        align-items: center;
-        color: #6c757d;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .reunion-status {
-        flex-shrink: 0;
-    }
-
-    .reunion-status .badge {
-        font-size: 0.8rem;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .reunion-detalles {
-        background: #f8f9fa;
-        border-radius: 0px 8px 8px 0px;
+    .reuniones-section,
+    .servicios-section,
+    .quick-links-section {
         padding: 1rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid #667eea;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
     }
 
-    .reunion-detalles p {
-        color: #5a6c7d;
-        font-size: 0.9rem;
-        line-height: 1.5;
+    .welcome-card {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
     }
 
-    .reunion-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 1rem;
-        border-top: 1px solid #e9ecef;
-    }
-
-    .tiempo-restante {
-        display: flex;
-        align-items: center;
-        color: #6c757d;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .reunion-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .reunion-actions .btn {
-        border-radius: 6px;
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .no-reuniones {
-        background: #f8f9fa;
-        border-radius: 12px;
-        border: 2px dashed #dee2e6;
-    }
-
-    /* Estilos para servicios - Diferenciados con paleta verde */
-    .servicios-section {
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .servicio-card-home {
-        background: linear-gradient(145deg, #8997df49, #a582af5e);
-        border: 1px solid #180d49;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .servicio-card-home:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
-        border-color: #2850a7;
-    }
-
-    .servicio-card-home:last-child {
-        margin-bottom: 0;
-    }
-
-    .servicio-header {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .servicio-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(45deg, #7828a7, #3f33ac);
-        color: white;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-
-    .servicio-info {
-        flex-grow: 1;
-    }
-
-    .servicio-titulo {
-        color: #292c2a;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .servicio-datetime {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .servicio-datetime .fecha,
-    .servicio-datetime .hora {
-        display: flex;
-        align-items: center;
-        color: #6c757d;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .servicio-badge {
-        flex-shrink: 0;
-    }
-
-    .servicio-badge .badge {
-        font-size: 0.8rem;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .servicio-detalles {
-
-        background: #fdfdfd54;
-
-        border-radius: 0px 8px 8px 0px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid #6328a7;
-    }
-
-    .servicio-detalles p {
-        color: #070635;
-        font-size: 0.9rem;
-        line-height: 1.5;
-    }
-
-    .servicio-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 1rem;
-        border-top: 1px solid #d4edda;
-    }
-
-    .servicio-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .servicio-actions .btn {
-        border-radius: 6px;
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .no-servicios {
-        background: #f8fff8;
-        border-radius: 12px;
-        border: 2px dashed #d4edda;
-    }
-
-    .quick-link-card {
-        display: block;
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.25rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .quick-link-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        text-decoration: none;
-        border-color: #667eea;
-    }
-
-    .quick-link-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-    }
-
-    .quick-link-content h6 {
-        color: #2c3e50;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .quick-link-content p {
-        color: #6c757d;
-        font-size: 0.85rem;
-        line-height: 1.4;
-    }
-
-    /* Estados de carga */
-    .spinner-border {
-        width: 2rem;
-        height: 2rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .welcome-card {
-            flex-direction: column;
-            text-align: center;
-            gap: 1rem;
-        }
-
-        .welcome-actions {
-            width: 100%;
-        }
-
-        .reunion-header,
-        .servicio-header {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .reunion-icon,
-        .servicio-icon {
-            margin: 0 auto 1rem auto;
-        }
-
-        .reunion-datetime,
-        .servicio-datetime {
-            justify-content: center;
-        }
-
-        .reunion-footer,
-        .servicio-footer {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-        }
-
-        .reunion-actions,
-        .servicio-actions {
-            justify-content: center;
-        }
-
-        .section-title {
-            text-align: center;
-        }
-    }
-
-    @media (max-width: 576px) {
-
-        .reuniones-section,
-        .servicios-section,
-        .quick-links-section {
-            padding: 1rem;
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
-        }
-
-        .welcome-card {
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
-        }
-
-        .reunion-card-home,
-        .servicio-card-home {
-            padding: 1rem;
-        }
-    }
-
-    /* Animaciones */
     .reunion-card-home,
-    .quick-link-card {
-        animation: fadeInUp 0.6s ease-out;
+    .servicio-card-home {
+        padding: 1rem;
+    }
+}
+
+/* Animaciones */
+.reunion-card-home,
+.quick-link-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
-    /* Badges personalizados */
-    .badge.bg-success {
-        background: linear-gradient(45deg, #28a745, #20c997) !important;
-    }
+/* Badges personalizados */
+.badge.bg-success {
+    background: linear-gradient(45deg, #28a745, #20c997) !important;
+}
 
-    .badge.bg-primary {
-        background: linear-gradient(45deg, #007bff, #6f42c1) !important;
-    }
+.badge.bg-primary {
+    background: linear-gradient(45deg, #007bff, #6f42c1) !important;
+}
 
-    .badge.bg-info {
-        background: linear-gradient(45deg, #17a2b8, #6f42c1) !important;
-    }
+.badge.bg-info {
+    background: linear-gradient(45deg, #17a2b8, #6f42c1) !important;
+}
 
-    .badge.bg-warning {
-        background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
-    }
+.badge.bg-warning {
+    background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
+}
 
-    /* Estilos para botones que actúan como enlaces */
-    .btn-link {
-        font-size: inherit;
-        line-height: inherit;
-        cursor: pointer;
-        transition: color 0.2s ease;
-    }
+/* Estilos para botones que actúan como enlaces */
+.btn-link {
+    font-size: inherit;
+    line-height: inherit;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
 
-    .btn-link:hover {
-        text-decoration: underline !important;
-    }
+.btn-link:hover {
+    text-decoration: underline !important;
+}
 
-    .btn-link:focus {
-        box-shadow: none;
-        outline: 2px solid #007bff;
-        outline-offset: 2px;
-    }
+.btn-link:focus {
+    box-shadow: none;
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
 </style>
