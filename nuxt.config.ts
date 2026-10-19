@@ -58,6 +58,7 @@ export default defineNuxtConfig({
         '/',
         '/login',
         '/offline',
+        '/instalar',
         '/ver-cancion/**',
         '/canciones',
         '/repertorio',

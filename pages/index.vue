@@ -12,7 +12,11 @@
             </div>
         </div>
         <div class="row mb-4 mt-1">
-
+            <div class="col text-center">
+                <nuxt-link to="/instalar" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download me-2"></i>Instalar app
+                </nuxt-link>
+            </div>
         </div>
         <div class="row text-center mt-5" v-if="!usuario">
             <div class="col-md-8 offset-md-2">
