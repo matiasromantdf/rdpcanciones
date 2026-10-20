@@ -33,7 +33,7 @@ export default defineNuxtConfig({
       navigateFallback: '/',
     },
     workbox: {
-      navigateFallback: '/offline',
+      navigateFallback: '/offline/canciones',
       globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
     },
   },
@@ -57,7 +57,7 @@ export default defineNuxtConfig({
       exclude: [
         '/',
         '/login',
-        '/offline',
+        '/offline/**',
         '/instalar',
         '/ver-cancion/**',
         '/canciones',

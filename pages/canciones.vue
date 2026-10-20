@@ -122,12 +122,7 @@
         loading.value = true
 
         try {
-            const { data, error } = await supabase
-                .from('canciones')
-                .select('*')
-                .order('titulo', { ascending: true })
-
-            if (error) throw error
+            const data = await loadCanciones(supabase)
 
             songs.value = data
             songsForShow.value = songs.value
@@ -182,6 +177,7 @@
                 console.error('Error al eliminar la canción:', error.message)
             } else {
                 console.log('Canción eliminada')
+                clearCancionesCache()
                 fetchSongs()
             }
         }

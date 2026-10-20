@@ -11,7 +11,7 @@
                 </div>
             </div>
         </div>
-        <div class="row mb-4 mt-1">
+        <div class="row mb-4 mt-1" v-if="!isInstalled">
             <div class="col text-center">
                 <nuxt-link to="/instalar" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-download me-2"></i>Instalar app
@@ -309,6 +309,7 @@ const cargandoReuniones = ref(true)
 const serviciosProximos = ref([])
 const cargandoServicios = ref(true)
 const servicioModalActual = ref(null)
+const isInstalled = ref(false)
 
 // Obtener roles del usuario
 const getRolesUsuario = async () => {
@@ -649,6 +650,15 @@ const logout = async () => {
     }
 }
 
+const checkIsInstalled = () => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        isInstalled.value = true
+    } else {
+        isInstalled.value = false
+    }
+}
+
+
 // Redirección OAuth
 const redirect = () => {
     let originUrl = localStorage.getItem('originUrl')
@@ -674,6 +684,7 @@ watch(usuario, (newUser) => {
 
 // Lifecycle
 onMounted(() => {
+    checkIsInstalled()
     redirect()
 
     // Exponer función globalmente para uso en modales
