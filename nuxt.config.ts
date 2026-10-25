@@ -37,6 +37,11 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
     },
   },
+  nitro: {
+    prerender: {
+      routes: ['/offline/canciones'],
+    },
+  },
   devServer: {
     port: 3007
   },

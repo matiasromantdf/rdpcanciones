@@ -57,7 +57,7 @@ export const useSupabase = () => {
   const hasRole = async (role) => {
     if(usuario.value){
       await fetchUserRoles(); 
-      return roles.value.some((r) => r.rol === role);
+      return roles.value?.some((r) => r.rol === role) ?? false;
     }
     return false;
   };
