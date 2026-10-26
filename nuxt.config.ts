@@ -33,8 +33,39 @@ export default defineNuxtConfig({
       navigateFallback: '/',
     },
     workbox: {
-      navigateFallback: '/offline/canciones',
+      navigateFallback: undefined,
       globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+      runtimeCaching: [
+        {
+          // Con red navega normal; si falla, responde con el HTML precacheado de /offline/canciones
+          urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'paginas',
+            networkTimeoutSeconds: 4,
+            plugins: [
+              {
+                handlerDidError: async () => {
+                  const opts = { ignoreSearch: true }
+                  return (
+                    (await caches.match('/offline/canciones', opts)) ||
+                    (await caches.match('/offline/canciones/index.html', opts)) ||
+                    Response.error()
+                  )
+                },
+              },
+            ],
+          },
+        },
+        {
+          urlPattern: /^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'cdn-recursos',
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+      ],
     },
   },
   nitro: {
